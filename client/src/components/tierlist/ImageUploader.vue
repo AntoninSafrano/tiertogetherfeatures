@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue'
 import { useCloudinary } from '@/composables/useCloudinary'
 import { useSocket } from '@/composables/useSocket'
+import { ImagePlus } from 'lucide-vue-next'
 
 const { uploadImage } = useCloudinary()
 const { socket } = useSocket()
@@ -10,28 +11,28 @@ const fileInput = ref<HTMLInputElement | null>(null)
 const isUploading = ref(false)
 const uploadProgress = ref({ current: 0, total: 0 })
 const error = ref<string | null>(null)
+const isDragging = ref(false)
+let dragCounter = 0
 
 function triggerFileInput() {
   fileInput.value?.click()
 }
 
-async function handleFiles(event: Event) {
-  const input = event.target as HTMLInputElement
-  const files = input.files
-  if (!files || files.length === 0) return
+async function processFiles(files: File[]) {
+  const images = files.filter((f) => f.type.startsWith('image/'))
+  if (images.length === 0) return
 
   isUploading.value = true
   error.value = null
-  uploadProgress.value = { current: 0, total: files.length }
+  uploadProgress.value = { current: 0, total: images.length }
 
-  for (const file of Array.from(files)) {
+  for (const file of images) {
     try {
       const imageUrl = await uploadImage(file)
+      const label = file.name && file.name !== 'image.png'
+        ? file.name.replace(/\.[^.]+$/, '').substring(0, 50)
+        : `Pasted image ${uploadProgress.value.current + 1}`
 
-      // Strip extension from filename for label
-      const label = file.name.replace(/\.[^.]+$/, '').substring(0, 50)
-
-      // Emit to server (or local in demo mode)
       if (socket.value?.connected) {
         socket.value.emit('item:create', { imageUrl, label })
       }
@@ -45,14 +46,65 @@ async function handleFiles(event: Event) {
   }
 
   isUploading.value = false
+}
 
-  // Reset input so the same files can be re-selected
+function handleFiles(event: Event) {
+  const input = event.target as HTMLInputElement
+  const files = input.files
+  if (!files || files.length === 0) return
+  processFiles(Array.from(files))
   input.value = ''
 }
+
+function onDragEnter(e: DragEvent) {
+  e.preventDefault()
+  dragCounter++
+  isDragging.value = true
+}
+
+function onDragLeave(e: DragEvent) {
+  e.preventDefault()
+  dragCounter--
+  if (dragCounter <= 0) {
+    isDragging.value = false
+    dragCounter = 0
+  }
+}
+
+function onDrop(e: DragEvent) {
+  e.preventDefault()
+  isDragging.value = false
+  dragCounter = 0
+  if (e.dataTransfer?.files) {
+    processFiles(Array.from(e.dataTransfer.files))
+  }
+}
+
+function onPaste(e: ClipboardEvent) {
+  if (!e.clipboardData?.files.length) return
+  processFiles(Array.from(e.clipboardData.files))
+}
+
+onMounted(() => {
+  document.addEventListener('paste', onPaste)
+})
+
+onUnmounted(() => {
+  document.removeEventListener('paste', onPaste)
+})
 </script>
 
 <template>
-  <div class="flex items-center gap-3">
+  <div
+    class="relative rounded-xl border-2 border-dashed p-6 text-center transition-colors duration-200"
+    :class="isDragging
+      ? 'border-primary bg-primary/5'
+      : 'border-white/10 hover:border-white/20'"
+    @dragover.prevent
+    @dragenter="onDragEnter"
+    @dragleave="onDragLeave"
+    @drop="onDrop"
+  >
     <input
       ref="fileInput"
       type="file"
@@ -62,36 +114,27 @@ async function handleFiles(event: Event) {
       @change="handleFiles"
     />
 
-    <button
-      :disabled="isUploading"
-      class="inline-flex items-center gap-2 rounded-lg bg-gradient-to-r from-primary to-purple-600 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-primary/25 transition-all duration-200 hover:shadow-xl hover:shadow-primary/30 hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-50"
-      @click="triggerFileInput"
-    >
-      <svg
-        v-if="!isUploading"
-        xmlns="http://www.w3.org/2000/svg"
-        class="h-5 w-5"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        stroke-width="2"
-        stroke-linecap="round"
-        stroke-linejoin="round"
-      >
-        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-        <polyline points="17 8 12 3 7 8" />
-        <line x1="12" y1="3" x2="12" y2="15" />
-      </svg>
-
-      <template v-if="isUploading">
+    <div v-if="isUploading" class="flex flex-col items-center gap-2">
+      <div class="h-8 w-8 animate-spin rounded-full border-2 border-white/20 border-t-primary" />
+      <span class="text-sm text-zinc-400">
         Uploading {{ uploadProgress.current }}/{{ uploadProgress.total }}...
-      </template>
-      <template v-else>
-        Add Images
-      </template>
-    </button>
+      </span>
+    </div>
 
-    <span v-if="error" class="text-xs text-destructive">
+    <div v-else class="flex flex-col items-center gap-3">
+      <ImagePlus class="h-8 w-8 text-zinc-500" />
+      <p class="text-sm text-zinc-400">
+        Drop images here, paste from clipboard, or
+        <button
+          class="font-semibold text-primary hover:text-primary-hover underline underline-offset-2"
+          @click="triggerFileInput"
+        >
+          browse
+        </button>
+      </p>
+    </div>
+
+    <span v-if="error" class="mt-2 block text-xs text-destructive">
       {{ error }}
     </span>
   </div>
