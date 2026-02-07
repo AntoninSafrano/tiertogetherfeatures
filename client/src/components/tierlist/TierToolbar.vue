@@ -2,7 +2,7 @@
 import { ref } from 'vue'
 import { useRoomStore } from '@/stores/room'
 import { Lock, Unlock, RotateCcw, Download } from 'lucide-vue-next'
-import html2canvas from 'html2canvas'
+import { toPng } from 'html-to-image'
 
 const store = useRoomStore()
 const isExporting = ref(false)
@@ -13,15 +13,14 @@ async function exportImage() {
 
   isExporting.value = true
   try {
-    const canvas = await html2canvas(target, {
+    const dataUrl = await toPng(target, {
       backgroundColor: '#09090b',
-      scale: 2,
-      useCORS: true,
+      pixelRatio: 2,
     })
 
     const link = document.createElement('a')
     link.download = `${store.title || 'tierlist'}.png`
-    link.href = canvas.toDataURL('image/png')
+    link.href = dataUrl
     link.click()
   } catch (err) {
     console.error('[Export] Failed:', err)
