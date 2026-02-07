@@ -15,17 +15,11 @@ const pool = computed({
 })
 
 function onDragChange(evt: any) {
-  if (evt.removed) {
-    store.trackDragSource(evt.removed.element.id, null)
-  }
   if (evt.added) {
-    const fromRowId = store.getDragSource(evt.added.element.id)
-    store.emitMove({
-      itemId: evt.added.element.id,
-      fromRowId,
-      toRowId: null,
-      toIndex: evt.added.newIndex,
-    })
+    store.handleDragAdded(evt.added.element.id, null, evt.added.newIndex)
+  }
+  if (evt.removed) {
+    store.handleDragRemoved(evt.removed.element.id, null)
   }
   if (evt.moved) {
     store.emitMove({

@@ -20,17 +20,11 @@ const items = computed({
 })
 
 function onDragChange(evt: any) {
-  if (evt.removed) {
-    store.trackDragSource(evt.removed.element.id, row.value.id)
-  }
   if (evt.added) {
-    const fromRowId = store.getDragSource(evt.added.element.id)
-    store.emitMove({
-      itemId: evt.added.element.id,
-      fromRowId,
-      toRowId: row.value.id,
-      toIndex: evt.added.newIndex,
-    })
+    store.handleDragAdded(evt.added.element.id, row.value.id, evt.added.newIndex)
+  }
+  if (evt.removed) {
+    store.handleDragRemoved(evt.removed.element.id, row.value.id)
   }
   if (evt.moved) {
     store.emitMove({

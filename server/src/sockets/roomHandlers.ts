@@ -147,18 +147,32 @@ export function registerRoomHandlers(io: TypedServer, socket: TypedSocket): void
       let movedItem: { id: string; imageUrl: string; label: string } | undefined
 
       if (fromRowId === null) {
-        // From pool
         const idx = tierList.pool.findIndex((i) => i.id === itemId)
         if (idx !== -1) {
           movedItem = tierList.pool.splice(idx, 1)[0]
         }
       } else {
-        // From a tier row
         const sourceRow = tierList.rows.find((r) => r.id === fromRowId)
         if (sourceRow) {
           const idx = sourceRow.items.findIndex((i) => i.id === itemId)
           if (idx !== -1) {
             movedItem = sourceRow.items.splice(idx, 1)[0]
+          }
+        }
+      }
+
+      // Fallback: search all containers if item wasn't in the specified source
+      if (!movedItem) {
+        const poolIdx = tierList.pool.findIndex((i) => i.id === itemId)
+        if (poolIdx !== -1) {
+          movedItem = tierList.pool.splice(poolIdx, 1)[0]
+        } else {
+          for (const row of tierList.rows) {
+            const idx = row.items.findIndex((i) => i.id === itemId)
+            if (idx !== -1) {
+              movedItem = row.items.splice(idx, 1)[0]
+              break
+            }
           }
         }
       }

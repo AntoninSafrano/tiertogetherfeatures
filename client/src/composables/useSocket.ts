@@ -1,10 +1,13 @@
-import { ref, readonly } from 'vue'
+import { shallowRef, ref, readonly } from 'vue'
 import { io, type Socket } from 'socket.io-client'
 import type { ClientToServerEvents, ServerToClientEvents } from '@tiertogether/shared'
 
 type TypedSocket = Socket<ServerToClientEvents, ClientToServerEvents>
 
-const socket = ref<TypedSocket | null>(null)
+// shallowRef: Vue tracks the ref itself but does NOT deep-proxy the Socket
+// object. This is critical because Socket.io mutates internal properties
+// (_callbacks, _opts, etc.) and Vue's reactive proxy breaks that.
+const socket = shallowRef<TypedSocket | null>(null)
 const isConnected = ref(false)
 const connectionError = ref<string | null>(null)
 
@@ -35,10 +38,6 @@ export function useSocket() {
       console.error('[Socket] Connection error:', err.message)
     })
 
-    newSocket.on('error', (message) => {
-      console.error('[Socket] Server error:', message)
-    })
-
     socket.value = newSocket
   }
 
@@ -49,7 +48,7 @@ export function useSocket() {
   }
 
   return {
-    socket: readonly(socket),
+    socket,
     isConnected: readonly(isConnected),
     connectionError: readonly(connectionError),
     connect,

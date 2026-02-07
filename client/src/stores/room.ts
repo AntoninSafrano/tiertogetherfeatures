@@ -25,31 +25,33 @@ export const useRoomStore = defineStore('room', () => {
   const pool = ref<TierItem[]>([])
 
   // ─── Drag Source Tracking ───────────────────────────────────────
-  // vuedraggable fires "removed" then "added" synchronously on cross-container drag.
-  // We track the source container so "added" knows where the item came from.
-  const _lastDragSource = ref<{ itemId: string; containerId: string | null } | null>(null)
+  // vuedraggable fires "added" on the TARGET before "removed" on the SOURCE.
+  // So we store the pending add and only emit when "removed" provides the source.
+  const _pendingAdd = ref<{ itemId: string; toRowId: string | null; toIndex: number } | null>(null)
 
-  function trackDragSource(itemId: string, containerId: string | null) {
-    _lastDragSource.value = { itemId, containerId }
+  function handleDragAdded(itemId: string, toRowId: string | null, toIndex: number) {
+    _pendingAdd.value = { itemId, toRowId, toIndex }
   }
 
-  function getDragSource(itemId: string): string | null {
-    if (_lastDragSource.value?.itemId === itemId) {
-      const src = _lastDragSource.value.containerId
-      _lastDragSource.value = null
-      return src
+  function handleDragRemoved(itemId: string, fromRowId: string | null) {
+    if (_pendingAdd.value?.itemId === itemId) {
+      emitMove({
+        itemId,
+        fromRowId,
+        toRowId: _pendingAdd.value.toRowId,
+        toIndex: _pendingAdd.value.toIndex,
+      })
+      _pendingAdd.value = null
     }
-    return null
   }
 
   // ─── Socket Event Binding ───────────────────────────────────────
-  let eventsBound = false
+  let boundSocket: object | null = null
 
   function bindEvents() {
-    if (eventsBound) return
     const { socket } = useSocket()
-    if (!socket.value) return
-    eventsBound = true
+    if (!socket.value || socket.value === boundSocket) return
+    boundSocket = socket.value
 
     socket.value.on('room:state', (room: Room) => {
       currentRoom.value = room
@@ -72,7 +74,10 @@ export const useRoomStore = defineStore('room', () => {
     })
 
     socket.value.on('item:created', (item: TierItem) => {
-      pool.value.push(item)
+      // Avoid duplicates (e.g. from reconnect + room:state race)
+      if (!pool.value.some((i) => i.id === item.id)) {
+        pool.value.push(item)
+      }
     })
 
     socket.value.on('error', (msg: string) => {
@@ -95,7 +100,6 @@ export const useRoomStore = defineStore('room', () => {
     bindEvents()
 
     return new Promise((resolve) => {
-      // socket.io buffers emits until connected
       socket.value!.emit('room:create', { username: user, tierListName }, resolve)
     })
   }
@@ -202,7 +206,7 @@ export const useRoomStore = defineStore('room', () => {
     title.value = ''
     rows.value = []
     pool.value = []
-    eventsBound = false
+    boundSocket = null
   }
 
   return {
@@ -224,8 +228,8 @@ export const useRoomStore = defineStore('room', () => {
     loadTierList,
     initDemo,
     // Drag tracking
-    trackDragSource,
-    getDragSource,
+    handleDragAdded,
+    handleDragRemoved,
     // Events
     bindEvents,
   }

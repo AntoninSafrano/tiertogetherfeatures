@@ -8,7 +8,7 @@ const TierItemSubSchema = new Schema(
     imageUrl: { type: String, default: '' },
     label: { type: String, required: true },
   },
-  { _id: false },
+  { _id: false, id: false },
 )
 
 const TierRowSubSchema = new Schema(
@@ -18,7 +18,7 @@ const TierRowSubSchema = new Schema(
     color: { type: String, required: true },
     items: { type: [TierItemSubSchema], default: [] },
   },
-  { _id: false },
+  { _id: false, id: false },
 )
 
 // ─── Main schema ────────────────────────────────────────────────────

@@ -21,6 +21,12 @@ onMounted(async () => {
     return
   }
 
+  // Skip join if we already joined this room (e.g. after createRoom navigated here)
+  if (store.currentRoom?.id === roomId) {
+    isLoading.value = false
+    return
+  }
+
   // Real mode: connect and join room via socket
   const user = store.username || 'Anonymous'
   const res = await store.joinRoom(roomId, user)
