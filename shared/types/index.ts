@@ -77,6 +77,7 @@ export interface SocketData {
   userId: string
   username: string
   roomId: string | null
+  color: string
 }
 
 // ─── Payloads ───────────────────────────────────────────────────────

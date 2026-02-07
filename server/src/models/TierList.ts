@@ -24,6 +24,7 @@ const TierRowSubSchema = new Schema(
 // ─── Main schema ────────────────────────────────────────────────────
 
 export interface TierListDocument extends Document {
+  roomId: string
   title: string
   rows: {
     id: string
@@ -39,6 +40,7 @@ export interface TierListDocument extends Document {
 
 const TierListSchema = new Schema(
   {
+    roomId: { type: String, required: true, unique: true, index: true },
     title: { type: String, required: true, maxlength: 100 },
     rows: { type: [TierRowSubSchema], default: [] },
     pool: { type: [TierItemSubSchema], default: [] },

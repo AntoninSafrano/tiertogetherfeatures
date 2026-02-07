@@ -4,11 +4,9 @@
     "module": "CommonJS",
     "moduleResolution": "node",
     "outDir": "dist",
-    "rootDir": "src",
     "paths": {
-      "@shared/*": ["../shared/*"]
+      "@tiertogether/shared": ["../shared/types/index.ts"]
     }
   },
-  "include": ["src/**/*"],
-  "references": [{ "path": "../shared" }]
+  "include": ["src/**/*"]
 }

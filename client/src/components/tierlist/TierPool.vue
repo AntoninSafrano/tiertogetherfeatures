@@ -15,8 +15,25 @@ const pool = computed({
 })
 
 function onDragChange(evt: any) {
+  if (evt.removed) {
+    store.trackDragSource(evt.removed.element.id, null)
+  }
   if (evt.added) {
-    console.log(`[DnD] Item "${evt.added.element.label}" returned to pool at index ${evt.added.newIndex}`)
+    const fromRowId = store.getDragSource(evt.added.element.id)
+    store.emitMove({
+      itemId: evt.added.element.id,
+      fromRowId,
+      toRowId: null,
+      toIndex: evt.added.newIndex,
+    })
+  }
+  if (evt.moved) {
+    store.emitMove({
+      itemId: evt.moved.element.id,
+      fromRowId: null,
+      toRowId: null,
+      toIndex: evt.moved.newIndex,
+    })
   }
 }
 </script>

@@ -2,12 +2,13 @@
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useSocket } from '@/composables/useSocket'
-import type { RoomResponse } from '@tiertogether/shared'
+import { useRoomStore } from '@/stores/room'
 
 const router = useRouter()
-const { socket, isConnected, connect } = useSocket()
+const store = useRoomStore()
+const { isConnected, connect } = useSocket()
 
-const username = ref('')
+const usernameInput = ref('')
 const tierListName = ref('')
 const roomIdInput = ref('')
 const error = ref<string | null>(null)
@@ -16,56 +17,48 @@ const isLoading = ref(false)
 // Connect on mount
 connect()
 
-function tryDemo() {
-  router.push({ name: 'room', params: { id: 'demo' } })
-}
-
-function createRoom() {
-  if (!socket.value || !isConnected.value) return
-  if (!username.value.trim() || !tierListName.value.trim()) {
+async function createRoom() {
+  if (!usernameInput.value.trim() || !tierListName.value.trim()) {
     error.value = 'Please fill in all fields'
     return
   }
 
   isLoading.value = true
   error.value = null
+  store.username = usernameInput.value.trim()
 
-  socket.value.emit(
-    'room:create',
-    { username: username.value, tierListName: tierListName.value },
-    (res: RoomResponse) => {
-      isLoading.value = false
-      if (res.success && res.roomId) {
-        router.push({ name: 'room', params: { id: res.roomId } })
-      } else {
-        error.value = res.error ?? 'Failed to create room'
-      }
-    },
-  )
+  const res = await store.createRoom(tierListName.value.trim(), store.username)
+
+  isLoading.value = false
+  if (res.success && res.roomId) {
+    router.push({ name: 'room', params: { id: res.roomId } })
+  } else {
+    error.value = res.error ?? 'Failed to create room'
+  }
 }
 
-function joinRoom() {
-  if (!socket.value || !isConnected.value) return
-  if (!username.value.trim() || !roomIdInput.value.trim()) {
+async function joinRoom() {
+  if (!usernameInput.value.trim() || !roomIdInput.value.trim()) {
     error.value = 'Please enter your name and room code'
     return
   }
 
   isLoading.value = true
   error.value = null
+  store.username = usernameInput.value.trim()
 
-  socket.value.emit(
-    'room:join',
-    { username: username.value, roomId: roomIdInput.value },
-    (res: RoomResponse) => {
-      isLoading.value = false
-      if (res.success && res.roomId) {
-        router.push({ name: 'room', params: { id: res.roomId } })
-      } else {
-        error.value = res.error ?? 'Failed to join room'
-      }
-    },
-  )
+  const res = await store.joinRoom(roomIdInput.value.trim(), store.username)
+
+  isLoading.value = false
+  if (res.success && res.roomId) {
+    router.push({ name: 'room', params: { id: res.roomId } })
+  } else {
+    error.value = res.error ?? 'Failed to join room'
+  }
+}
+
+function tryDemo() {
+  router.push({ name: 'room', params: { id: 'demo' } })
 }
 </script>
 
@@ -105,7 +98,7 @@ function joinRoom() {
         </label>
         <input
           id="username"
-          v-model="username"
+          v-model="usernameInput"
           type="text"
           placeholder="Enter your name"
           maxlength="20"

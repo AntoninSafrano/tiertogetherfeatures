@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import draggable from 'vuedraggable'
-import type { TierRow } from '@tiertogether/shared'
 import { useRoomStore } from '@/stores/room'
 import TierItem from './TierItem.vue'
 
@@ -21,9 +20,25 @@ const items = computed({
 })
 
 function onDragChange(evt: any) {
-  // Will be used for socket sync in next step
+  if (evt.removed) {
+    store.trackDragSource(evt.removed.element.id, row.value.id)
+  }
   if (evt.added) {
-    console.log(`[DnD] Item "${evt.added.element.label}" added to row "${row.value.label}" at index ${evt.added.newIndex}`)
+    const fromRowId = store.getDragSource(evt.added.element.id)
+    store.emitMove({
+      itemId: evt.added.element.id,
+      fromRowId,
+      toRowId: row.value.id,
+      toIndex: evt.added.newIndex,
+    })
+  }
+  if (evt.moved) {
+    store.emitMove({
+      itemId: evt.moved.element.id,
+      fromRowId: row.value.id,
+      toRowId: row.value.id,
+      toIndex: evt.moved.newIndex,
+    })
   }
 }
 </script>

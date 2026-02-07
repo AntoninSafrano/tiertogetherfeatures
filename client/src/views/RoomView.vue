@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted } from 'vue'
+import { onMounted, onUnmounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useRoomStore } from '@/stores/room'
 import { TierBoard } from '@/components/tierlist'
@@ -10,11 +10,31 @@ const router = useRouter()
 const store = useRoomStore()
 
 const roomId = route.params.id as string
+const error = ref<string | null>(null)
+const isLoading = ref(true)
+const isDemo = roomId === 'demo'
 
-onMounted(() => {
-  // For now, load demo data locally (socket sync comes in step 3)
-  if (store.rows.length === 0) {
+onMounted(async () => {
+  if (isDemo) {
     store.initDemo()
+    isLoading.value = false
+    return
+  }
+
+  // Real mode: connect and join room via socket
+  const user = store.username || 'Anonymous'
+  const res = await store.joinRoom(roomId, user)
+
+  isLoading.value = false
+
+  if (!res.success) {
+    error.value = res.error ?? 'Failed to join room'
+  }
+})
+
+onUnmounted(() => {
+  if (!isDemo) {
+    store.clearRoom()
   }
 })
 
@@ -39,14 +59,33 @@ function goHome() {
         <Badge variant="outline" class="font-mono">
           {{ roomId }}
         </Badge>
-        <Badge variant="secondary">
+        <Badge v-if="isDemo" variant="secondary">
           Demo Mode
+        </Badge>
+        <Badge v-else variant="secondary">
+          {{ store.users.length }} online
         </Badge>
       </div>
     </header>
 
-    <!-- Main Content -->
-    <main class="flex-1 p-6">
+    <!-- Loading -->
+    <main v-if="isLoading" class="flex flex-1 items-center justify-center">
+      <p class="text-foreground-muted">Joining room...</p>
+    </main>
+
+    <!-- Error -->
+    <main v-else-if="error" class="flex flex-1 flex-col items-center justify-center gap-4">
+      <p class="text-destructive">{{ error }}</p>
+      <button
+        class="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary-hover"
+        @click="goHome"
+      >
+        Back to Home
+      </button>
+    </main>
+
+    <!-- Tier Board -->
+    <main v-else class="flex-1 p-6">
       <TierBoard />
     </main>
   </div>
