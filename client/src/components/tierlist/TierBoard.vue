@@ -27,9 +27,10 @@ const store = useRoomStore()
       />
     </div>
 
-    <!-- Upload + Pool -->
-    <div class="space-y-4">
+    <!-- Staging Area: Upload + Pool -->
+    <div class="overflow-hidden rounded-xl border border-white/10 bg-white/[0.03]">
       <ImageUploader />
+      <div class="border-t border-white/5" />
       <TierPool />
     </div>
   </div>

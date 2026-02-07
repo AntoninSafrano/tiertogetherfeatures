@@ -34,7 +34,7 @@ function onDragChange(evt: any) {
 </script>
 
 <template>
-  <div class="glass rounded-xl p-4">
+  <div class="p-4">
     <div class="mb-3 flex items-center gap-2">
       <h3 class="text-sm font-semibold text-foreground">Unranked</h3>
       <span class="rounded-full bg-white/10 px-2 py-0.5 text-xs font-medium text-foreground-muted">
