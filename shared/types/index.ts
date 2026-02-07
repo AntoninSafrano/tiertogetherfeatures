@@ -48,6 +48,7 @@ export interface Room {
   tierList: TierList
   users: RoomUser[]
   hostId: string
+  isLocked: boolean
 }
 
 // ─── Socket Events ──────────────────────────────────────────────────
@@ -59,6 +60,8 @@ export interface ClientToServerEvents {
   'room:leave': () => void
   'item:move': (data: MoveItemPayload) => void
   'item:create': (data: CreateItemPayload) => void
+  'room:reset': () => void
+  'room:lock': () => void
 }
 
 /** Server -> Client events */
@@ -68,6 +71,8 @@ export interface ServerToClientEvents {
   'room:user-left': (userId: string) => void
   'item:moved': (data: MoveItemPayload) => void
   'item:created': (item: TierItem) => void
+  'room:reset': (room: Room) => void
+  'room:locked': (isLocked: boolean) => void
   'error': (message: string) => void
 }
 

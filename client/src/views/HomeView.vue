@@ -3,7 +3,7 @@ import { ref, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useSocket } from '@/composables/useSocket'
 import { useRoomStore } from '@/stores/room'
-import { User, Type, Hash, Github, Layers, Terminal, SlidersHorizontal } from 'lucide-vue-next'
+import { User, Type, Hash, Layers, Terminal, SlidersHorizontal } from 'lucide-vue-next'
 
 const router = useRouter()
 const store = useRoomStore()
@@ -115,6 +115,15 @@ function tryDemo() {
     } as any"
     @mousemove="onMouseMove"
   >
+    <!-- System Status Badge -->
+    <div class="fixed top-4 right-4 z-20 flex items-center gap-2">
+      <span class="relative flex h-2 w-2">
+        <span class="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
+        <span class="relative inline-flex h-2 w-2 rounded-full bg-emerald-500" />
+      </span>
+      <span class="font-mono text-xs text-zinc-600">SYSTEM ONLINE</span>
+    </div>
+
     <!-- Main content -->
     <main class="flex flex-1 items-center justify-center px-4 py-12">
       <div class="relative z-10 w-full max-w-lg">
@@ -233,7 +242,7 @@ function tryDemo() {
                 </div>
                 <button
                   :disabled="!isConnected || isLoading"
-                  class="w-full rounded-lg border border-white/10 bg-transparent px-4 py-2.5 text-sm font-semibold text-zinc-300 transition-all duration-300 ease-out hover:scale-[1.03] hover:border-white/20 hover:bg-white/5 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:scale-100"
+                  class="w-full rounded-lg border border-white/10 bg-transparent px-4 py-2.5 text-sm font-semibold text-zinc-300 transition-all duration-300 ease-out hover:scale-[1.03] hover:border-white hover:bg-white/5 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:scale-100"
                   @click="joinRoom"
                 >
                   {{ isLoading ? 'Joining...' : 'Join' }}
@@ -266,17 +275,7 @@ function tryDemo() {
     <footer class="relative z-10 px-6 py-4">
       <div class="flex items-center justify-between text-xs text-zinc-600">
         <span>Built with Vue & Socket.io</span>
-        <div class="flex items-center gap-3">
-          <a
-            href="https://github.com/AntoninSafrano/TierTogether"
-            target="_blank"
-            rel="noopener noreferrer"
-            class="transition-colors hover:text-zinc-400"
-          >
-            <Github class="h-3.5 w-3.5" />
-          </a>
-          <span>&copy; {{ new Date().getFullYear() }} TierTogether</span>
-        </div>
+        <span>&copy; {{ new Date().getFullYear() }} TierTogether</span>
       </div>
     </footer>
   </div>

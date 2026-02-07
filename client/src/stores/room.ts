@@ -23,6 +23,14 @@ export const useRoomStore = defineStore('room', () => {
   const title = ref('')
   const rows = ref<TierRow[]>([])
   const pool = ref<TierItem[]>([])
+  const isLocked = ref(false)
+
+  // ─── Host Detection ───────────────────────────────────────────
+  const isHost = computed(() => {
+    if (!currentRoom.value) return false
+    const { socket } = useSocket()
+    return currentRoom.value.hostId === socket.value?.id
+  })
 
   // ─── Drag Source Tracking ───────────────────────────────────────
   // vuedraggable fires "added" on the TARGET before "removed" on the SOURCE.
@@ -59,6 +67,7 @@ export const useRoomStore = defineStore('room', () => {
       title.value = room.tierList.title
       rows.value = room.tierList.rows
       pool.value = room.tierList.pool
+      isLocked.value = room.isLocked ?? false
     })
 
     socket.value.on('item:moved', (data: MoveItemPayload) => {
@@ -83,6 +92,19 @@ export const useRoomStore = defineStore('room', () => {
     socket.value.on('error', (msg: string) => {
       console.error('[Socket] Server error:', msg)
     })
+
+    socket.value.on('room:locked', (locked: boolean) => {
+      isLocked.value = locked
+    })
+
+    socket.value.on('room:reset', (room: Room) => {
+      currentRoom.value = room
+      users.value = room.users
+      title.value = room.tierList.title
+      rows.value = room.tierList.rows
+      pool.value = room.tierList.pool
+      isLocked.value = room.isLocked ?? false
+    })
   }
 
   // ─── Socket Emitters ────────────────────────────────────────────
@@ -91,6 +113,20 @@ export const useRoomStore = defineStore('room', () => {
     const { socket } = useSocket()
     if (socket.value?.connected) {
       socket.value.emit('item:move', payload)
+    }
+  }
+
+  function resetRoom() {
+    const { socket } = useSocket()
+    if (socket.value?.connected) {
+      socket.value.emit('room:reset')
+    }
+  }
+
+  function toggleLock() {
+    const { socket } = useSocket()
+    if (socket.value?.connected) {
+      socket.value.emit('room:lock')
     }
   }
 
@@ -206,6 +242,7 @@ export const useRoomStore = defineStore('room', () => {
     title.value = ''
     rows.value = []
     pool.value = []
+    isLocked.value = false
     boundSocket = null
   }
 
@@ -223,8 +260,12 @@ export const useRoomStore = defineStore('room', () => {
     title,
     rows,
     pool,
+    isHost,
+    isLocked,
     moveItem,
     emitMove,
+    resetRoom,
+    toggleLock,
     loadTierList,
     initDemo,
     // Drag tracking

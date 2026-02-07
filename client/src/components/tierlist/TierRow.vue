@@ -11,6 +11,7 @@ const props = defineProps<{
 const store = useRoomStore()
 
 const row = computed(() => store.rows[props.rowIndex])
+const isDragDisabled = computed(() => store.isLocked && !store.isHost)
 
 const items = computed({
   get: () => store.rows[props.rowIndex].items,
@@ -60,6 +61,7 @@ function onDragChange(evt: any) {
       chosen-class="chosen"
       drag-class="drag"
       :animation="200"
+      :disabled="isDragDisabled"
       class="flex min-h-[100px] flex-1 flex-wrap items-start gap-2 bg-white/[0.02] p-3 transition-colors duration-200 group-hover/row:bg-white/[0.04]"
       @change="onDragChange"
     >

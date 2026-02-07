@@ -2,6 +2,7 @@
 import { useRoomStore } from '@/stores/room'
 import TierRow from './TierRow.vue'
 import TierPool from './TierPool.vue'
+import TierToolbar from './TierToolbar.vue'
 import ImageUploader from './ImageUploader.vue'
 
 const store = useRoomStore()
@@ -14,8 +15,11 @@ const store = useRoomStore()
       {{ store.title }}
     </h2>
 
+    <!-- Toolbar -->
+    <TierToolbar />
+
     <!-- Tier Rows -->
-    <div class="overflow-hidden rounded-xl border border-white/10 shadow-2xl">
+    <div id="tier-rows-container" class="overflow-hidden rounded-xl border border-white/10 shadow-2xl">
       <TierRow
         v-for="(row, index) in store.rows"
         :key="row.id"

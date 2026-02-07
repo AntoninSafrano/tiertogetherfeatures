@@ -34,6 +34,7 @@ export interface TierListDocument extends Document {
   }[]
   pool: { id: string; imageUrl: string; label: string }[]
   ownerId: string
+  isLocked: boolean
   createdAt: Date
   updatedAt: Date
 }
@@ -45,6 +46,7 @@ const TierListSchema = new Schema(
     rows: { type: [TierRowSubSchema], default: [] },
     pool: { type: [TierItemSubSchema], default: [] },
     ownerId: { type: String, required: true },
+    isLocked: { type: Boolean, default: false },
   },
   { timestamps: true },
 )

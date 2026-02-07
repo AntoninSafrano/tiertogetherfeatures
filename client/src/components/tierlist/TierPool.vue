@@ -6,6 +6,7 @@ import TierItem from './TierItem.vue'
 import { Layers } from 'lucide-vue-next'
 
 const store = useRoomStore()
+const isDragDisabled = computed(() => store.isLocked && !store.isHost)
 
 const pool = computed({
   get: () => store.pool,
@@ -50,6 +51,7 @@ function onDragChange(evt: any) {
         chosen-class="chosen"
         drag-class="drag"
         :animation="200"
+        :disabled="isDragDisabled"
         class="flex min-h-[100px] flex-wrap items-start gap-2"
         @change="onDragChange"
       >

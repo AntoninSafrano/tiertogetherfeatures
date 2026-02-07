@@ -141,6 +141,12 @@ export function registerRoomHandlers(io: TypedServer, socket: TypedSocket): void
         return
       }
 
+      // Reject moves from non-hosts when room is locked
+      if (tierList.isLocked && tierList.ownerId !== socket.id) {
+        socket.emit('error', 'Room is locked — only the host can move items')
+        return
+      }
+
       const { itemId, fromRowId, toRowId, toIndex } = parsed.data
 
       // 1. Remove item from source container
@@ -250,6 +256,77 @@ export function registerRoomHandlers(io: TypedServer, socket: TypedSocket): void
     }
   })
 
+  // ─── room:lock ─────────────────────────────────────────────────
+  socket.on('room:lock', async () => {
+    const roomId = socket.data.roomId
+    if (!roomId) {
+      socket.emit('error', 'Not in a room')
+      return
+    }
+
+    try {
+      const tierList = await TierListModel.findOne({ roomId })
+      if (!tierList) {
+        socket.emit('error', 'Room not found')
+        return
+      }
+
+      if (tierList.ownerId !== socket.id) {
+        socket.emit('error', 'Only the host can lock/unlock the room')
+        return
+      }
+
+      tierList.isLocked = !tierList.isLocked
+      await tierList.save()
+
+      io.in(roomId).emit('room:locked', tierList.isLocked)
+      console.log(`[Room] Room ${roomId} ${tierList.isLocked ? 'locked' : 'unlocked'} by host`)
+    } catch (err) {
+      console.error('[Room] Lock toggle failed:', err)
+      socket.emit('error', 'Failed to toggle lock')
+    }
+  })
+
+  // ─── room:reset ────────────────────────────────────────────────
+  socket.on('room:reset', async () => {
+    const roomId = socket.data.roomId
+    if (!roomId) {
+      socket.emit('error', 'Not in a room')
+      return
+    }
+
+    try {
+      const tierList = await TierListModel.findOne({ roomId })
+      if (!tierList) {
+        socket.emit('error', 'Room not found')
+        return
+      }
+
+      if (tierList.ownerId !== socket.id) {
+        socket.emit('error', 'Only the host can reset the room')
+        return
+      }
+
+      for (const row of tierList.rows) {
+        row.items = []
+      }
+      tierList.pool = []
+      tierList.markModified('rows')
+      tierList.markModified('pool')
+      await tierList.save()
+
+      const roomState = await buildRoomState(io, roomId)
+      if (roomState) {
+        io.in(roomId).emit('room:reset', roomState)
+      }
+
+      console.log(`[Room] Room ${roomId} reset by host`)
+    } catch (err) {
+      console.error('[Room] Reset failed:', err)
+      socket.emit('error', 'Failed to reset room')
+    }
+  })
+
   // ─── disconnect ─────────────────────────────────────────────────
   socket.on('disconnect', () => {
     leaveCurrentRoom(io, socket)
@@ -298,6 +375,7 @@ async function buildRoomState(io: TypedServer, roomId: string): Promise<Room | n
     },
     users,
     hostId: tierList.ownerId,
+    isLocked: tierList.isLocked ?? false,
   }
 }
 
