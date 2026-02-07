@@ -3,6 +3,7 @@ import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useSocket } from '@/composables/useSocket'
 import { useRoomStore } from '@/stores/room'
+import { User, Type, Hash } from 'lucide-vue-next'
 
 const router = useRouter()
 const store = useRoomStore()
@@ -94,14 +95,17 @@ function tryDemo() {
         <label for="username" class="mb-1.5 block text-sm font-medium text-foreground-muted">
           Your name
         </label>
-        <input
-          id="username"
-          v-model="usernameInput"
-          type="text"
-          placeholder="Enter your name"
-          maxlength="20"
-          class="w-full rounded-lg border border-white/10 bg-white/5 px-4 py-2.5 text-foreground placeholder:text-foreground-subtle focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
-        />
+        <div class="relative">
+          <User class="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-foreground-subtle" />
+          <input
+            id="username"
+            v-model="usernameInput"
+            type="text"
+            placeholder="Enter your name"
+            maxlength="20"
+            class="w-full rounded-lg border border-white/10 bg-white/5 py-2.5 pl-10 pr-4 text-foreground placeholder:text-foreground-subtle focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+          />
+        </div>
       </div>
 
       <!-- Cards Grid -->
@@ -117,13 +121,16 @@ function tryDemo() {
             <h2 class="text-base font-bold text-foreground">Create</h2>
           </div>
 
-          <input
-            v-model="tierListName"
-            type="text"
-            placeholder="Tier list name"
-            maxlength="100"
-            class="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-foreground placeholder:text-foreground-subtle focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
-          />
+          <div class="relative">
+            <Type class="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-foreground-subtle" />
+            <input
+              v-model="tierListName"
+              type="text"
+              placeholder="Tier list name"
+              maxlength="100"
+              class="w-full rounded-lg border border-white/10 bg-white/5 py-2 pl-10 pr-3 text-sm text-foreground placeholder:text-foreground-subtle focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+            />
+          </div>
 
           <button
             :disabled="!isConnected || isLoading"
@@ -145,13 +152,16 @@ function tryDemo() {
             <h2 class="text-base font-bold text-foreground">Join</h2>
           </div>
 
-          <input
-            v-model="roomIdInput"
-            type="text"
-            placeholder="Room code"
-            maxlength="50"
-            class="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-foreground placeholder:text-foreground-subtle focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
-          />
+          <div class="relative">
+            <Hash class="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-foreground-subtle" />
+            <input
+              v-model="roomIdInput"
+              type="text"
+              placeholder="Room code"
+              maxlength="50"
+              class="w-full rounded-lg border border-white/10 bg-white/5 py-2 pl-10 pr-3 text-sm text-foreground placeholder:text-foreground-subtle focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+            />
+          </div>
 
           <button
             :disabled="!isConnected || isLoading"

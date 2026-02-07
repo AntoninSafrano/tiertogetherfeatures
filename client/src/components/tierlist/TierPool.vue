@@ -3,6 +3,7 @@ import { computed } from 'vue'
 import draggable from 'vuedraggable'
 import { useRoomStore } from '@/stores/room'
 import TierItem from './TierItem.vue'
+import { Layers } from 'lucide-vue-next'
 
 const store = useRoomStore()
 
@@ -40,27 +41,31 @@ function onDragChange(evt: any) {
       </span>
     </div>
 
-    <draggable
-      v-model="pool"
-      group="tieritems"
-      item-key="id"
-      ghost-class="ghost"
-      chosen-class="chosen"
-      drag-class="drag"
-      :animation="200"
-      class="flex min-h-[100px] flex-wrap items-start gap-2"
-      @change="onDragChange"
-    >
-      <template #item="{ element }">
-        <TierItem :item="element" />
-      </template>
-    </draggable>
+    <div class="relative">
+      <draggable
+        v-model="pool"
+        group="tieritems"
+        item-key="id"
+        ghost-class="ghost"
+        chosen-class="chosen"
+        drag-class="drag"
+        :animation="200"
+        class="flex min-h-[100px] flex-wrap items-start gap-2"
+        @change="onDragChange"
+      >
+        <template #item="{ element }">
+          <TierItem :item="element" />
+        </template>
+      </draggable>
 
-    <p
-      v-if="pool.length === 0"
-      class="flex min-h-[100px] items-center justify-center text-sm text-foreground-subtle"
-    >
-      Drag items here to unrank them
-    </p>
+      <!-- Empty state overlay -->
+      <div
+        v-if="pool.length === 0"
+        class="pointer-events-none absolute inset-0 flex flex-col items-center justify-center gap-2"
+      >
+        <Layers class="h-8 w-8 text-foreground-subtle" />
+        <span class="text-sm text-foreground-subtle">Drag items here or upload above</span>
+      </div>
+    </div>
   </div>
 </template>
