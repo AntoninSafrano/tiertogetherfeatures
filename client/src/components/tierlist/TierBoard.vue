@@ -2,6 +2,7 @@
 import { useRoomStore } from '@/stores/room'
 import TierRow from './TierRow.vue'
 import TierPool from './TierPool.vue'
+import ImageUploader from './ImageUploader.vue'
 
 const store = useRoomStore()
 </script>
@@ -22,7 +23,10 @@ const store = useRoomStore()
       />
     </div>
 
-    <!-- Pool -->
-    <TierPool />
+    <!-- Upload + Pool -->
+    <div class="space-y-3">
+      <ImageUploader />
+      <TierPool />
+    </div>
   </div>
 </template>

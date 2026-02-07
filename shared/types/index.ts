@@ -58,6 +58,7 @@ export interface ClientToServerEvents {
   'room:join': (data: JoinRoomPayload, callback: (res: RoomResponse) => void) => void
   'room:leave': () => void
   'item:move': (data: MoveItemPayload) => void
+  'item:create': (data: CreateItemPayload) => void
 }
 
 /** Server -> Client events */
@@ -66,6 +67,7 @@ export interface ServerToClientEvents {
   'room:user-joined': (user: RoomUser) => void
   'room:user-left': (userId: string) => void
   'item:moved': (data: MoveItemPayload) => void
+  'item:created': (item: TierItem) => void
   'error': (message: string) => void
 }
 
@@ -97,6 +99,11 @@ export interface MoveItemPayload {
   fromRowId: string | null  // null = pool
   toRowId: string | null    // null = pool
   toIndex: number
+}
+
+export interface CreateItemPayload {
+  imageUrl: string
+  label: string
 }
 
 export interface RoomResponse {
@@ -143,4 +150,9 @@ export const moveItemSchema = z.object({
   fromRowId: z.string().nullable(),
   toRowId: z.string().nullable(),
   toIndex: z.number().int().min(0),
+})
+
+export const createItemSchema = z.object({
+  imageUrl: z.string().url(),
+  label: z.string().min(1).max(50).trim(),
 })

@@ -11,8 +11,10 @@ import {
   createRoomSchema,
   joinRoomSchema,
   moveItemSchema,
+  createItemSchema,
   DEFAULT_TIERS,
 } from '@tiertogether/shared'
+import { randomUUID } from 'crypto'
 import { TierListModel } from '../models/TierList'
 
 type TypedServer = Server<ClientToServerEvents, ServerToClientEvents, InterServerEvents, SocketData>
@@ -190,6 +192,47 @@ export function registerRoomHandlers(io: TypedServer, socket: TypedSocket): void
     } catch (err) {
       console.error('[Room] Move failed:', err)
       socket.emit('error', 'Failed to move item')
+    }
+  })
+
+  // ─── item:create ────────────────────────────────────────────────
+  socket.on('item:create', async (data) => {
+    const parsed = createItemSchema.safeParse(data)
+    if (!parsed.success) {
+      socket.emit('error', 'Invalid item data')
+      return
+    }
+
+    const roomId = socket.data.roomId
+    if (!roomId) {
+      socket.emit('error', 'Not in a room')
+      return
+    }
+
+    try {
+      const tierList = await TierListModel.findOne({ roomId })
+      if (!tierList) {
+        socket.emit('error', 'Room not found in database')
+        return
+      }
+
+      const newItem = {
+        id: randomUUID(),
+        imageUrl: parsed.data.imageUrl,
+        label: parsed.data.label,
+      }
+
+      tierList.pool.push(newItem)
+      tierList.markModified('pool')
+      await tierList.save()
+
+      // Broadcast to ALL users in the room (including sender)
+      io.in(roomId).emit('item:created', newItem)
+
+      console.log(`[Room] Item "${newItem.label}" created in room ${roomId}`)
+    } catch (err) {
+      console.error('[Room] Create item failed:', err)
+      socket.emit('error', 'Failed to create item')
     }
   })
 

@@ -71,6 +71,10 @@ export const useRoomStore = defineStore('room', () => {
       users.value = users.value.filter((u) => u.id !== userId)
     })
 
+    socket.value.on('item:created', (item: TierItem) => {
+      pool.value.push(item)
+    })
+
     socket.value.on('error', (msg: string) => {
       console.error('[Socket] Server error:', msg)
     })
