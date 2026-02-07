@@ -7,6 +7,11 @@ import { toPng } from 'html-to-image'
 const store = useRoomStore()
 const isExporting = ref(false)
 
+function resetRankings() {
+  if (!confirm('Move all items back to the pool?')) return
+  store.resetRoom()
+}
+
 async function exportImage() {
   const target = document.getElementById('tier-rows-container')
   if (!target) return
@@ -40,10 +45,10 @@ async function exportImage() {
 
       <button
         class="inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium text-zinc-400 transition-colors hover:bg-red-500/10 hover:text-red-400"
-        @click="store.resetRoom()"
+        @click="resetRankings"
       >
         <RotateCcw class="h-3.5 w-3.5" />
-        Reset
+        Unrank All
       </button>
 
       <button

@@ -308,9 +308,9 @@ export function registerRoomHandlers(io: TypedServer, socket: TypedSocket): void
       }
 
       for (const row of tierList.rows) {
+        tierList.pool.push(...row.items)
         row.items = []
       }
-      tierList.pool = []
       tierList.markModified('rows')
       tierList.markModified('pool')
       await tierList.save()
