@@ -1,2 +1,0 @@
-# TierTogether
-TierList collaborative
