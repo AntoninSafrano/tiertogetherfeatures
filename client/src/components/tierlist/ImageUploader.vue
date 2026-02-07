@@ -64,13 +64,13 @@ async function handleFiles(event: Event) {
 
     <button
       :disabled="isUploading"
-      class="inline-flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary-hover disabled:cursor-not-allowed disabled:opacity-50"
+      class="inline-flex items-center gap-2 rounded-lg bg-gradient-to-r from-primary to-purple-600 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-primary/25 transition-all duration-200 hover:shadow-xl hover:shadow-primary/30 hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-50"
       @click="triggerFileInput"
     >
       <svg
         v-if="!isUploading"
         xmlns="http://www.w3.org/2000/svg"
-        class="h-4 w-4"
+        class="h-5 w-5"
         viewBox="0 0 24 24"
         fill="none"
         stroke="currentColor"

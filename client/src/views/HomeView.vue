@@ -63,37 +63,35 @@ function tryDemo() {
 </script>
 
 <template>
-  <div class="flex min-h-screen items-center justify-center bg-background p-4">
-    <div class="w-full max-w-md space-y-8">
-      <!-- Header -->
+  <div class="flex min-h-screen items-center justify-center p-4">
+    <div class="w-full max-w-lg space-y-8">
+      <!-- Connection indicator -->
+      <div class="flex items-center justify-end gap-2 text-xs text-foreground-subtle">
+        <span
+          class="h-1.5 w-1.5 rounded-full"
+          :class="isConnected ? 'bg-success' : 'bg-destructive'"
+        />
+        {{ isConnected ? 'Connected' : 'Connecting...' }}
+      </div>
+
+      <!-- Hero -->
       <div class="text-center">
-        <h1 class="text-4xl font-bold tracking-tight text-foreground">
-          Tier<span class="text-primary">Together</span>
+        <h1 class="text-5xl font-extrabold tracking-tight text-foreground">
+          Tier<span class="bg-gradient-to-r from-primary to-purple-500 bg-clip-text text-transparent">Together</span>
         </h1>
-        <p class="mt-2 text-foreground-muted">
-          Create and rank tier lists together in real time
+        <p class="mt-3 text-lg text-foreground-muted">
+          Rank everything. Together.
         </p>
       </div>
 
-      <!-- Connection status -->
-      <div class="flex items-center justify-center gap-2 text-sm">
-        <span
-          class="h-2 w-2 rounded-full"
-          :class="isConnected ? 'bg-success' : 'bg-destructive'"
-        />
-        <span class="text-foreground-subtle">
-          {{ isConnected ? 'Connected' : 'Connecting...' }}
-        </span>
-      </div>
-
       <!-- Error -->
-      <div v-if="error" class="rounded-md bg-destructive/10 p-3 text-sm text-destructive">
+      <div v-if="error" class="rounded-lg bg-destructive/10 p-3 text-sm text-destructive">
         {{ error }}
       </div>
 
       <!-- Username -->
       <div>
-        <label for="username" class="mb-1 block text-sm font-medium text-foreground-muted">
+        <label for="username" class="mb-1.5 block text-sm font-medium text-foreground-muted">
           Your name
         </label>
         <input
@@ -102,58 +100,79 @@ function tryDemo() {
           type="text"
           placeholder="Enter your name"
           maxlength="20"
-          class="w-full rounded-md border border-border bg-surface px-3 py-2 text-foreground placeholder:text-foreground-subtle focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+          class="w-full rounded-lg border border-white/10 bg-white/5 px-4 py-2.5 text-foreground placeholder:text-foreground-subtle focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
         />
       </div>
 
-      <!-- Create Room -->
-      <div class="space-y-3 rounded-lg border border-border bg-surface p-4">
-        <h2 class="text-lg font-semibold text-foreground">Create a Room</h2>
-        <input
-          v-model="tierListName"
-          type="text"
-          placeholder="Tier list name (e.g. Best Anime)"
-          maxlength="100"
-          class="w-full rounded-md border border-border bg-background px-3 py-2 text-foreground placeholder:text-foreground-subtle focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
-        />
-        <button
-          :disabled="!isConnected || isLoading"
-          class="w-full rounded-md bg-primary px-4 py-2 font-medium text-primary-foreground transition-colors hover:bg-primary-hover disabled:cursor-not-allowed disabled:opacity-50"
-          @click="createRoom"
-        >
-          {{ isLoading ? 'Creating...' : 'Create Room' }}
-        </button>
-      </div>
+      <!-- Cards Grid -->
+      <div class="grid grid-cols-2 gap-4">
+        <!-- Create Room Card -->
+        <div class="glass rounded-xl p-5 space-y-4">
+          <div class="flex items-center gap-2">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-primary" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 2L2 7l10 5 10-5-10-5z" />
+              <path d="M2 17l10 5 10-5" />
+              <path d="M2 12l10 5 10-5" />
+            </svg>
+            <h2 class="text-base font-bold text-foreground">Create</h2>
+          </div>
 
-      <!-- Join Room -->
-      <div class="space-y-3 rounded-lg border border-border bg-surface p-4">
-        <h2 class="text-lg font-semibold text-foreground">Join a Room</h2>
-        <input
-          v-model="roomIdInput"
-          type="text"
-          placeholder="Room code (e.g. A1B2C3)"
-          maxlength="50"
-          class="w-full rounded-md border border-border bg-background px-3 py-2 text-foreground placeholder:text-foreground-subtle focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
-        />
-        <button
-          :disabled="!isConnected || isLoading"
-          class="w-full rounded-md border border-primary bg-transparent px-4 py-2 font-medium text-primary transition-colors hover:bg-primary/10 disabled:cursor-not-allowed disabled:opacity-50"
-          @click="joinRoom"
-        >
-          {{ isLoading ? 'Joining...' : 'Join Room' }}
-        </button>
+          <input
+            v-model="tierListName"
+            type="text"
+            placeholder="Tier list name"
+            maxlength="100"
+            class="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-foreground placeholder:text-foreground-subtle focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+          />
+
+          <button
+            :disabled="!isConnected || isLoading"
+            class="w-full rounded-lg bg-gradient-to-r from-primary to-purple-600 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-primary/20 transition-all duration-200 hover:shadow-xl hover:shadow-primary/30 hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-50"
+            @click="createRoom"
+          >
+            {{ isLoading ? 'Creating...' : 'Create Room' }}
+          </button>
+        </div>
+
+        <!-- Join Room Card -->
+        <div class="glass rounded-xl p-5 space-y-4">
+          <div class="flex items-center gap-2">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-primary" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4" />
+              <polyline points="10 17 15 12 10 7" />
+              <line x1="15" y1="12" x2="3" y2="12" />
+            </svg>
+            <h2 class="text-base font-bold text-foreground">Join</h2>
+          </div>
+
+          <input
+            v-model="roomIdInput"
+            type="text"
+            placeholder="Room code"
+            maxlength="50"
+            class="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-foreground placeholder:text-foreground-subtle focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+          />
+
+          <button
+            :disabled="!isConnected || isLoading"
+            class="w-full rounded-lg border border-primary bg-transparent px-4 py-2.5 text-sm font-semibold text-primary transition-all duration-200 hover:bg-primary/10 disabled:cursor-not-allowed disabled:opacity-50"
+            @click="joinRoom"
+          >
+            {{ isLoading ? 'Joining...' : 'Join Room' }}
+          </button>
+        </div>
       </div>
 
       <!-- Divider -->
       <div class="flex items-center gap-3">
-        <div class="h-px flex-1 bg-border" />
+        <div class="h-px flex-1 bg-white/5" />
         <span class="text-xs text-foreground-subtle">OR</span>
-        <div class="h-px flex-1 bg-border" />
+        <div class="h-px flex-1 bg-white/5" />
       </div>
 
       <!-- Demo -->
       <button
-        class="w-full rounded-md border border-border bg-surface px-4 py-2.5 text-sm font-medium text-foreground-muted transition-colors hover:bg-surface-hover hover:text-foreground"
+        class="w-full rounded-lg border border-white/10 bg-white/[0.03] px-4 py-2.5 text-sm font-medium text-foreground-muted transition-all duration-200 hover:bg-white/[0.06] hover:text-foreground"
         @click="tryDemo"
       >
         Try Demo (offline)

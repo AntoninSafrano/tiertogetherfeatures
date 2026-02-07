@@ -22,7 +22,7 @@ function getPlaceholderColor(id: string): string {
 
 <template>
   <div
-    class="tier-item group relative h-[72px] w-[72px] cursor-grab overflow-hidden rounded-md border border-border bg-surface shadow-sm transition-shadow hover:shadow-md active:cursor-grabbing"
+    class="tier-item group relative aspect-square w-[76px] cursor-grab overflow-hidden rounded-lg border border-white/10 bg-surface shadow-lg transition-all duration-200 hover:scale-105 hover:border-white/25 hover:shadow-xl active:cursor-grabbing"
   >
     <!-- Image mode -->
     <img
@@ -36,19 +36,19 @@ function getPlaceholderColor(id: string): string {
     <!-- Placeholder mode -->
     <div
       v-else
-      class="flex h-full w-full items-center justify-center p-1"
-      :style="{ backgroundColor: getPlaceholderColor(item.id) + '25' }"
+      class="flex h-full w-full items-center justify-center p-1.5"
+      :style="{
+        background: `linear-gradient(135deg, ${getPlaceholderColor(item.id)}30, ${getPlaceholderColor(item.id)}10)`,
+      }"
     >
-      <span
-        class="text-center text-[10px] font-semibold leading-tight text-foreground"
-      >
+      <span class="text-center text-[10px] font-semibold leading-tight text-foreground/90">
         {{ item.label }}
       </span>
     </div>
 
     <!-- Tooltip on hover -->
     <div
-      class="pointer-events-none absolute inset-x-0 bottom-0 bg-black/70 px-1 py-0.5 text-center text-[9px] text-white opacity-0 transition-opacity group-hover:opacity-100"
+      class="pointer-events-none absolute inset-x-0 bottom-0 translate-y-1 bg-black/80 px-1.5 py-0.5 text-center text-[9px] font-medium text-white opacity-0 backdrop-blur-sm transition-all duration-150 group-hover:translate-y-0 group-hover:opacity-100"
     >
       {{ item.label }}
     </div>

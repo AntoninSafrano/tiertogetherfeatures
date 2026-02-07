@@ -8,14 +8,14 @@ const store = useRoomStore()
 </script>
 
 <template>
-  <div class="mx-auto w-full max-w-5xl space-y-4">
+  <div class="mx-auto w-full max-w-5xl space-y-6">
     <!-- Title -->
-    <h2 class="text-center text-2xl font-bold text-foreground">
+    <h2 class="text-center text-3xl font-extrabold tracking-tight text-foreground">
       {{ store.title }}
     </h2>
 
     <!-- Tier Rows -->
-    <div class="overflow-hidden rounded-lg border border-border">
+    <div class="overflow-hidden rounded-xl border border-white/10 shadow-2xl">
       <TierRow
         v-for="(row, index) in store.rows"
         :key="row.id"
@@ -24,7 +24,7 @@ const store = useRoomStore()
     </div>
 
     <!-- Upload + Pool -->
-    <div class="space-y-3">
+    <div class="space-y-4">
       <ImageUploader />
       <TierPool />
     </div>

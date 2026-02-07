@@ -3,7 +3,6 @@ import { computed } from 'vue'
 import draggable from 'vuedraggable'
 import { useRoomStore } from '@/stores/room'
 import TierItem from './TierItem.vue'
-import { Badge } from '@/components/ui/badge'
 
 const store = useRoomStore()
 
@@ -33,10 +32,12 @@ function onDragChange(evt: any) {
 </script>
 
 <template>
-  <div class="rounded-lg border border-border bg-surface p-4">
+  <div class="glass rounded-xl p-4">
     <div class="mb-3 flex items-center gap-2">
       <h3 class="text-sm font-semibold text-foreground">Unranked</h3>
-      <Badge variant="secondary">{{ pool.length }}</Badge>
+      <span class="rounded-full bg-white/10 px-2 py-0.5 text-xs font-medium text-foreground-muted">
+        {{ pool.length }}
+      </span>
     </div>
 
     <draggable
@@ -47,7 +48,7 @@ function onDragChange(evt: any) {
       chosen-class="chosen"
       drag-class="drag"
       :animation="200"
-      class="flex min-h-[90px] flex-wrap gap-2"
+      class="flex min-h-[100px] flex-wrap items-start gap-2"
       @change="onDragChange"
     >
       <template #item="{ element }">
@@ -57,7 +58,7 @@ function onDragChange(evt: any) {
 
     <p
       v-if="pool.length === 0"
-      class="flex min-h-[90px] items-center justify-center text-sm text-foreground-subtle"
+      class="flex min-h-[100px] items-center justify-center text-sm text-foreground-subtle"
     >
       Drag items here to unrank them
     </p>

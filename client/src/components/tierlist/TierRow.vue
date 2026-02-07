@@ -38,11 +38,15 @@ function onDragChange(evt: any) {
 </script>
 
 <template>
-  <div class="flex border-b border-border last:border-b-0">
-    <!-- Tier Label -->
+  <div class="group/row flex border-b border-white/5 last:border-b-0">
+    <!-- Tier Label with inner glow -->
     <div
-      class="flex w-20 shrink-0 items-center justify-center text-2xl font-black select-none"
-      :style="{ backgroundColor: row.color, color: '#1a1a1a' }"
+      class="flex w-24 shrink-0 items-center justify-center text-3xl font-extrabold select-none"
+      :style="{
+        backgroundColor: row.color,
+        color: '#0a0a0c',
+        boxShadow: `inset 0 0 32px ${row.color}80, inset 0 0 12px ${row.color}40`,
+      }"
     >
       {{ row.label }}
     </div>
@@ -56,7 +60,7 @@ function onDragChange(evt: any) {
       chosen-class="chosen"
       drag-class="drag"
       :animation="200"
-      class="flex min-h-[80px] flex-1 flex-wrap items-start gap-1.5 bg-surface-hover/50 p-2"
+      class="flex min-h-[100px] flex-1 flex-wrap items-start gap-2 bg-white/[0.02] p-3 transition-colors duration-200 group-hover/row:bg-white/[0.04]"
       @change="onDragChange"
     >
       <template #item="{ element }">
