@@ -16,6 +16,10 @@ const isLoading = ref(false)
 // Connect on mount
 connect()
 
+function tryDemo() {
+  router.push({ name: 'room', params: { id: 'demo' } })
+}
+
 function createRoom() {
   if (!socket.value || !isConnected.value) return
   if (!username.value.trim() || !tierListName.value.trim()) {
@@ -146,6 +150,21 @@ function joinRoom() {
           {{ isLoading ? 'Joining...' : 'Join Room' }}
         </button>
       </div>
+
+      <!-- Divider -->
+      <div class="flex items-center gap-3">
+        <div class="h-px flex-1 bg-border" />
+        <span class="text-xs text-foreground-subtle">OR</span>
+        <div class="h-px flex-1 bg-border" />
+      </div>
+
+      <!-- Demo -->
+      <button
+        class="w-full rounded-md border border-border bg-surface px-4 py-2.5 text-sm font-medium text-foreground-muted transition-colors hover:bg-surface-hover hover:text-foreground"
+        @click="tryDemo"
+      >
+        Try Demo (offline)
+      </button>
     </div>
   </div>
 </template>

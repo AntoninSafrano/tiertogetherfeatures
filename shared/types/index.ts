@@ -17,12 +17,23 @@ export interface TierRow {
 
 export interface TierList {
   id: string
-  name: string
+  title: string
   rows: TierRow[]
-  unrankedItems: TierItem[]
+  pool: TierItem[]
+  ownerId: string
   createdAt: string
   updatedAt: string
 }
+
+// ─── Default Tiers ──────────────────────────────────────────────────
+
+export const DEFAULT_TIERS: Omit<TierRow, 'items'>[] = [
+  { id: 'tier-s', label: 'S', color: '#FF7F7F' },
+  { id: 'tier-a', label: 'A', color: '#FFBF7F' },
+  { id: 'tier-b', label: 'B', color: '#FFDF7F' },
+  { id: 'tier-c', label: 'C', color: '#FFFF7F' },
+  { id: 'tier-d', label: 'D', color: '#7FFFFF' },
+]
 
 // ─── Room / User ────────────────────────────────────────────────────
 
@@ -82,8 +93,8 @@ export interface JoinRoomPayload {
 
 export interface MoveItemPayload {
   itemId: string
-  fromRowId: string | null  // null = unranked pool
-  toRowId: string | null    // null = unranked pool
+  fromRowId: string | null  // null = pool
+  toRowId: string | null    // null = pool
   toIndex: number
 }
 
@@ -94,6 +105,27 @@ export interface RoomResponse {
 }
 
 // ─── Zod Schemas (shared validation) ────────────────────────────────
+
+export const tierItemSchema = z.object({
+  id: z.string().min(1),
+  imageUrl: z.string().default(''),
+  label: z.string().min(1).max(50),
+})
+
+export const tierRowSchema = z.object({
+  id: z.string().min(1),
+  label: z.string().min(1).max(10),
+  color: z.string().regex(/^#[0-9A-Fa-f]{6}$/),
+  items: z.array(tierItemSchema),
+})
+
+export const tierListSchema = z.object({
+  id: z.string().min(1),
+  title: z.string().min(1).max(100),
+  rows: z.array(tierRowSchema),
+  pool: z.array(tierItemSchema),
+  ownerId: z.string().min(1),
+})
 
 export const createRoomSchema = z.object({
   username: z.string().min(1).max(20).trim(),
