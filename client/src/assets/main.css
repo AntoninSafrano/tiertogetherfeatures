@@ -69,6 +69,18 @@ body {
   z-index: 0;
 }
 
+.noise-bg::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  background-image:
+    linear-gradient(to right, #ffffff04 1px, transparent 1px),
+    linear-gradient(to bottom, #ffffff04 1px, transparent 1px);
+  background-size: 48px 48px;
+  pointer-events: none;
+  z-index: 0;
+}
+
 /* ─── Custom Scrollbar ────────────────────────────────────────── */
 
 ::-webkit-scrollbar {

@@ -3,7 +3,7 @@ import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useSocket } from '@/composables/useSocket'
 import { useRoomStore } from '@/stores/room'
-import { User, Type, Hash, Github } from 'lucide-vue-next'
+import { User, Type, Hash, Github, Layers, Terminal, SlidersHorizontal } from 'lucide-vue-next'
 
 const router = useRouter()
 const store = useRoomStore()
@@ -81,10 +81,11 @@ function tryDemo() {
         >
           <!-- Header -->
           <div class="mb-2 flex items-center gap-3">
+            <Layers class="h-6 w-6 text-primary" :stroke-width="2.5" />
             <h1 class="text-2xl font-bold tracking-tight text-white">
               TierTogether
             </h1>
-            <span class="rounded-md border border-primary/30 bg-primary/10 px-1.5 py-0.5 font-mono text-[10px] font-semibold tracking-wider text-primary uppercase">
+            <span class="border border-primary/40 bg-primary/5 px-1.5 py-px font-mono text-[9px] font-bold tracking-widest text-primary/80 uppercase">
               Beta
             </span>
           </div>
@@ -95,7 +96,11 @@ function tryDemo() {
           </p>
 
           <!-- Separator -->
-          <div class="mb-6 border-b border-white/5" />
+          <div class="mb-6 flex items-center gap-2">
+            <div class="h-px flex-1 border-b border-dashed border-white/10" />
+            <span class="text-[8px] text-zinc-700">&bull;</span>
+            <div class="h-px flex-1 border-b border-dashed border-white/10" />
+          </div>
 
           <!-- Error -->
           <div v-if="error" class="mb-5 rounded-lg bg-destructive/10 p-3 text-sm text-destructive">
@@ -104,7 +109,8 @@ function tryDemo() {
 
           <!-- Display Name -->
           <div class="mb-6">
-            <label for="username" class="mb-1.5 block font-mono text-[11px] font-medium tracking-wider text-zinc-500 uppercase">
+            <label for="username" class="mb-1.5 flex items-center gap-1.5 font-mono text-[11px] font-medium tracking-wider text-zinc-500 uppercase">
+              <Terminal class="h-3 w-3" />
               Display Name
             </label>
             <div class="relative">
@@ -121,10 +127,15 @@ function tryDemo() {
           </div>
 
           <!-- Separator -->
-          <div class="mb-6 border-b border-white/5" />
+          <div class="mb-6 flex items-center gap-2">
+            <div class="h-px flex-1 border-b border-dashed border-white/10" />
+            <span class="text-[8px] text-zinc-700">&bull;</span>
+            <div class="h-px flex-1 border-b border-dashed border-white/10" />
+          </div>
 
           <!-- Session Config Label -->
-          <p class="mb-4 font-mono text-[11px] font-medium tracking-wider text-zinc-500 uppercase">
+          <p class="mb-4 flex items-center gap-1.5 font-mono text-[11px] font-medium tracking-wider text-zinc-500 uppercase">
+            <SlidersHorizontal class="h-3 w-3" />
             Session Config
           </p>
 
@@ -174,9 +185,9 @@ function tryDemo() {
           </div>
         </div>
 
-        <!-- Solo Mode (outside the card) -->
+        <!-- Below card -->
         <div
-          class="mt-6 text-center transition-all delay-200 duration-700 ease-out"
+          class="mt-6 flex items-center justify-between transition-all delay-200 duration-700 ease-out"
           :class="mounted ? 'translate-y-0 opacity-100' : 'translate-y-4 opacity-0'"
         >
           <button
@@ -185,6 +196,10 @@ function tryDemo() {
           >
             Solo Mode (Offline)
           </button>
+          <span class="flex items-center gap-1.5 font-mono text-[10px] text-zinc-600">
+            <span class="h-1.5 w-1.5 rounded-full" :class="isConnected ? 'bg-emerald-500' : 'bg-zinc-600'" />
+            v1.0.0
+          </span>
         </div>
       </div>
     </main>
