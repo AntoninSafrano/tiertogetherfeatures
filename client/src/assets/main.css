@@ -57,28 +57,34 @@ body {
 /* ─── Noise Texture ──────────────────────────────────────────── */
 
 .noise-bg {
+  --px: 0px;
+  --py: 0px;
   position: relative;
 }
 
 .noise-bg::before {
   content: "";
   position: fixed;
-  inset: 0;
+  inset: -24px;
   background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.04'/%3E%3C/svg%3E");
   pointer-events: none;
   z-index: 0;
+  transform: translate(var(--px), var(--py));
+  will-change: transform;
 }
 
 .noise-bg::after {
   content: "";
   position: fixed;
-  inset: 0;
+  inset: -24px;
   background-image:
     linear-gradient(to right, #ffffff04 1px, transparent 1px),
     linear-gradient(to bottom, #ffffff04 1px, transparent 1px);
   background-size: 48px 48px;
   pointer-events: none;
   z-index: 0;
+  transform: translate(var(--px), var(--py));
+  will-change: transform;
 }
 
 /* ─── Custom Scrollbar ────────────────────────────────────────── */

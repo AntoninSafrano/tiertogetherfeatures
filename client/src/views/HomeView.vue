@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useSocket } from '@/composables/useSocket'
 import { useRoomStore } from '@/stores/room'
@@ -14,14 +14,50 @@ const tierListName = ref('')
 const roomIdInput = ref('')
 const error = ref<string | null>(null)
 const isLoading = ref(false)
-const mounted = ref(false)
+
+// Boot-up sequence steps
+const step = ref(0)
+
+// Parallax
+const parallaxRef = ref<HTMLElement | null>(null)
+const mouseX = ref(0)
+const mouseY = ref(0)
+let rafId = 0
+let targetX = 0
+let targetY = 0
+
+function onMouseMove(e: MouseEvent) {
+  const el = parallaxRef.value
+  if (!el) return
+  const rect = el.getBoundingClientRect()
+  // Normalize to -1..1 from center
+  targetX = ((e.clientX - rect.left) / rect.width - 0.5) * 2
+  targetY = ((e.clientY - rect.top) / rect.height - 0.5) * 2
+}
+
+function animateParallax() {
+  // Lerp for smoothness
+  mouseX.value += (targetX - mouseX.value) * 0.08
+  mouseY.value += (targetY - mouseY.value) * 0.08
+  rafId = requestAnimationFrame(animateParallax)
+}
 
 connect()
 
 onMounted(() => {
-  requestAnimationFrame(() => {
-    mounted.value = true
-  })
+  // Start parallax loop
+  rafId = requestAnimationFrame(animateParallax)
+
+  // Staggered entrance sequence
+  setTimeout(() => { step.value = 1 }, 100)   // Card shell
+  setTimeout(() => { step.value = 2 }, 400)   // Logo + subtitle
+  setTimeout(() => { step.value = 3 }, 700)   // Display Name
+  setTimeout(() => { step.value = 4 }, 1000)  // Session Config
+  setTimeout(() => { step.value = 5 }, 1300)  // Below card
+})
+
+onUnmounted(() => {
+  cancelAnimationFrame(rafId)
 })
 
 async function createRoom() {
@@ -70,17 +106,28 @@ function tryDemo() {
 </script>
 
 <template>
-  <div class="noise-bg flex min-h-screen flex-col bg-zinc-950">
+  <div
+    ref="parallaxRef"
+    class="noise-bg flex min-h-screen flex-col bg-zinc-950"
+    :style="{
+      '--px': `${mouseX * -12}px`,
+      '--py': `${mouseY * -12}px`,
+    } as any"
+    @mousemove="onMouseMove"
+  >
     <!-- Main content -->
     <main class="flex flex-1 items-center justify-center px-4 py-12">
       <div class="relative z-10 w-full max-w-lg">
         <!-- Lobby Card -->
         <div
           class="rounded-2xl border border-white/10 bg-zinc-900/50 p-8 shadow-2xl shadow-black/50 transition-all duration-700 ease-out"
-          :class="mounted ? 'translate-y-0 opacity-100' : 'translate-y-4 opacity-0'"
+          :class="step >= 1 ? 'translate-y-0 opacity-100' : 'translate-y-6 opacity-0'"
         >
           <!-- Header -->
-          <div class="mb-2 flex items-center gap-3">
+          <div
+            class="mb-2 flex items-center gap-3 transition-all duration-500 ease-out"
+            :class="step >= 2 ? 'translate-y-0 opacity-100' : 'translate-y-3 opacity-0'"
+          >
             <Layers class="h-6 w-6 text-primary" :stroke-width="2.5" />
             <h1 class="text-2xl font-bold tracking-tight text-white">
               TierTogether
@@ -91,7 +138,10 @@ function tryDemo() {
           </div>
 
           <!-- Subtitle -->
-          <p class="mb-6 text-sm text-zinc-400">
+          <p
+            class="mb-6 text-sm text-zinc-400 transition-all duration-500 ease-out"
+            :class="step >= 2 ? 'translate-y-0 opacity-100' : 'translate-y-3 opacity-0'"
+          >
             Instant Multiplayer Ranking.
           </p>
 
@@ -108,7 +158,10 @@ function tryDemo() {
           </div>
 
           <!-- Display Name -->
-          <div class="mb-6">
+          <div
+            class="mb-6 transition-all duration-500 ease-out"
+            :class="step >= 3 ? 'translate-y-0 opacity-100' : 'translate-y-3 opacity-0'"
+          >
             <label for="username" class="mb-1.5 flex items-center gap-1.5 font-mono text-[11px] font-medium tracking-wider text-zinc-500 uppercase">
               <Terminal class="h-3 w-3" />
               Display Name
@@ -121,7 +174,7 @@ function tryDemo() {
                 type="text"
                 placeholder="Your name"
                 maxlength="20"
-                class="w-full rounded-lg border border-white/5 bg-zinc-800/80 py-2.5 pl-10 pr-4 text-sm text-foreground placeholder:text-zinc-600 focus:border-primary/50 focus:outline-none focus:ring-1 focus:ring-primary/50"
+                class="home-input w-full rounded-lg border border-white/5 bg-zinc-800/80 py-2.5 pl-10 pr-4 text-sm text-foreground placeholder:text-zinc-600 transition-all duration-300 focus:border-primary/50 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:shadow-[0_0_12px_rgba(145,71,255,0.15)]"
               />
             </div>
           </div>
@@ -133,62 +186,67 @@ function tryDemo() {
             <div class="h-px flex-1 border-b border-dashed border-white/10" />
           </div>
 
-          <!-- Session Config Label -->
-          <p class="mb-4 flex items-center gap-1.5 font-mono text-[11px] font-medium tracking-wider text-zinc-500 uppercase">
-            <SlidersHorizontal class="h-3 w-3" />
-            Session Config
-          </p>
+          <!-- Session Config -->
+          <div
+            class="transition-all duration-500 ease-out"
+            :class="step >= 4 ? 'translate-y-0 opacity-100' : 'translate-y-3 opacity-0'"
+          >
+            <p class="mb-4 flex items-center gap-1.5 font-mono text-[11px] font-medium tracking-wider text-zinc-500 uppercase">
+              <SlidersHorizontal class="h-3 w-3" />
+              Session Config
+            </p>
 
-          <!-- Create / Join Grid -->
-          <div class="grid grid-cols-2 gap-3">
-            <!-- Create -->
-            <div class="space-y-3">
-              <div class="relative">
-                <Type class="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-600" />
-                <input
-                  v-model="tierListName"
-                  type="text"
-                  placeholder="Room name"
-                  maxlength="100"
-                  class="w-full rounded-lg border border-white/5 bg-zinc-800/80 py-2.5 pl-10 pr-3 text-sm text-foreground placeholder:text-zinc-600 focus:border-primary/50 focus:outline-none focus:ring-1 focus:ring-primary/50"
-                />
+            <!-- Create / Join Grid -->
+            <div class="grid grid-cols-2 gap-3">
+              <!-- Create -->
+              <div class="space-y-3">
+                <div class="relative">
+                  <Type class="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-600" />
+                  <input
+                    v-model="tierListName"
+                    type="text"
+                    placeholder="Room name"
+                    maxlength="100"
+                    class="home-input w-full rounded-lg border border-white/5 bg-zinc-800/80 py-2.5 pl-10 pr-3 text-sm text-foreground placeholder:text-zinc-600 transition-all duration-300 focus:border-primary/50 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:shadow-[0_0_12px_rgba(145,71,255,0.15)]"
+                  />
+                </div>
+                <button
+                  :disabled="!isConnected || isLoading"
+                  class="w-full rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-white shadow-md shadow-primary/15 transition-all duration-300 ease-out hover:scale-[1.03] hover:bg-primary-hover hover:shadow-lg hover:shadow-primary/25 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:scale-100"
+                  @click="createRoom"
+                >
+                  {{ isLoading ? 'Creating...' : 'Create' }}
+                </button>
               </div>
-              <button
-                :disabled="!isConnected || isLoading"
-                class="w-full rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-white transition-colors duration-150 hover:bg-primary-hover disabled:cursor-not-allowed disabled:opacity-50"
-                @click="createRoom"
-              >
-                {{ isLoading ? 'Creating...' : 'Create' }}
-              </button>
-            </div>
 
-            <!-- Join -->
-            <div class="space-y-3">
-              <div class="relative">
-                <Hash class="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-600" />
-                <input
-                  v-model="roomIdInput"
-                  type="text"
-                  placeholder="Room code"
-                  maxlength="50"
-                  class="w-full rounded-lg border border-white/5 bg-zinc-800/80 py-2.5 pl-10 pr-3 text-sm text-foreground placeholder:text-zinc-600 focus:border-primary/50 focus:outline-none focus:ring-1 focus:ring-primary/50"
-                />
+              <!-- Join -->
+              <div class="space-y-3">
+                <div class="relative">
+                  <Hash class="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-600" />
+                  <input
+                    v-model="roomIdInput"
+                    type="text"
+                    placeholder="Room code"
+                    maxlength="50"
+                    class="home-input w-full rounded-lg border border-white/5 bg-zinc-800/80 py-2.5 pl-10 pr-3 text-sm text-foreground placeholder:text-zinc-600 transition-all duration-300 focus:border-primary/50 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:shadow-[0_0_12px_rgba(145,71,255,0.15)]"
+                  />
+                </div>
+                <button
+                  :disabled="!isConnected || isLoading"
+                  class="w-full rounded-lg border border-white/10 bg-transparent px-4 py-2.5 text-sm font-semibold text-zinc-300 transition-all duration-300 ease-out hover:scale-[1.03] hover:border-white/20 hover:bg-white/5 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:scale-100"
+                  @click="joinRoom"
+                >
+                  {{ isLoading ? 'Joining...' : 'Join' }}
+                </button>
               </div>
-              <button
-                :disabled="!isConnected || isLoading"
-                class="w-full rounded-lg border border-white/10 bg-transparent px-4 py-2.5 text-sm font-semibold text-zinc-300 transition-colors duration-150 hover:border-white/20 hover:bg-white/5 disabled:cursor-not-allowed disabled:opacity-50"
-                @click="joinRoom"
-              >
-                {{ isLoading ? 'Joining...' : 'Join' }}
-              </button>
             </div>
           </div>
         </div>
 
         <!-- Below card -->
         <div
-          class="mt-6 flex items-center justify-between transition-all delay-200 duration-700 ease-out"
-          :class="mounted ? 'translate-y-0 opacity-100' : 'translate-y-4 opacity-0'"
+          class="mt-6 flex items-center justify-between transition-all duration-500 ease-out"
+          :class="step >= 5 ? 'translate-y-0 opacity-100' : 'translate-y-4 opacity-0'"
         >
           <button
             class="text-sm text-zinc-500 transition-colors hover:text-zinc-300 hover:underline"
