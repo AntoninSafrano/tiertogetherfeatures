@@ -34,9 +34,9 @@ function onDragChange(evt: any) {
 </script>
 
 <template>
-  <div class="p-4">
+  <div class="glass rounded-xl p-4">
     <div class="mb-3 flex items-center gap-2">
-      <h3 class="font-display text-sm font-bold tracking-wide text-foreground uppercase">Unranked</h3>
+      <h3 class="text-sm font-semibold text-foreground">Unranked</h3>
       <span class="rounded-full bg-white/10 px-2 py-0.5 text-xs font-medium text-foreground-muted">
         {{ pool.length }}
       </span>
@@ -52,7 +52,7 @@ function onDragChange(evt: any) {
         drag-class="drag"
         :animation="200"
         :disabled="isDragDisabled"
-        class="flex min-h-[80px] flex-wrap items-start gap-2"
+        class="flex min-h-[100px] flex-wrap items-start gap-2"
         @change="onDragChange"
       >
         <template #item="{ element }">
@@ -65,8 +65,8 @@ function onDragChange(evt: any) {
         v-if="pool.length === 0"
         class="pointer-events-none absolute inset-0 flex flex-col items-center justify-center gap-2"
       >
-        <Layers class="h-7 w-7 text-foreground-subtle" />
-        <span class="text-xs text-foreground-subtle">Drag items here or upload above</span>
+        <Layers class="h-8 w-8 text-foreground-subtle" />
+        <span class="text-sm text-foreground-subtle">Drag items here or upload above</span>
       </div>
     </div>
   </div>

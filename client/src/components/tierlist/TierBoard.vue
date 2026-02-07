@@ -11,36 +11,25 @@ const store = useRoomStore()
 <template>
   <div class="mx-auto w-full max-w-5xl space-y-6">
     <!-- Title -->
-    <h2 class="text-center font-display text-4xl font-bold tracking-wide text-foreground uppercase">
+    <h2 class="text-center text-3xl font-extrabold tracking-tight text-foreground">
       {{ store.title }}
     </h2>
 
     <!-- Toolbar -->
     <TierToolbar />
 
-    <!-- Tier Rows with ambient glow -->
-    <div class="relative">
-      <!-- Glow behind the tier board -->
-      <div class="pointer-events-none absolute -inset-4 -z-10 rounded-3xl bg-gradient-to-b from-primary/5 via-transparent to-transparent blur-2xl" />
-
-      <div id="tier-rows-container" class="overflow-hidden rounded-xl border border-white/10 shadow-2xl shadow-black/50">
-        <TierRow
-          v-for="(row, index) in store.rows"
-          :key="row.id"
-          :row-index="index"
-        />
-      </div>
+    <!-- Tier Rows -->
+    <div id="tier-rows-container" class="overflow-hidden rounded-xl border border-white/10 shadow-2xl">
+      <TierRow
+        v-for="(row, index) in store.rows"
+        :key="row.id"
+        :row-index="index"
+      />
     </div>
 
-    <!-- Unified Staging Area: Upload + Pool -->
-    <div class="glass overflow-hidden rounded-xl">
-      <!-- Upload zone -->
+    <!-- Upload + Pool -->
+    <div class="space-y-4">
       <ImageUploader />
-
-      <!-- Divider -->
-      <div class="mx-4 border-t border-white/5" />
-
-      <!-- Pool -->
       <TierPool />
     </div>
   </div>

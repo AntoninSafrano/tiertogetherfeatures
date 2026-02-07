@@ -4,7 +4,6 @@ import { useRoute, useRouter } from 'vue-router'
 import { useRoomStore } from '@/stores/room'
 import { TierBoard } from '@/components/tierlist'
 import { Badge } from '@/components/ui/badge'
-import { Layers } from 'lucide-vue-next'
 
 const route = useRoute()
 const router = useRouter()
@@ -52,14 +51,13 @@ function goHome() {
 </script>
 
 <template>
-  <div class="room-bg flex min-h-screen flex-col">
+  <div class="flex min-h-screen flex-col bg-background">
     <!-- Header -->
-    <header class="glass-toolbar relative z-10 flex items-center justify-between px-6 py-3">
+    <header class="flex items-center justify-between border-b border-border px-6 py-3">
       <button
-        class="flex items-center gap-2 text-xl font-bold text-foreground transition-colors hover:text-primary"
+        class="text-xl font-bold text-foreground transition-colors hover:text-primary"
         @click="goHome"
       >
-        <Layers class="h-5 w-5 text-primary" />
         Tier<span class="text-primary">Together</span>
       </button>
 
@@ -77,12 +75,12 @@ function goHome() {
     </header>
 
     <!-- Loading -->
-    <main v-if="isLoading" class="relative z-10 flex flex-1 items-center justify-center">
+    <main v-if="isLoading" class="flex flex-1 items-center justify-center">
       <p class="text-foreground-muted">Joining room...</p>
     </main>
 
     <!-- Error -->
-    <main v-else-if="error" class="relative z-10 flex flex-1 flex-col items-center justify-center gap-4">
+    <main v-else-if="error" class="flex flex-1 flex-col items-center justify-center gap-4">
       <p class="text-destructive">{{ error }}</p>
       <button
         class="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary-hover"
@@ -93,7 +91,7 @@ function goHome() {
     </main>
 
     <!-- Tier Board -->
-    <main v-else class="relative z-10 flex-1 p-6">
+    <main v-else class="flex-1 p-6">
       <TierBoard />
     </main>
   </div>

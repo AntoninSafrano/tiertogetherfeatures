@@ -22,7 +22,7 @@ function getPlaceholderColor(id: string): string {
 
 <template>
   <div
-    class="tier-item group relative aspect-square w-[76px] cursor-grab overflow-hidden rounded-lg border border-white/10 bg-surface shadow-lg transition-all duration-200 hover:scale-105 hover:border-white/25 hover:shadow-xl hover:shadow-primary/10 active:cursor-grabbing"
+    class="tier-item group relative aspect-square w-[76px] cursor-grab overflow-hidden rounded-lg border border-white/10 bg-surface shadow-lg transition-all duration-200 hover:scale-105 hover:border-white/25 hover:shadow-xl active:cursor-grabbing"
   >
     <!-- Image mode -->
     <img
