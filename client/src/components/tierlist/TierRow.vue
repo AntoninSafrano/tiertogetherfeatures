@@ -39,17 +39,23 @@ function onDragChange(evt: any) {
 </script>
 
 <template>
-  <div class="group/row flex border-b border-white/5 last:border-b-0">
-    <!-- Tier Label with inner glow -->
+  <div class="tier-row group/row flex border-b border-white/5 last:border-b-0">
+    <!-- Tier Label -->
     <div
-      class="flex w-24 shrink-0 items-center justify-center text-3xl font-extrabold select-none"
+      class="tier-label relative flex w-24 shrink-0 items-center justify-center overflow-hidden text-4xl select-none"
       :style="{
         backgroundColor: row.color,
         color: '#0a0a0c',
-        boxShadow: `inset 0 0 32px ${row.color}80, inset 0 0 12px ${row.color}40`,
       }"
     >
-      {{ row.label }}
+      <!-- Inner glow layers -->
+      <div
+        class="pointer-events-none absolute inset-0"
+        :style="{
+          boxShadow: `inset 0 0 40px ${row.color}90, inset 0 0 16px ${row.color}50`,
+        }"
+      />
+      <span class="relative z-10">{{ row.label }}</span>
     </div>
 
     <!-- Draggable Drop Zone -->
@@ -62,7 +68,10 @@ function onDragChange(evt: any) {
       drag-class="drag"
       :animation="200"
       :disabled="isDragDisabled"
-      class="flex min-h-[100px] flex-1 flex-wrap items-start gap-2 bg-white/[0.02] p-3 transition-colors duration-200 group-hover/row:bg-white/[0.04]"
+      class="flex min-h-[100px] flex-1 flex-wrap items-start gap-2 p-3 transition-all duration-300"
+      :style="{
+        background: `linear-gradient(90deg, ${row.color}06 0%, transparent 30%)`,
+      }"
       @change="onDragChange"
     >
       <template #item="{ element }">

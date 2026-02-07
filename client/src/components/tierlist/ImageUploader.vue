@@ -96,10 +96,8 @@ onUnmounted(() => {
 
 <template>
   <div
-    class="relative rounded-xl border-2 border-dashed p-6 text-center transition-colors duration-200"
-    :class="isDragging
-      ? 'border-primary bg-primary/5'
-      : 'border-white/10 hover:border-white/20'"
+    class="p-4 transition-colors duration-200"
+    :class="isDragging ? 'bg-primary/5' : ''"
     @dragover.prevent
     @dragenter="onDragEnter"
     @dragleave="onDragLeave"
@@ -114,19 +112,19 @@ onUnmounted(() => {
       @change="handleFiles"
     />
 
-    <div v-if="isUploading" class="flex flex-col items-center gap-2">
-      <div class="h-8 w-8 animate-spin rounded-full border-2 border-white/20 border-t-primary" />
+    <div v-if="isUploading" class="flex items-center justify-center gap-3 py-2">
+      <div class="h-5 w-5 animate-spin rounded-full border-2 border-white/20 border-t-primary" />
       <span class="text-sm text-zinc-400">
         Uploading {{ uploadProgress.current }}/{{ uploadProgress.total }}...
       </span>
     </div>
 
-    <div v-else class="flex flex-col items-center gap-3">
-      <ImagePlus class="h-8 w-8 text-zinc-500" />
-      <p class="text-sm text-zinc-400">
-        Drop images here, paste from clipboard, or
+    <div v-else class="flex items-center justify-center gap-2 py-2">
+      <ImagePlus class="h-5 w-5 text-zinc-500" />
+      <p class="text-sm text-zinc-500">
+        Drop images, paste, or
         <button
-          class="font-semibold text-primary hover:text-primary-hover underline underline-offset-2"
+          class="font-semibold text-primary transition-colors hover:text-primary-hover"
           @click="triggerFileInput"
         >
           browse
@@ -134,7 +132,7 @@ onUnmounted(() => {
       </p>
     </div>
 
-    <span v-if="error" class="mt-2 block text-xs text-destructive">
+    <span v-if="error" class="mt-1 block text-center text-xs text-destructive">
       {{ error }}
     </span>
   </div>

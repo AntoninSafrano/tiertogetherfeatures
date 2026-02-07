@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@fontsource/outfit": "^5.2.8",
+    "@fontsource/rajdhani": "^5.2.7",
     "@tiertogether/shared": "*",
     "@vueuse/core": "^12.4.0",
     "class-variance-authority": "^0.7.1",

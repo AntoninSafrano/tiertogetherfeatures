@@ -36,15 +36,15 @@ async function exportImage() {
 </script>
 
 <template>
-  <div class="flex items-center justify-between rounded-md border border-white/10 bg-zinc-900/80 px-4 py-2">
+  <div class="glass-toolbar flex items-center justify-between rounded-xl px-5 py-2.5">
     <!-- Left zone: Admin Controls (host only) -->
-    <div v-if="store.isHost" class="flex items-center gap-3">
-      <span class="font-mono text-[10px] font-medium tracking-wider text-zinc-500 uppercase">
+    <div v-if="store.isHost" class="flex items-center gap-1">
+      <span class="mr-2 font-mono text-[10px] font-medium tracking-wider text-zinc-500 uppercase">
         Admin
       </span>
 
       <button
-        class="inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium text-zinc-400 transition-colors hover:bg-red-500/10 hover:text-red-400"
+        class="toolbar-btn toolbar-btn-danger inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium text-zinc-400 transition-all duration-200 hover:bg-red-500/10 hover:text-red-400"
         @click="resetRankings"
       >
         <RotateCcw class="h-3.5 w-3.5" />
@@ -52,7 +52,7 @@ async function exportImage() {
       </button>
 
       <button
-        class="inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium text-zinc-400 transition-colors hover:bg-orange-500/10 hover:text-orange-400"
+        class="toolbar-btn toolbar-btn-warn inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium text-zinc-400 transition-all duration-200 hover:bg-orange-500/10 hover:text-orange-400"
         @click="store.toggleLock()"
       >
         <Lock v-if="store.isLocked" class="h-3.5 w-3.5" />
@@ -66,7 +66,7 @@ async function exportImage() {
     <!-- Right zone: Export -->
     <button
       :disabled="isExporting"
-      class="inline-flex items-center gap-1.5 rounded-md border border-white/10 px-3 py-1.5 text-xs font-medium text-zinc-300 transition-colors hover:bg-white/5 hover:text-white disabled:opacity-50"
+      class="toolbar-btn toolbar-btn-export inline-flex items-center gap-1.5 rounded-lg border border-white/10 bg-white/5 px-4 py-1.5 text-xs font-semibold text-zinc-200 transition-all duration-200 hover:border-primary/30 hover:bg-primary/10 hover:text-white disabled:opacity-50"
       @click="exportImage"
     >
       <Download class="h-3.5 w-3.5" />
