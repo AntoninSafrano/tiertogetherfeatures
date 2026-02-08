@@ -335,6 +335,11 @@ export function registerRoomHandlers(io: TypedServer, socket: TypedSocket): void
     const text = (data?.text ?? '').trim()
     if (!text || text.length > 500) return
 
+    if (containsBannedWord(text)) {
+      socket.emit('error', 'Message blocked: inappropriate language')
+      return
+    }
+
     const tierList = await TierListModel.findOne({ roomId })
 
     const message = {
@@ -409,4 +414,36 @@ function generateRoomId(): string {
 function generateUserColor(): string {
   const colors = ['#9147ff', '#00c853', '#ff9800', '#eb0400', '#2196f3', '#e91e63', '#00bcd4']
   return colors[Math.floor(Math.random() * colors.length)]!
+}
+
+// ─── Chat Moderation ───────────────────────────────────────────────
+
+const BANNED_WORDS = [
+  // English slurs & hate speech
+  'nigger', 'nigga', 'faggot', 'fag', 'retard', 'retarded', 'tranny',
+  'kike', 'spic', 'chink', 'gook', 'wetback', 'beaner', 'coon',
+  'dyke', 'paki', 'towelhead', 'raghead', 'cracker',
+  // French slurs & hate speech
+  'nègre', 'negre', 'bougnoule', 'bougnoul', 'youpin', 'youpine',
+  'bamboula', 'bicot', 'raton', 'chinetoque', 'bridé', 'bride',
+  'tapette', 'pédé', 'pede', 'gouine', 'tarlouze', 'enculé', 'encule',
+  'fils de pute', 'fdp', 'ntm', 'nique ta mere', 'nique ta mère',
+  // Violence & threats
+  'kill yourself', 'kys', 'suicide', 'gas the', 'heil hitler',
+  'nazi', 'white power', 'white supremacy',
+]
+
+const bannedRegex = new RegExp(
+  BANNED_WORDS.map((w) => w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|'),
+  'i',
+)
+
+function containsBannedWord(text: string): boolean {
+  // Normalize: remove accents, leetspeak basics
+  const normalized = text
+    .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+    .replace(/0/g, 'o').replace(/1/g, 'i').replace(/3/g, 'e')
+    .replace(/4/g, 'a').replace(/5/g, 's').replace(/\$/g, 's')
+    .replace(/@/g, 'a')
+  return bannedRegex.test(normalized) || bannedRegex.test(text)
 }
