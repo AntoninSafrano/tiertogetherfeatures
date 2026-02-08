@@ -423,11 +423,21 @@ const BANNED_WORDS = [
   'nigger', 'nigga', 'faggot', 'fag', 'retard', 'retarded', 'tranny',
   'kike', 'spic', 'chink', 'gook', 'wetback', 'beaner', 'coon',
   'dyke', 'paki', 'towelhead', 'raghead', 'cracker',
+  // English profanity
+  'fuck', 'shit', 'ass', 'asshole', 'bitch', 'dick', 'cock', 'pussy',
+  'whore', 'slut', 'cunt', 'bastard', 'motherfucker', 'stfu', 'wtf',
   // French slurs & hate speech
   'nègre', 'negre', 'bougnoule', 'bougnoul', 'youpin', 'youpine',
   'bamboula', 'bicot', 'raton', 'chinetoque', 'bridé', 'bride',
   'tapette', 'pédé', 'pede', 'gouine', 'tarlouze', 'enculé', 'encule',
   'fils de pute', 'fdp', 'ntm', 'nique ta mere', 'nique ta mère',
+  // French profanity
+  'pute', 'putain', 'salope', 'salaud', 'connard', 'connasse',
+  'merde', 'bordel', 'bite', 'couille', 'branleur', 'branleuse',
+  'nique', 'niquer', 'baiser', 'sexe', 'porn', 'porno',
+  'pd', 'tg', 'ta gueule', 'ferme ta gueule', 'ftg',
+  'batard', 'bâtard', 'abruti', 'débile', 'debile',
+  'con', 'conne', 'connerie',
   // Violence & threats
   'kill yourself', 'kys', 'suicide', 'gas the', 'heil hitler',
   'nazi', 'white power', 'white supremacy',
