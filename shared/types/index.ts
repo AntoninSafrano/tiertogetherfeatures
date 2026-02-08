@@ -62,6 +62,7 @@ export interface ClientToServerEvents {
   'item:create': (data: CreateItemPayload) => void
   'room:reset': () => void
   'room:lock': () => void
+  'chat:send': (data: { text: string }) => void
 }
 
 /** Server -> Client events */
@@ -73,6 +74,7 @@ export interface ServerToClientEvents {
   'item:created': (item: TierItem) => void
   'room:reset': (room: Room) => void
   'room:locked': (isLocked: boolean) => void
+  'chat:message': (message: ChatMessage) => void
   'error': (message: string) => void
 }
 
@@ -85,6 +87,18 @@ export interface SocketData {
   username: string
   roomId: string | null
   color: string
+}
+
+// ─── Chat ────────────────────────────────────────────────────────────
+
+export interface ChatMessage {
+  id: string
+  userId: string
+  username: string
+  color: string
+  text: string
+  isHost: boolean
+  timestamp: number
 }
 
 // ─── Payloads ───────────────────────────────────────────────────────

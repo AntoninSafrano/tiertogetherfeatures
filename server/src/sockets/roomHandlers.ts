@@ -327,6 +327,29 @@ export function registerRoomHandlers(io: TypedServer, socket: TypedSocket): void
     }
   })
 
+  // ─── chat:send ─────────────────────────────────────────────────
+  socket.on('chat:send', async (data) => {
+    const roomId = socket.data.roomId
+    if (!roomId) return
+
+    const text = (data?.text ?? '').trim()
+    if (!text || text.length > 500) return
+
+    const tierList = await TierListModel.findOne({ roomId })
+
+    const message = {
+      id: randomUUID(),
+      userId: socket.id,
+      username: socket.data.username || 'Anonymous',
+      color: socket.data.color || '#9147ff',
+      text,
+      isHost: tierList?.ownerId === socket.id,
+      timestamp: Date.now(),
+    }
+
+    io.in(roomId).emit('chat:message', message)
+  })
+
   // ─── disconnect ─────────────────────────────────────────────────
   socket.on('disconnect', () => {
     leaveCurrentRoom(io, socket)

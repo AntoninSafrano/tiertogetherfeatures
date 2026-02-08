@@ -4,6 +4,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { useRoomStore } from '@/stores/room'
 import { TierBoard } from '@/components/tierlist'
 import { Badge } from '@/components/ui/badge'
+import ChatPanel from '@/components/chat/ChatPanel.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -94,5 +95,8 @@ function goHome() {
     <main v-else class="flex-1 p-6">
       <TierBoard />
     </main>
+
+    <!-- Chat -->
+    <ChatPanel v-if="!isDemo" />
   </div>
 </template>
