@@ -287,6 +287,71 @@ export function registerRoomHandlers(io: TypedServer, socket: TypedSocket): void
     }
   })
 
+  // ─── room:toggle-focus ─────────────────────────────────────────
+  socket.on('room:toggle-focus', async () => {
+    const roomId = socket.data.roomId
+    if (!roomId) {
+      socket.emit('error', 'Not in a room')
+      return
+    }
+
+    try {
+      const tierList = await TierListModel.findOne({ roomId })
+      if (!tierList) {
+        socket.emit('error', 'Room not found')
+        return
+      }
+
+      if (tierList.ownerId !== socket.id) {
+        socket.emit('error', 'Only the host can toggle focus mode')
+        return
+      }
+
+      tierList.isFocusMode = !tierList.isFocusMode
+      await tierList.save()
+
+      io.in(roomId).emit('room:focus-toggled', tierList.isFocusMode)
+      console.log(`[Room] Room ${roomId} focus mode ${tierList.isFocusMode ? 'enabled' : 'disabled'} by host`)
+    } catch (err) {
+      console.error('[Room] Focus toggle failed:', err)
+      socket.emit('error', 'Failed to toggle focus mode')
+    }
+  })
+
+  // ─── item:skip ────────────────────────────────────────────────
+  socket.on('item:skip', async () => {
+    const roomId = socket.data.roomId
+    if (!roomId) {
+      socket.emit('error', 'Not in a room')
+      return
+    }
+
+    try {
+      const tierList = await TierListModel.findOne({ roomId })
+      if (!tierList) {
+        socket.emit('error', 'Room not found')
+        return
+      }
+
+      if (tierList.pool.length === 0) {
+        socket.emit('error', 'No items in pool to skip')
+        return
+      }
+
+      // Move first item to end of pool
+      const skipped = tierList.pool.shift()!
+      tierList.pool.push(skipped)
+      tierList.markModified('pool')
+      await tierList.save()
+
+      io.in(roomId).emit('item:skipped')
+      console.log(`[Room] Item "${skipped.label}" skipped in room ${roomId}`)
+    } catch (err) {
+      console.error('[Room] Skip item failed:', err)
+      socket.emit('error', 'Failed to skip item')
+    }
+  })
+
   // ─── room:reset ────────────────────────────────────────────────
   socket.on('room:reset', async () => {
     const roomId = socket.data.roomId
@@ -404,6 +469,7 @@ async function buildRoomState(io: TypedServer, roomId: string): Promise<Room | n
     users,
     hostId: tierList.ownerId,
     isLocked: tierList.isLocked ?? false,
+    isFocusMode: tierList.isFocusMode ?? false,
   }
 }
 

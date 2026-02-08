@@ -49,6 +49,7 @@ export interface Room {
   users: RoomUser[]
   hostId: string
   isLocked: boolean
+  isFocusMode: boolean
 }
 
 // ─── Socket Events ──────────────────────────────────────────────────
@@ -62,6 +63,8 @@ export interface ClientToServerEvents {
   'item:create': (data: CreateItemPayload) => void
   'room:reset': () => void
   'room:lock': () => void
+  'room:toggle-focus': () => void
+  'item:skip': () => void
   'chat:send': (data: { text: string }) => void
 }
 
@@ -74,6 +77,8 @@ export interface ServerToClientEvents {
   'item:created': (item: TierItem) => void
   'room:reset': (room: Room) => void
   'room:locked': (isLocked: boolean) => void
+  'room:focus-toggled': (isFocusMode: boolean) => void
+  'item:skipped': () => void
   'chat:message': (message: ChatMessage) => void
   'error': (message: string) => void
 }

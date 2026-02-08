@@ -24,6 +24,10 @@ export const useRoomStore = defineStore('room', () => {
   const rows = ref<TierRow[]>([])
   const pool = ref<TierItem[]>([])
   const isLocked = ref(false)
+  const isFocusMode = ref(false)
+
+  // ─── Focus Mode ───────────────────────────────────────────────
+  const currentFocusItem = computed(() => pool.value[0] ?? null)
 
   // ─── Host Detection ───────────────────────────────────────────
   const isHost = computed(() => {
@@ -68,6 +72,7 @@ export const useRoomStore = defineStore('room', () => {
       rows.value = room.tierList.rows
       pool.value = room.tierList.pool
       isLocked.value = room.isLocked ?? false
+      isFocusMode.value = room.isFocusMode ?? false
     })
 
     socket.value.on('item:moved', (data: MoveItemPayload) => {
@@ -97,6 +102,18 @@ export const useRoomStore = defineStore('room', () => {
       isLocked.value = locked
     })
 
+    socket.value.on('room:focus-toggled', (focused: boolean) => {
+      isFocusMode.value = focused
+    })
+
+    socket.value.on('item:skipped', () => {
+      // Rotate first pool item to end
+      if (pool.value.length > 0) {
+        const skipped = pool.value.shift()!
+        pool.value.push(skipped)
+      }
+    })
+
     socket.value.on('room:reset', (room: Room) => {
       currentRoom.value = room
       users.value = room.users
@@ -104,6 +121,7 @@ export const useRoomStore = defineStore('room', () => {
       rows.value = room.tierList.rows
       pool.value = room.tierList.pool
       isLocked.value = room.isLocked ?? false
+      isFocusMode.value = room.isFocusMode ?? false
     })
   }
 
@@ -127,6 +145,20 @@ export const useRoomStore = defineStore('room', () => {
     const { socket } = useSocket()
     if (socket.value?.connected) {
       socket.value.emit('room:lock')
+    }
+  }
+
+  function toggleFocusMode() {
+    const { socket } = useSocket()
+    if (socket.value?.connected) {
+      socket.value.emit('room:toggle-focus')
+    }
+  }
+
+  function skipCurrentItem() {
+    const { socket } = useSocket()
+    if (socket.value?.connected) {
+      socket.value.emit('item:skip')
     }
   }
 
@@ -243,6 +275,7 @@ export const useRoomStore = defineStore('room', () => {
     rows.value = []
     pool.value = []
     isLocked.value = false
+    isFocusMode.value = false
     boundSocket = null
   }
 
@@ -262,10 +295,14 @@ export const useRoomStore = defineStore('room', () => {
     pool,
     isHost,
     isLocked,
+    isFocusMode,
+    currentFocusItem,
     moveItem,
     emitMove,
     resetRoom,
     toggleLock,
+    toggleFocusMode,
+    skipCurrentItem,
     loadTierList,
     initDemo,
     // Drag tracking
