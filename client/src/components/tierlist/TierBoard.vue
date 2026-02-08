@@ -4,6 +4,7 @@ import TierRow from './TierRow.vue'
 import TierPool from './TierPool.vue'
 import TierToolbar from './TierToolbar.vue'
 import ImageUploader from './ImageUploader.vue'
+import FocusView from './FocusView.vue'
 
 const store = useRoomStore()
 </script>
@@ -27,11 +28,16 @@ const store = useRoomStore()
       />
     </div>
 
-    <!-- Staging Area: Upload + Pool -->
-    <div class="overflow-hidden rounded-xl border border-white/10 bg-white/[0.03]">
-      <ImageUploader />
-      <div class="border-t border-white/5" />
-      <TierPool />
-    </div>
+    <!-- Focus Mode vs Staging Area -->
+    <Transition name="fade" mode="out-in">
+      <div v-if="store.isFocusMode" key="focus" class="rounded-xl border border-white/10 bg-white/[0.03]">
+        <FocusView />
+      </div>
+      <div v-else key="pool" class="overflow-hidden rounded-xl border border-white/10 bg-white/[0.03]">
+        <ImageUploader />
+        <div class="border-t border-white/5" />
+        <TierPool />
+      </div>
+    </Transition>
   </div>
 </template>
