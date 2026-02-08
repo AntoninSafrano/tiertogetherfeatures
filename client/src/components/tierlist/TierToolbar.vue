@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { useRoomStore } from '@/stores/room'
-import { Lock, Unlock, RotateCcw, Download } from 'lucide-vue-next'
+import { Lock, Unlock, RotateCcw, Download, Maximize } from 'lucide-vue-next'
 import { toPng } from 'html-to-image'
 
 const store = useRoomStore()
@@ -58,6 +58,19 @@ async function exportImage() {
         <Lock v-if="store.isLocked" class="h-3.5 w-3.5" />
         <Unlock v-else class="h-3.5 w-3.5" />
         {{ store.isLocked ? 'Unlock' : 'Lock' }}
+      </button>
+
+      <button
+        :class="[
+          'inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition-colors',
+          store.isFocusMode
+            ? 'bg-primary/20 text-primary ring-1 ring-primary/50'
+            : 'text-zinc-400 hover:bg-violet-500/10 hover:text-violet-400',
+        ]"
+        @click="store.toggleFocusMode()"
+      >
+        <Maximize class="h-3.5 w-3.5" />
+        Focus Mode
       </button>
     </div>
 
