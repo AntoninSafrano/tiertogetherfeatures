@@ -8,6 +8,10 @@ import type {
   TierList,
   MoveItemPayload,
   RoomResponse,
+  RowUpdatePayload,
+  RowDeletePayload,
+  RowReorderPayload,
+  RowAddPayload,
 } from '@tiertogether/shared'
 import { DEFAULT_TIERS } from '@tiertogether/shared'
 import { useSocket } from '@/composables/useSocket'
@@ -123,6 +127,38 @@ export const useRoomStore = defineStore('room', () => {
       isLocked.value = room.isLocked ?? false
       isFocusMode.value = room.isFocusMode ?? false
     })
+
+    socket.value.on('row:updated', (data) => {
+      const row = rows.value.find((r) => r.id === data.rowId)
+      if (row) {
+        if (data.label !== undefined) row.label = data.label
+        if (data.color !== undefined) row.color = data.color
+      }
+    })
+
+    socket.value.on('row:deleted', (data) => {
+      const idx = rows.value.findIndex((r) => r.id === data.rowId)
+      if (idx !== -1) {
+        const removed = rows.value.splice(idx, 1)[0]
+        pool.value.push(...removed.items)
+      }
+    })
+
+    socket.value.on('row:reordered', (data) => {
+      const idx = rows.value.findIndex((r) => r.id === data.rowId)
+      if (idx === -1) return
+      const newIdx = data.direction === 'up' ? idx - 1 : idx + 1
+      if (newIdx < 0 || newIdx >= rows.value.length) return
+      const temp = rows.value[idx]
+      rows.value[idx] = rows.value[newIdx]
+      rows.value[newIdx] = temp
+    })
+
+    socket.value.on('row:added', (row) => {
+      if (!rows.value.some((r) => r.id === row.id)) {
+        rows.value.push(row)
+      }
+    })
   }
 
   // ─── Socket Emitters ────────────────────────────────────────────
@@ -132,6 +168,45 @@ export const useRoomStore = defineStore('room', () => {
     if (socket.value?.connected) {
       socket.value.emit('item:move', payload)
     }
+  }
+
+  function updateRow(data: RowUpdatePayload) {
+    const { socket } = useSocket()
+    if (socket.value?.connected) socket.value.emit('row:update', data)
+    // Optimistic update
+    const row = rows.value.find((r) => r.id === data.rowId)
+    if (row) {
+      if (data.label !== undefined) row.label = data.label
+      if (data.color !== undefined) row.color = data.color
+    }
+  }
+
+  function deleteRow(data: RowDeletePayload) {
+    const { socket } = useSocket()
+    if (socket.value?.connected) socket.value.emit('row:delete', data)
+    const idx = rows.value.findIndex((r) => r.id === data.rowId)
+    if (idx !== -1) {
+      const removed = rows.value.splice(idx, 1)[0]
+      pool.value.push(...removed.items)
+    }
+  }
+
+  function reorderRow(data: RowReorderPayload) {
+    const { socket } = useSocket()
+    if (socket.value?.connected) socket.value.emit('row:reorder', data)
+    const idx = rows.value.findIndex((r) => r.id === data.rowId)
+    if (idx === -1) return
+    const newIdx = data.direction === 'up' ? idx - 1 : idx + 1
+    if (newIdx < 0 || newIdx >= rows.value.length) return
+    const temp = rows.value[idx]
+    rows.value[idx] = rows.value[newIdx]
+    rows.value[newIdx] = temp
+  }
+
+  function addRow(data?: RowAddPayload) {
+    const { socket } = useSocket()
+    const payload = data || { label: 'New', color: '#9147ff' }
+    if (socket.value?.connected) socket.value.emit('row:add', payload)
   }
 
   function resetRoom() {
@@ -308,6 +383,11 @@ export const useRoomStore = defineStore('room', () => {
     // Drag tracking
     handleDragAdded,
     handleDragRemoved,
+    // Row management
+    updateRow,
+    deleteRow,
+    reorderRow,
+    addRow,
     // Events
     bindEvents,
   }

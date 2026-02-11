@@ -54,6 +54,27 @@ export interface Room {
 
 // ─── Socket Events ──────────────────────────────────────────────────
 
+/** Row management payloads */
+export interface RowUpdatePayload {
+  rowId: string
+  label?: string
+  color?: string
+}
+
+export interface RowDeletePayload {
+  rowId: string
+}
+
+export interface RowReorderPayload {
+  rowId: string
+  direction: 'up' | 'down'
+}
+
+export interface RowAddPayload {
+  label: string
+  color: string
+}
+
 /** Client -> Server events */
 export interface ClientToServerEvents {
   'room:create': (data: CreateRoomPayload, callback: (res: RoomResponse) => void) => void
@@ -66,6 +87,10 @@ export interface ClientToServerEvents {
   'room:toggle-focus': () => void
   'item:skip': () => void
   'chat:send': (data: { text: string }) => void
+  'row:update': (data: RowUpdatePayload) => void
+  'row:delete': (data: RowDeletePayload) => void
+  'row:reorder': (data: RowReorderPayload) => void
+  'row:add': (data: RowAddPayload) => void
 }
 
 /** Server -> Client events */
@@ -81,6 +106,10 @@ export interface ServerToClientEvents {
   'item:skipped': () => void
   'chat:message': (message: ChatMessage) => void
   'error': (message: string) => void
+  'row:updated': (data: RowUpdatePayload & { rowId: string }) => void
+  'row:deleted': (data: RowDeletePayload) => void
+  'row:reordered': (data: RowReorderPayload) => void
+  'row:added': (row: TierRow) => void
 }
 
 /** Inter-server events (unused for now) */

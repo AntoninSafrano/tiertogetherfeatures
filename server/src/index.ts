@@ -2,6 +2,8 @@ import express from 'express'
 import { createServer } from 'http'
 import { Server } from 'socket.io'
 import cors from 'cors'
+import cookieParser from 'cookie-parser'
+import passport from 'passport'
 import type {
   ClientToServerEvents,
   ServerToClientEvents,
@@ -13,13 +15,23 @@ import { corsOptions } from './config/cors'
 import { connectDatabase } from './config/database'
 import { createRateLimiter } from './middleware/rateLimiter'
 import { registerSocketHandlers } from './sockets'
+import authRoutes from './routes/auth'
+import tierlistRoutes from './routes/tierlists'
+import imageRoutes from './routes/images'
 
 const app = express()
 const httpServer = createServer(app)
 
 // ─── Express Middleware ─────────────────────────────────────────────
-app.use(cors(corsOptions))
+app.use(cors({ ...corsOptions, credentials: true }))
 app.use(express.json())
+app.use(cookieParser())
+app.use(passport.initialize())
+
+// ─── Routes ─────────────────────────────────────────────────────────
+app.use(authRoutes)
+app.use(tierlistRoutes)
+app.use(imageRoutes)
 
 // ─── Health Check ───────────────────────────────────────────────────
 app.get('/api/health', (_req, res) => {

@@ -36,6 +36,11 @@ export interface TierListDocument extends Document {
   ownerId: string
   isLocked: boolean
   isFocusMode: boolean
+  isPublic: boolean
+  downloads: number
+  category: string
+  authorId: string
+  coverImage: string
   createdAt: Date
   updatedAt: Date
 }
@@ -49,6 +54,11 @@ const TierListSchema = new Schema(
     ownerId: { type: String, required: true },
     isLocked: { type: Boolean, default: false },
     isFocusMode: { type: Boolean, default: false },
+    isPublic: { type: Boolean, default: false },
+    downloads: { type: Number, default: 0 },
+    category: { type: String, enum: ['Gaming', 'Food', 'Anime', 'Music', 'Movies', 'Sports', 'Other'], default: 'Other' },
+    authorId: { type: String, default: '' },
+    coverImage: { type: String, default: '' },
   },
   { timestamps: true },
 )

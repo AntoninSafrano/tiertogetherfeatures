@@ -5,6 +5,7 @@ import TierPool from './TierPool.vue'
 import TierToolbar from './TierToolbar.vue'
 import ImageUploader from './ImageUploader.vue'
 import FocusView from './FocusView.vue'
+import { Plus } from 'lucide-vue-next'
 
 const store = useRoomStore()
 </script>
@@ -27,6 +28,15 @@ const store = useRoomStore()
         :row-index="index"
       />
     </div>
+
+    <!-- Add Row Button -->
+    <button
+      class="w-full flex items-center justify-center gap-2 rounded-lg border border-dashed border-white/10 py-2 text-sm text-zinc-500 hover:text-primary hover:border-primary/30 transition-all duration-300"
+      @click="store.addRow()"
+    >
+      <Plus class="h-4 w-4" />
+      Add Tier
+    </button>
 
     <!-- Focus Mode vs Staging Area -->
     <Transition name="fade" mode="out-in">

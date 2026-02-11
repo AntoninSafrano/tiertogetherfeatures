@@ -392,6 +392,116 @@ export function registerRoomHandlers(io: TypedServer, socket: TypedSocket): void
     }
   })
 
+  // ─── row:update ──────────────────────────────────────────────────
+  socket.on('row:update', async (data) => {
+    const roomId = socket.data.roomId
+    if (!roomId) { socket.emit('error', 'Not in a room'); return }
+
+    try {
+      const tierList = await TierListModel.findOne({ roomId })
+      if (!tierList) { socket.emit('error', 'Room not found'); return }
+
+      const row = tierList.rows.find((r) => r.id === data.rowId)
+      if (!row) { socket.emit('error', 'Row not found'); return }
+
+      if (data.label !== undefined) row.label = data.label
+      if (data.color !== undefined) row.color = data.color
+
+      tierList.markModified('rows')
+      await tierList.save()
+
+      io.in(roomId).emit('row:updated', { rowId: data.rowId, label: row.label, color: row.color })
+    } catch (err) {
+      console.error('[Room] Row update failed:', err)
+      socket.emit('error', 'Failed to update row')
+    }
+  })
+
+  // ─── row:delete ──────────────────────────────────────────────────
+  socket.on('row:delete', async (data) => {
+    const roomId = socket.data.roomId
+    if (!roomId) { socket.emit('error', 'Not in a room'); return }
+
+    try {
+      const tierList = await TierListModel.findOne({ roomId })
+      if (!tierList) { socket.emit('error', 'Room not found'); return }
+
+      const rowIndex = tierList.rows.findIndex((r) => r.id === data.rowId)
+      if (rowIndex === -1) { socket.emit('error', 'Row not found'); return }
+
+      // Move items back to pool
+      const removedRow = tierList.rows[rowIndex]
+      tierList.pool.push(...removedRow.items)
+      tierList.rows.splice(rowIndex, 1)
+
+      tierList.markModified('rows')
+      tierList.markModified('pool')
+      await tierList.save()
+
+      io.in(roomId).emit('row:deleted', { rowId: data.rowId })
+    } catch (err) {
+      console.error('[Room] Row delete failed:', err)
+      socket.emit('error', 'Failed to delete row')
+    }
+  })
+
+  // ─── row:reorder ────────────────────────────────────────────────
+  socket.on('row:reorder', async (data) => {
+    const roomId = socket.data.roomId
+    if (!roomId) { socket.emit('error', 'Not in a room'); return }
+
+    try {
+      const tierList = await TierListModel.findOne({ roomId })
+      if (!tierList) { socket.emit('error', 'Room not found'); return }
+
+      const idx = tierList.rows.findIndex((r) => r.id === data.rowId)
+      if (idx === -1) { socket.emit('error', 'Row not found'); return }
+
+      const newIdx = data.direction === 'up' ? idx - 1 : idx + 1
+      if (newIdx < 0 || newIdx >= tierList.rows.length) return
+
+      // Swap
+      const temp = tierList.rows[idx]
+      tierList.rows[idx] = tierList.rows[newIdx]
+      tierList.rows[newIdx] = temp
+
+      tierList.markModified('rows')
+      await tierList.save()
+
+      io.in(roomId).emit('row:reordered', data)
+    } catch (err) {
+      console.error('[Room] Row reorder failed:', err)
+      socket.emit('error', 'Failed to reorder row')
+    }
+  })
+
+  // ─── row:add ────────────────────────────────────────────────────
+  socket.on('row:add', async (data) => {
+    const roomId = socket.data.roomId
+    if (!roomId) { socket.emit('error', 'Not in a room'); return }
+
+    try {
+      const tierList = await TierListModel.findOne({ roomId })
+      if (!tierList) { socket.emit('error', 'Room not found'); return }
+
+      const newRow = {
+        id: `tier-${randomUUID().substring(0, 8)}`,
+        label: data.label || 'New',
+        color: data.color || '#9147ff',
+        items: [] as { id: string; imageUrl: string; label: string }[],
+      }
+
+      tierList.rows.push(newRow)
+      tierList.markModified('rows')
+      await tierList.save()
+
+      io.in(roomId).emit('row:added', { ...newRow, items: [] })
+    } catch (err) {
+      console.error('[Room] Row add failed:', err)
+      socket.emit('error', 'Failed to add row')
+    }
+  })
+
   // ─── chat:send ─────────────────────────────────────────────────
   socket.on('chat:send', async (data) => {
     const roomId = socket.data.roomId
