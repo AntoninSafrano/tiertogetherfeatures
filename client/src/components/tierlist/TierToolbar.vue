@@ -1,11 +1,15 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { useRoomStore } from '@/stores/room'
-import { Lock, Unlock, RotateCcw, Download, Maximize } from 'lucide-vue-next'
+import { useAuth } from '@/composables/useAuth'
+import { Lock, Unlock, RotateCcw, Download, Maximize, Upload } from 'lucide-vue-next'
 import { toPng } from 'html-to-image'
+import PublishModal from './PublishModal.vue'
 
 const store = useRoomStore()
+const { user } = useAuth()
 const isExporting = ref(false)
+const showPublishModal = ref(false)
 
 function resetRankings() {
   if (!confirm('Move all items back to the pool?')) return
@@ -76,7 +80,18 @@ async function exportImage() {
 
     <div v-else />
 
-    <!-- Right zone: Export -->
+    <!-- Right zone -->
+    <div class="flex items-center gap-2">
+      <!-- Publish (auth only) -->
+      <button
+        v-if="user"
+        class="inline-flex items-center gap-1.5 rounded-md border border-primary/30 px-3 py-1.5 text-xs font-medium text-primary transition-colors hover:bg-primary/10"
+        @click="showPublishModal = true"
+      >
+        <Upload class="h-3.5 w-3.5" />
+        Publish
+      </button>
+
     <button
       :disabled="isExporting"
       class="inline-flex items-center gap-1.5 rounded-md border border-white/10 px-3 py-1.5 text-xs font-medium text-zinc-300 transition-colors hover:bg-white/5 hover:text-white disabled:opacity-50"
@@ -85,5 +100,8 @@ async function exportImage() {
       <Download class="h-3.5 w-3.5" />
       {{ isExporting ? 'Exporting...' : 'Export Image' }}
     </button>
+    </div>
+
+    <PublishModal v-if="showPublishModal" @close="showPublishModal = false" />
   </div>
 </template>

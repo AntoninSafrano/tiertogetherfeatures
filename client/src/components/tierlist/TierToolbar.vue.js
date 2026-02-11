@@ -1,9 +1,13 @@
 import { ref } from 'vue';
 import { useRoomStore } from '@/stores/room';
-import { Lock, Unlock, RotateCcw, Download, Maximize } from 'lucide-vue-next';
+import { useAuth } from '@/composables/useAuth';
+import { Lock, Unlock, RotateCcw, Download, Maximize, Upload } from 'lucide-vue-next';
 import { toPng } from 'html-to-image';
+import PublishModal from './PublishModal.vue';
 const store = useRoomStore();
+const { user } = useAuth();
 const isExporting = ref(false);
+const showPublishModal = ref(false);
 function resetRankings() {
     if (!confirm('Move all items back to the pool?'))
         return;
@@ -115,21 +119,64 @@ if (__VLS_ctx.store.isHost) {
 else {
     __VLS_asFunctionalElement(__VLS_intrinsicElements.div)({});
 }
+__VLS_asFunctionalElement(__VLS_intrinsicElements.div, __VLS_intrinsicElements.div)({
+    ...{ class: "flex items-center gap-2" },
+});
+if (__VLS_ctx.user) {
+    __VLS_asFunctionalElement(__VLS_intrinsicElements.button, __VLS_intrinsicElements.button)({
+        ...{ onClick: (...[$event]) => {
+                if (!(__VLS_ctx.user))
+                    return;
+                __VLS_ctx.showPublishModal = true;
+            } },
+        ...{ class: "inline-flex items-center gap-1.5 rounded-md border border-primary/30 px-3 py-1.5 text-xs font-medium text-primary transition-colors hover:bg-primary/10" },
+    });
+    const __VLS_16 = {}.Upload;
+    /** @type {[typeof __VLS_components.Upload, ]} */ ;
+    // @ts-ignore
+    const __VLS_17 = __VLS_asFunctionalComponent(__VLS_16, new __VLS_16({
+        ...{ class: "h-3.5 w-3.5" },
+    }));
+    const __VLS_18 = __VLS_17({
+        ...{ class: "h-3.5 w-3.5" },
+    }, ...__VLS_functionalComponentArgsRest(__VLS_17));
+}
 __VLS_asFunctionalElement(__VLS_intrinsicElements.button, __VLS_intrinsicElements.button)({
     ...{ onClick: (__VLS_ctx.exportImage) },
     disabled: (__VLS_ctx.isExporting),
     ...{ class: "inline-flex items-center gap-1.5 rounded-md border border-white/10 px-3 py-1.5 text-xs font-medium text-zinc-300 transition-colors hover:bg-white/5 hover:text-white disabled:opacity-50" },
 });
-const __VLS_16 = {}.Download;
+const __VLS_20 = {}.Download;
 /** @type {[typeof __VLS_components.Download, ]} */ ;
 // @ts-ignore
-const __VLS_17 = __VLS_asFunctionalComponent(__VLS_16, new __VLS_16({
+const __VLS_21 = __VLS_asFunctionalComponent(__VLS_20, new __VLS_20({
     ...{ class: "h-3.5 w-3.5" },
 }));
-const __VLS_18 = __VLS_17({
+const __VLS_22 = __VLS_21({
     ...{ class: "h-3.5 w-3.5" },
-}, ...__VLS_functionalComponentArgsRest(__VLS_17));
+}, ...__VLS_functionalComponentArgsRest(__VLS_21));
 (__VLS_ctx.isExporting ? 'Exporting...' : 'Export Image');
+if (__VLS_ctx.showPublishModal) {
+    /** @type {[typeof PublishModal, ]} */ ;
+    // @ts-ignore
+    const __VLS_24 = __VLS_asFunctionalComponent(PublishModal, new PublishModal({
+        ...{ 'onClose': {} },
+    }));
+    const __VLS_25 = __VLS_24({
+        ...{ 'onClose': {} },
+    }, ...__VLS_functionalComponentArgsRest(__VLS_24));
+    let __VLS_27;
+    let __VLS_28;
+    let __VLS_29;
+    const __VLS_30 = {
+        onClose: (...[$event]) => {
+            if (!(__VLS_ctx.showPublishModal))
+                return;
+            __VLS_ctx.showPublishModal = false;
+        }
+    };
+    var __VLS_26;
+}
 /** @type {__VLS_StyleScopedClasses['flex']} */ ;
 /** @type {__VLS_StyleScopedClasses['items-center']} */ ;
 /** @type {__VLS_StyleScopedClasses['justify-between']} */ ;
@@ -180,6 +227,24 @@ const __VLS_18 = __VLS_17({
 /** @type {__VLS_StyleScopedClasses['w-3.5']} */ ;
 /** @type {__VLS_StyleScopedClasses['h-3.5']} */ ;
 /** @type {__VLS_StyleScopedClasses['w-3.5']} */ ;
+/** @type {__VLS_StyleScopedClasses['flex']} */ ;
+/** @type {__VLS_StyleScopedClasses['items-center']} */ ;
+/** @type {__VLS_StyleScopedClasses['gap-2']} */ ;
+/** @type {__VLS_StyleScopedClasses['inline-flex']} */ ;
+/** @type {__VLS_StyleScopedClasses['items-center']} */ ;
+/** @type {__VLS_StyleScopedClasses['gap-1.5']} */ ;
+/** @type {__VLS_StyleScopedClasses['rounded-md']} */ ;
+/** @type {__VLS_StyleScopedClasses['border']} */ ;
+/** @type {__VLS_StyleScopedClasses['border-primary/30']} */ ;
+/** @type {__VLS_StyleScopedClasses['px-3']} */ ;
+/** @type {__VLS_StyleScopedClasses['py-1.5']} */ ;
+/** @type {__VLS_StyleScopedClasses['text-xs']} */ ;
+/** @type {__VLS_StyleScopedClasses['font-medium']} */ ;
+/** @type {__VLS_StyleScopedClasses['text-primary']} */ ;
+/** @type {__VLS_StyleScopedClasses['transition-colors']} */ ;
+/** @type {__VLS_StyleScopedClasses['hover:bg-primary/10']} */ ;
+/** @type {__VLS_StyleScopedClasses['h-3.5']} */ ;
+/** @type {__VLS_StyleScopedClasses['w-3.5']} */ ;
 /** @type {__VLS_StyleScopedClasses['inline-flex']} */ ;
 /** @type {__VLS_StyleScopedClasses['items-center']} */ ;
 /** @type {__VLS_StyleScopedClasses['gap-1.5']} */ ;
@@ -206,8 +271,12 @@ const __VLS_self = (await import('vue')).defineComponent({
             RotateCcw: RotateCcw,
             Download: Download,
             Maximize: Maximize,
+            Upload: Upload,
+            PublishModal: PublishModal,
             store: store,
+            user: user,
             isExporting: isExporting,
+            showPublishModal: showPublishModal,
             resetRankings: resetRankings,
             exportImage: exportImage,
         };
