@@ -60,12 +60,12 @@ function formatTime(ts: number): string {
   <!-- Closed tab -->
   <button
     v-if="!isOpen"
-    class="fixed right-0 top-1/2 z-40 -translate-y-1/2 rounded-l-lg border border-r-0 border-white/10 bg-zinc-900/90 px-2 py-4 backdrop-blur-sm transition-colors hover:bg-zinc-800"
+    class="fixed right-0 top-1/2 z-40 -translate-y-1/2 rounded-l-lg border border-r-0 border-border-hover bg-surface/90 px-2 py-4 backdrop-blur-sm transition-colors hover:bg-surface-hover"
     @click="toggle"
   >
     <div class="flex flex-col items-center gap-2">
-      <MessageSquare class="h-4 w-4 text-zinc-400" />
-      <span class="text-[10px] font-bold tracking-widest text-zinc-500 uppercase [writing-mode:vertical-lr]">
+      <MessageSquare class="h-4 w-4 text-foreground-muted" />
+      <span class="text-[10px] font-bold tracking-widest text-foreground-muted uppercase [writing-mode:vertical-lr]">
         Comms
       </span>
       <!-- Notification badge -->
@@ -89,16 +89,16 @@ function formatTime(ts: number): string {
   >
     <div
       v-if="isOpen"
-      class="fixed right-0 top-0 z-50 flex h-full w-80 flex-col border-l border-white/10 bg-zinc-950/95 backdrop-blur-md"
+      class="fixed right-0 top-0 z-50 flex h-full w-80 flex-col border-l border-border-hover bg-background/95 backdrop-blur-md"
     >
       <!-- Header -->
-      <div class="flex items-center justify-between border-b border-white/10 px-4 py-3">
+      <div class="flex items-center justify-between border-b border-border-hover px-4 py-3">
         <div class="flex items-center gap-2">
           <MessageSquare class="h-4 w-4 text-primary" />
-          <span class="font-mono text-xs font-bold tracking-wider text-zinc-300 uppercase">Comms</span>
+          <span class="font-mono text-xs font-bold tracking-wider text-foreground uppercase">Comms</span>
         </div>
         <button
-          class="rounded-md p-1 text-zinc-500 transition-colors hover:bg-white/5 hover:text-zinc-300"
+          class="rounded-md p-1 text-foreground-muted transition-colors hover:bg-surface-hover hover:text-foreground"
           @click="toggle"
         >
           <X class="h-4 w-4" />
@@ -108,13 +108,13 @@ function formatTime(ts: number): string {
       <!-- Messages -->
       <div class="flex-1 space-y-1 overflow-y-auto px-3 py-3">
         <div v-if="messages.length === 0" class="flex h-full items-center justify-center">
-          <p class="text-xs text-zinc-600">No messages yet</p>
+          <p class="text-xs text-foreground-subtle">No messages yet</p>
         </div>
 
         <div
           v-for="msg in messages"
           :key="msg.id"
-          class="group rounded-md px-2 py-1.5 transition-colors hover:bg-white/[0.03]"
+          class="group rounded-md px-2 py-1.5 transition-colors hover:bg-surface/20"
         >
           <div class="flex items-baseline gap-2">
             <span
@@ -124,25 +124,25 @@ function formatTime(ts: number): string {
               {{ msg.username }}
               <span v-if="msg.isHost" class="ml-0.5 text-[9px] font-bold text-yellow-500">HOST</span>
             </span>
-            <span class="text-[10px] text-zinc-600 opacity-0 transition-opacity group-hover:opacity-100">
+            <span class="text-[10px] text-foreground-subtle opacity-0 transition-opacity group-hover:opacity-100">
               {{ formatTime(msg.timestamp) }}
             </span>
           </div>
-          <p class="text-sm leading-snug text-zinc-300">{{ msg.text }}</p>
+          <p class="text-sm leading-snug text-foreground">{{ msg.text }}</p>
         </div>
 
         <div ref="messagesEnd" />
       </div>
 
       <!-- Input -->
-      <div class="border-t border-white/10 p-3">
+      <div class="border-t border-border-hover p-3">
         <form class="flex gap-2" @submit.prevent="sendMessage">
           <input
             v-model="input"
             type="text"
             placeholder="Message..."
             maxlength="500"
-            class="flex-1 rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-foreground placeholder:text-zinc-600 focus:border-primary/50 focus:outline-none focus:ring-1 focus:ring-primary/30"
+            class="flex-1 rounded-lg border border-border-hover bg-surface-hover px-3 py-2 text-sm text-foreground placeholder:text-foreground-subtle focus:border-primary/50 focus:outline-none focus:ring-1 focus:ring-primary/30"
           />
           <button
             type="submit"

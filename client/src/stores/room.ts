@@ -205,7 +205,7 @@ export const useRoomStore = defineStore('room', () => {
 
   function addRow(data?: RowAddPayload) {
     const { socket } = useSocket()
-    const payload = data || { label: 'New', color: '#9147ff' }
+    const payload = data || { label: 'New', color: '#6366f1' }
     if (socket.value?.connected) socket.value.emit('row:add', payload)
   }
 
@@ -237,23 +237,36 @@ export const useRoomStore = defineStore('room', () => {
     }
   }
 
-  function createRoom(tierListName: string, user: string): Promise<RoomResponse> {
+  function saveRoomToHistory(roomId: string, titleName: string) {
+    const history = JSON.parse(localStorage.getItem('tt-my-rooms') || '[]')
+    if (!history.some((r: any) => r.roomId === roomId)) {
+      history.unshift({ roomId, title: titleName, createdAt: new Date().toISOString() })
+      localStorage.setItem('tt-my-rooms', JSON.stringify(history.slice(0, 50)))
+    }
+  }
+
+  function createRoom(tierListName: string, user: string, avatar = '', isGuest = true): Promise<RoomResponse> {
     const { socket, connect } = useSocket()
     connect()
     bindEvents()
 
     return new Promise((resolve) => {
-      socket.value!.emit('room:create', { username: user, tierListName }, resolve)
+      socket.value!.emit('room:create', { username: user, tierListName, avatar, isGuest }, (res: RoomResponse) => {
+        if (res.success && res.roomId) {
+          saveRoomToHistory(res.roomId, tierListName)
+        }
+        resolve(res)
+      })
     })
   }
 
-  function joinRoom(roomId: string, user: string): Promise<RoomResponse> {
+  function joinRoom(roomId: string, user: string, avatar = '', isGuest = true): Promise<RoomResponse> {
     const { socket, connect } = useSocket()
     connect()
     bindEvents()
 
     return new Promise((resolve) => {
-      socket.value!.emit('room:join', { username: user, roomId }, resolve)
+      socket.value!.emit('room:join', { username: user, roomId, avatar, isGuest }, resolve)
     })
   }
 
@@ -390,5 +403,7 @@ export const useRoomStore = defineStore('room', () => {
     addRow,
     // Events
     bindEvents,
+    // History
+    saveRoomToHistory,
   }
 })

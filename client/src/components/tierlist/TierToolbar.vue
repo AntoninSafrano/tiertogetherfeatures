@@ -23,7 +23,7 @@ async function exportImage() {
   isExporting.value = true
   try {
     const dataUrl = await toPng(target, {
-      backgroundColor: '#09090b',
+      backgroundColor: '#0c0d14',
       pixelRatio: 2,
     })
 
@@ -40,15 +40,15 @@ async function exportImage() {
 </script>
 
 <template>
-  <div class="flex items-center justify-between rounded-md border border-white/10 bg-zinc-900/80 px-4 py-2">
+  <div class="flex items-center justify-between rounded-md border border-border-hover bg-surface/80 px-4 py-2">
     <!-- Left zone: Admin Controls (host only) -->
     <div v-if="store.isHost" class="flex items-center gap-3">
-      <span class="font-mono text-[10px] font-medium tracking-wider text-zinc-500 uppercase">
+      <span class="font-mono text-[10px] font-medium tracking-wider text-foreground-muted uppercase">
         Admin
       </span>
 
       <button
-        class="inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium text-zinc-400 transition-colors hover:bg-red-500/10 hover:text-red-400"
+        class="inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium text-foreground-muted transition-colors hover:bg-red-500/10 hover:text-red-400"
         @click="resetRankings"
       >
         <RotateCcw class="h-3.5 w-3.5" />
@@ -56,7 +56,7 @@ async function exportImage() {
       </button>
 
       <button
-        class="inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium text-zinc-400 transition-colors hover:bg-orange-500/10 hover:text-orange-400"
+        class="inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium text-foreground-muted transition-colors hover:bg-orange-500/10 hover:text-orange-400"
         @click="store.toggleLock()"
       >
         <Lock v-if="store.isLocked" class="h-3.5 w-3.5" />
@@ -69,7 +69,7 @@ async function exportImage() {
           'inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition-colors',
           store.isFocusMode
             ? 'bg-primary/20 text-primary ring-1 ring-primary/50'
-            : 'text-zinc-400 hover:bg-violet-500/10 hover:text-violet-400',
+            : 'text-foreground-muted hover:bg-primary/10 hover:text-primary',
         ]"
         @click="store.toggleFocusMode()"
       >
@@ -82,9 +82,8 @@ async function exportImage() {
 
     <!-- Right zone -->
     <div class="flex items-center gap-2">
-      <!-- Publish (auth only) -->
+      <!-- Publish -->
       <button
-        v-if="user"
         class="inline-flex items-center gap-1.5 rounded-md border border-primary/30 px-3 py-1.5 text-xs font-medium text-primary transition-colors hover:bg-primary/10"
         @click="showPublishModal = true"
       >
@@ -94,7 +93,7 @@ async function exportImage() {
 
     <button
       :disabled="isExporting"
-      class="inline-flex items-center gap-1.5 rounded-md border border-white/10 px-3 py-1.5 text-xs font-medium text-zinc-300 transition-colors hover:bg-white/5 hover:text-white disabled:opacity-50"
+      class="inline-flex items-center gap-1.5 rounded-md border border-border-hover px-3 py-1.5 text-xs font-medium text-foreground transition-colors hover:bg-surface-hover hover:text-foreground disabled:opacity-50"
       @click="exportImage"
     >
       <Download class="h-3.5 w-3.5" />

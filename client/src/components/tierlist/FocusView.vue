@@ -75,7 +75,7 @@ function onDragChange(evt: any) {
       >
         <template #item="{ element }">
           <div
-            class="relative h-56 w-56 cursor-grab rounded-2xl border border-white/10 bg-surface shadow-2xl ring-0 ring-primary/30 transition-all duration-200 hover:scale-[1.03] hover:ring-2 active:cursor-grabbing sm:h-64 sm:w-64"
+            class="relative h-56 w-56 cursor-grab rounded-2xl border border-border-hover bg-surface shadow-2xl ring-0 ring-primary/30 transition-all duration-200 hover:scale-[1.03] hover:ring-2 active:cursor-grabbing sm:h-64 sm:w-64"
           >
             <!-- Image mode -->
             <img
@@ -116,7 +116,7 @@ function onDragChange(evt: any) {
       <div class="flex items-center gap-4">
         <button
           v-if="store.isHost"
-          class="flex items-center gap-2 rounded-lg border border-white/10 bg-white/5 px-4 py-2 text-sm font-medium text-foreground-muted transition-colors hover:bg-white/10 hover:text-foreground"
+          class="flex items-center gap-2 rounded-lg border border-border-hover bg-surface-hover px-4 py-2 text-sm font-medium text-foreground-muted transition-colors hover:bg-surface-active hover:text-foreground"
           @click="store.skipCurrentItem()"
         >
           <SkipForward class="h-4 w-4" />

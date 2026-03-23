@@ -186,12 +186,12 @@ onUnmounted(() => {
     <!-- Image Search Section -->
     <div class="px-4 pt-3 pb-2">
       <div class="relative">
-        <Search class="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-500" />
+        <Search class="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-foreground-muted" />
         <input
           v-model="searchQuery"
           type="text"
           placeholder="Search images..."
-          class="w-full rounded-lg border border-white/10 bg-zinc-900 py-2 pl-9 pr-3 text-sm text-white placeholder-zinc-500 outline-none transition-colors focus:border-primary/30"
+          class="w-full rounded-lg border border-border-hover bg-surface py-2 pl-9 pr-3 text-sm text-foreground placeholder-foreground-muted outline-none transition-colors focus:border-primary/30"
           @input="onSearchInput"
           @keydown="onSearchKeydown"
         />
@@ -203,7 +203,7 @@ onUnmounted(() => {
       <div
         v-for="i in 8"
         :key="i"
-        class="aspect-square animate-pulse rounded-lg bg-zinc-800"
+        class="aspect-square animate-pulse rounded-lg bg-surface-hover"
       />
     </div>
 
@@ -211,7 +211,7 @@ onUnmounted(() => {
       <!-- Selected image label input -->
       <div
         v-if="selectedImage"
-        class="mb-2 flex items-center gap-2 rounded-lg border border-primary/30 bg-zinc-900 p-2"
+        class="mb-2 flex items-center gap-2 rounded-lg border border-primary/30 bg-surface p-2"
       >
         <img
           :src="selectedImage.thumbnail"
@@ -223,7 +223,7 @@ onUnmounted(() => {
           type="text"
           placeholder="Label"
           maxlength="50"
-          class="flex-1 rounded border border-white/10 bg-zinc-800 px-2 py-1 text-sm text-white placeholder-zinc-500 outline-none focus:border-primary/30"
+          class="flex-1 rounded border border-border-hover bg-surface-hover px-2 py-1 text-sm text-foreground placeholder-foreground-muted outline-none focus:border-primary/30"
           @keydown.enter="confirmAddImage"
         />
         <button
@@ -233,7 +233,7 @@ onUnmounted(() => {
           Add
         </button>
         <button
-          class="rounded p-1 text-zinc-400 transition-colors hover:text-white"
+          class="rounded p-1 text-foreground-muted transition-colors hover:text-foreground"
           @click="cancelSelection"
         >
           <X class="h-4 w-4" />
@@ -248,7 +248,7 @@ onUnmounted(() => {
           :class="
             selectedImage?.imageUrl === img.imageUrl
               ? 'border-primary ring-2 ring-primary'
-              : 'border-white/5 hover:border-primary/30'
+              : 'border-border hover:border-primary/30'
           "
           @click="selectImage(img)"
         >
@@ -268,9 +268,9 @@ onUnmounted(() => {
 
     <!-- Separator -->
     <div v-if="searchQuery || searchResults.length > 0" class="flex items-center gap-3 px-4 py-2">
-      <div class="h-px flex-1 bg-white/10" />
-      <span class="text-xs text-zinc-500">or upload manually</span>
-      <div class="h-px flex-1 bg-white/10" />
+      <div class="h-px flex-1 bg-border-hover" />
+      <span class="text-xs text-foreground-muted">or upload manually</span>
+      <div class="h-px flex-1 bg-border-hover" />
     </div>
 
     <!-- Original Upload Section -->
@@ -286,14 +286,14 @@ onUnmounted(() => {
 
       <div v-if="isUploading" class="flex items-center justify-center gap-3">
         <div class="h-5 w-5 animate-spin rounded-full border-2 border-white/20 border-t-primary" />
-        <span class="text-sm text-zinc-400">
+        <span class="text-sm text-foreground-muted">
           Uploading {{ uploadProgress.current }}/{{ uploadProgress.total }}...
         </span>
       </div>
 
       <div v-else class="flex items-center justify-center gap-2">
-        <ImagePlus class="h-5 w-5 text-zinc-500" />
-        <p class="text-sm text-zinc-500">
+        <ImagePlus class="h-5 w-5 text-foreground-muted" />
+        <p class="text-sm text-foreground-muted">
           Drop images, paste, or
           <button
             class="font-semibold text-primary transition-colors hover:text-primary-hover"
