@@ -12,7 +12,7 @@ const isExporting = ref(false)
 const showPublishModal = ref(false)
 
 function resetRankings() {
-  if (!confirm('Move all items back to the pool?')) return
+  if (!confirm('Remettre tous les éléments dans le pool ?')) return
   store.resetRoom()
 }
 
@@ -52,7 +52,7 @@ async function exportImage() {
         @click="resetRankings"
       >
         <RotateCcw class="h-3.5 w-3.5" />
-        Unrank All
+        Tout retirer
       </button>
 
       <button
@@ -61,7 +61,7 @@ async function exportImage() {
       >
         <Lock v-if="store.isLocked" class="h-3.5 w-3.5" />
         <Unlock v-else class="h-3.5 w-3.5" />
-        {{ store.isLocked ? 'Unlock' : 'Lock' }}
+        {{ store.isLocked ? 'Déverrouiller' : 'Verrouiller' }}
       </button>
 
       <button
@@ -74,7 +74,7 @@ async function exportImage() {
         @click="store.toggleFocusMode()"
       >
         <Maximize class="h-3.5 w-3.5" />
-        Focus Mode
+        Mode Focus
       </button>
     </div>
 
@@ -88,7 +88,7 @@ async function exportImage() {
         @click="showPublishModal = true"
       >
         <Upload class="h-3.5 w-3.5" />
-        Publish
+        Publier
       </button>
 
     <button
@@ -97,7 +97,7 @@ async function exportImage() {
       @click="exportImage"
     >
       <Download class="h-3.5 w-3.5" />
-      {{ isExporting ? 'Exporting...' : 'Export Image' }}
+      {{ isExporting ? 'Export...' : 'Exporter' }}
     </button>
     </div>
 

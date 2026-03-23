@@ -66,7 +66,7 @@ function formatTime(ts: number): string {
     <div class="flex flex-col items-center gap-2">
       <MessageSquare class="h-4 w-4 text-foreground-muted" />
       <span class="text-[10px] font-bold tracking-widest text-foreground-muted uppercase [writing-mode:vertical-lr]">
-        Comms
+        Chat
       </span>
       <!-- Notification badge -->
       <span
@@ -108,7 +108,7 @@ function formatTime(ts: number): string {
       <!-- Messages -->
       <div class="flex-1 space-y-1 overflow-y-auto px-3 py-3">
         <div v-if="messages.length === 0" class="flex h-full items-center justify-center">
-          <p class="text-xs text-foreground-subtle">No messages yet</p>
+          <p class="text-xs text-foreground-subtle">Aucun message pour le moment</p>
         </div>
 
         <div
@@ -122,7 +122,7 @@ function formatTime(ts: number): string {
               :style="{ color: msg.color }"
             >
               {{ msg.username }}
-              <span v-if="msg.isHost" class="ml-0.5 text-[9px] font-bold text-yellow-500">HOST</span>
+              <span v-if="msg.isHost" class="ml-0.5 text-[9px] font-bold text-yellow-500">HÔTE</span>
             </span>
             <span class="text-[10px] text-foreground-subtle opacity-0 transition-opacity group-hover:opacity-100">
               {{ formatTime(msg.timestamp) }}

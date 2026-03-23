@@ -13,6 +13,8 @@ const envSchema = z.object({
   JWT_SECRET: z.string().default('your-jwt-secret-change-in-production'),
   GOOGLE_API_KEY: z.string().default(''),
   GOOGLE_CSE_ID: z.string().default(''),
+  RESEND_API_KEY: z.string().default(''),
+  RESEND_FROM_EMAIL: z.string().default('TierTogether <onboarding@resend.dev>'),
 })
 
 export const env = envSchema.parse(process.env)

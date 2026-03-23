@@ -49,15 +49,15 @@ function onDragChange(evt: any) {
     <template v-if="store.pool.length === 0">
       <div class="flex flex-col items-center gap-3 py-12">
         <PartyPopper class="h-16 w-16 text-primary" />
-        <p class="text-xl font-bold text-foreground">All items ranked!</p>
-        <p class="text-sm text-foreground-muted">Every item has been placed in a tier.</p>
+        <p class="text-xl font-bold text-foreground">Tous les éléments classés !</p>
+        <p class="text-sm text-foreground-muted">Chaque élément a été placé dans un tier.</p>
       </div>
     </template>
 
     <!-- Focus card -->
     <template v-else>
       <p class="text-sm font-medium text-foreground-muted">
-        Classify this item — drag it to a tier
+        Classez cet élément — glissez-le vers un tier
       </p>
 
       <!-- Draggable card (pull only, no drop back) -->
@@ -120,13 +120,13 @@ function onDragChange(evt: any) {
           @click="store.skipCurrentItem()"
         >
           <SkipForward class="h-4 w-4" />
-          Skip / Later
+          Passer / Plus tard
         </button>
       </div>
 
       <!-- Remaining counter -->
       <p class="text-xs text-foreground-subtle">
-        {{ remainingCount }} item{{ remainingCount !== 1 ? 's' : '' }} remaining
+        {{ remainingCount }} élément{{ remainingCount !== 1 ? 's' : '' }} restant{{ remainingCount !== 1 ? 's' : '' }}
       </p>
     </template>
   </div>

@@ -48,6 +48,20 @@ router.get('/api/tierlists/public', async (req: Request, res: Response) => {
   }
 })
 
+// GET /api/tierlists/featured
+router.get('/api/tierlists/featured', async (_req: Request, res: Response) => {
+  try {
+    const tierlists = await TierListModel.find({ isPublic: true })
+      .sort({ downloads: -1 })
+      .limit(6)
+      .lean()
+    res.json({ tierlists })
+  } catch (err) {
+    console.error('[API] Failed to fetch featured tierlists:', err)
+    res.status(500).json({ error: 'Failed to fetch featured tierlists' })
+  }
+})
+
 // GET /api/tierlists/mine
 router.get('/api/tierlists/mine', async (req: Request, res: Response) => {
   const userId = getUserId(req)
@@ -64,6 +78,21 @@ router.get('/api/tierlists/mine', async (req: Request, res: Response) => {
   } catch (err) {
     console.error('[API] Failed to fetch user tierlists:', err)
     res.status(500).json({ error: 'Failed to fetch tierlists' })
+  }
+})
+
+// GET /api/tierlists/:id
+router.get('/api/tierlists/:id', async (req: Request, res: Response) => {
+  try {
+    const tierlist = await TierListModel.findById(req.params.id).lean()
+    if (!tierlist) {
+      res.status(404).json({ error: 'Tier list not found' })
+      return
+    }
+    res.json({ tierlist })
+  } catch (err) {
+    console.error('[API] Failed to fetch tierlist:', err)
+    res.status(500).json({ error: 'Failed to fetch tierlist' })
   }
 })
 

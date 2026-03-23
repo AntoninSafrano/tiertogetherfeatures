@@ -5,7 +5,7 @@ import { useAuth } from '@/composables/useAuth'
 import { Crown, Plus, Hash, LogOut } from 'lucide-vue-next'
 
 const router = useRouter()
-const { user, fetchUser, loginWithGoogle, logout } = useAuth()
+const { user, fetchUser, logout } = useAuth()
 
 onMounted(() => {
   fetchUser()
@@ -33,15 +33,15 @@ async function handleLogout() {
           class="inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm text-foreground-muted hover:bg-surface-hover hover:text-foreground transition-colors"
         >
           <Plus class="h-4 w-4" />
-          <span class="hidden sm:inline">Create</span>
+          <span class="hidden sm:inline">Créer</span>
         </router-link>
 
         <router-link
-          to="/create"
+          to="/create?mode=join"
           class="inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm text-foreground-muted hover:bg-surface-hover hover:text-foreground transition-colors"
         >
           <Hash class="h-4 w-4" />
-          <span class="hidden sm:inline">Join</span>
+          <span class="hidden sm:inline">Rejoindre</span>
         </router-link>
 
         <!-- Auth -->
@@ -57,19 +57,19 @@ async function handleLogout() {
             <button
               class="p-1.5 rounded-lg text-foreground-muted hover:text-foreground hover:bg-surface-hover transition-colors"
               @click="handleLogout"
-              title="Logout"
+              title="Déconnexion"
             >
               <LogOut class="h-4 w-4" />
             </button>
           </div>
         </template>
         <template v-else>
-          <button
+          <router-link
+            to="/auth"
             class="rounded-lg bg-surface-hover border border-border-hover px-3 py-1.5 text-sm text-foreground hover:bg-surface-active hover:text-foreground transition-all"
-            @click="loginWithGoogle"
           >
-            Sign in
-          </button>
+            Connexion
+          </router-link>
         </template>
       </div>
     </div>

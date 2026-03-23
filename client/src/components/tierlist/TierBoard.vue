@@ -35,7 +35,7 @@ const store = useRoomStore()
       @click="store.addRow()"
     >
       <Plus class="h-4 w-4" />
-      Add Tier
+      Ajouter un Tier
     </button>
 
     <!-- Focus Mode vs Staging Area -->

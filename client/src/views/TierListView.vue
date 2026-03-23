@@ -60,13 +60,13 @@ async function fetchTierList() {
   try {
     const res = await fetch(`${API_BASE}/api/tierlists/${route.params.id}`)
     if (!res.ok) {
-      error.value = 'Tier list not found'
+      error.value = 'Tier list introuvable'
       return
     }
     const data = await res.json()
     tierlist.value = data.tierlist
   } catch {
-    error.value = 'Failed to load tier list'
+    error.value = 'Impossible de charger la tier list'
   } finally {
     isLoading.value = false
   }
@@ -121,7 +121,7 @@ onMounted(() => {
         @click="router.push({ name: 'explore' })"
       >
         <ArrowLeft class="h-4 w-4" />
-        Back to Explore
+        Retour à l'exploration
       </button>
 
       <!-- Loading -->
@@ -140,7 +140,7 @@ onMounted(() => {
           class="mt-4 rounded-lg bg-surface-hover border border-border-hover px-4 py-2 text-sm text-foreground hover:bg-surface-active transition-colors"
           @click="router.push({ name: 'explore' })"
         >
-          Back to Explore
+          Retour à l'exploration
         </button>
       </div>
 
@@ -155,11 +155,11 @@ onMounted(() => {
             </span>
             <span class="inline-flex items-center gap-1">
               <Download class="h-3.5 w-3.5" />
-              {{ tierlist.downloads || 0 }} downloads
+              {{ tierlist.downloads || 0 }} téléchargements
             </span>
             <span class="inline-flex items-center gap-1">
               <LayoutGrid class="h-3.5 w-3.5" />
-              {{ totalItems }} items
+              {{ totalItems }} éléments
             </span>
             <span class="inline-flex items-center gap-1">
               <Calendar class="h-3.5 w-3.5" />
@@ -176,7 +176,7 @@ onMounted(() => {
             @click="cloneAndUse"
           >
             <Copy class="h-4 w-4" />
-            {{ isCloning ? 'Creating...' : 'Use as Template' }}
+            {{ isCloning ? 'Création...' : 'Utiliser comme modèle' }}
           </button>
         </div>
 
@@ -214,13 +214,13 @@ onMounted(() => {
                     class="h-6 w-6 cursor-pointer rounded border-0 bg-transparent"
                     @input="changeRowColor(index, ($event.target as HTMLInputElement).value)"
                   />
-                  Color
+                  Couleur
                 </label>
                 <button
                   class="rounded-md bg-red-500/10 px-3 py-1.5 text-sm font-medium text-red-400 hover:bg-red-500/20 transition-colors text-left"
                   @click="deleteRow(index)"
                 >
-                  Delete Row
+                  Supprimer la ligne
                 </button>
               </div>
             </div>
@@ -229,7 +229,7 @@ onMounted(() => {
 
         <!-- Pool -->
         <div v-if="tierlist.pool.length > 0" class="mt-6">
-          <h2 class="text-sm font-semibold text-foreground-muted mb-3">Pool ({{ tierlist.pool.length }} items)</h2>
+          <h2 class="text-sm font-semibold text-foreground-muted mb-3">Pool ({{ tierlist.pool.length }} éléments)</h2>
           <div class="rounded-xl border border-border-hover bg-surface p-4">
             <div class="flex flex-wrap gap-2">
               <TierItem v-for="item in tierlist.pool" :key="item.id" :item="item" />

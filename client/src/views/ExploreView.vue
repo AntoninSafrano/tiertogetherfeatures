@@ -45,20 +45,20 @@ function loadLocalRooms() {
 }
 
 const categories = [
-  { label: 'All', icon: MoreHorizontal },
-  { label: 'Gaming', icon: Gamepad2 },
-  { label: 'Food', icon: UtensilsCrossed },
-  { label: 'Anime', icon: Tv },
-  { label: 'Music', icon: Music },
-  { label: 'Movies', icon: Film },
-  { label: 'Sports', icon: Dumbbell },
-  { label: 'Other', icon: MoreHorizontal },
+  { label: 'Tout', icon: MoreHorizontal, value: 'All' },
+  { label: 'Jeux vidéo', icon: Gamepad2, value: 'Gaming' },
+  { label: 'Cuisine', icon: UtensilsCrossed, value: 'Food' },
+  { label: 'Anime', icon: Tv, value: 'Anime' },
+  { label: 'Musique', icon: Music, value: 'Music' },
+  { label: 'Films', icon: Film, value: 'Movies' },
+  { label: 'Sport', icon: Dumbbell, value: 'Sports' },
+  { label: 'Autre', icon: MoreHorizontal, value: 'Other' },
 ]
 
 const sortOptions = [
-  { value: 'downloads', label: 'Most Downloaded', icon: Download },
-  { value: 'recent', label: 'Recent', icon: Clock },
-  { value: 'popular', label: 'Popular', icon: TrendingUp },
+  { value: 'downloads', label: 'Plus téléchargés', icon: Download },
+  { value: 'recent', label: 'Récents', icon: Clock },
+  { value: 'popular', label: 'Populaires', icon: TrendingUp },
 ]
 
 async function fetchTierlists() {
@@ -66,7 +66,9 @@ async function fetchTierlists() {
   try {
     const params = new URLSearchParams()
     params.set('sort', activeSort.value)
-    if (activeCategory.value !== 'All') params.set('category', activeCategory.value)
+    if (activeCategory.value !== 'All') {
+      params.set('category', activeCategory.value)
+    }
     if (searchQuery.value) params.set('search', searchQuery.value)
 
     const res = await fetch(`${API_BASE}/api/tierlists/public?${params}`)
@@ -150,8 +152,8 @@ onMounted(async () => {
     <main class="mx-auto max-w-6xl px-4 py-8">
       <!-- Header -->
       <div class="mb-8">
-        <h1 class="text-3xl font-extrabold tracking-tight text-foreground mb-2">Explore Tier Lists</h1>
-        <p class="text-foreground-muted">Discover and use community tier lists</p>
+        <h1 class="text-3xl font-extrabold tracking-tight text-foreground mb-2">Explorer les Tier Lists</h1>
+        <p class="text-foreground-muted">Découvrez et utilisez les tier lists de la communauté</p>
       </div>
 
       <!-- Tabs (Explore / My Lists) -->
@@ -160,13 +162,13 @@ onMounted(async () => {
           :class="['px-4 py-2 text-sm font-medium transition-colors border-b-2 -mb-px', activeTab === 'explore' ? 'border-primary text-primary' : 'border-transparent text-foreground-muted hover:text-foreground']"
           @click="activeTab = 'explore'"
         >
-          Explore
+          Explorer
         </button>
         <button
           :class="['px-4 py-2 text-sm font-medium transition-colors border-b-2 -mb-px', activeTab === 'mine' ? 'border-primary text-primary' : 'border-transparent text-foreground-muted hover:text-foreground']"
           @click="activeTab = 'mine'; loadLocalRooms(); if (user) fetchMyLists()"
         >
-          My Lists
+          Mes Listes
         </button>
       </div>
 
@@ -177,7 +179,7 @@ onMounted(async () => {
           <input
             v-model="searchQuery"
             type="text"
-            placeholder="Search tier lists..."
+            placeholder="Rechercher des tier lists..."
             class="w-full rounded-lg border border-border bg-surface py-2.5 pl-10 pr-4 text-sm text-foreground placeholder:text-foreground-subtle focus:border-primary/50 focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
             @input="onSearchInput"
           />
@@ -187,9 +189,9 @@ onMounted(async () => {
         <div class="flex flex-wrap items-center gap-2 mb-6">
           <button
             v-for="cat in categories"
-            :key="cat.label"
-            :class="['inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium transition-all duration-200', activeCategory === cat.label ? 'bg-primary/20 text-primary ring-1 ring-primary/30' : 'bg-surface text-foreground-muted hover:bg-surface-hover hover:text-foreground']"
-            @click="activeCategory = cat.label"
+            :key="cat.value"
+            :class="['inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium transition-all duration-200', activeCategory === cat.value ? 'bg-primary/20 text-primary ring-1 ring-primary/30' : 'bg-surface text-foreground-muted hover:bg-surface-hover hover:text-foreground']"
+            @click="activeCategory = cat.value"
           >
             <component :is="cat.icon" class="h-3.5 w-3.5" />
             {{ cat.label }}
@@ -220,8 +222,8 @@ onMounted(async () => {
         </div>
 
         <div v-else-if="tierlists.length === 0" class="text-center py-16">
-          <p class="text-foreground-muted text-lg">No tier lists found</p>
-          <p class="text-foreground-subtle text-sm mt-1">Be the first to publish one!</p>
+          <p class="text-foreground-muted text-lg">Aucune tier list trouvée</p>
+          <p class="text-foreground-subtle text-sm mt-1">Soyez le premier à en publier une !</p>
         </div>
 
         <div v-else class="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
@@ -235,7 +237,7 @@ onMounted(async () => {
             <!-- Featured badge -->
             <div v-if="featuredIds.has(tl._id)" class="absolute top-1.5 left-1.5 z-10 flex items-center gap-1 rounded-full bg-yellow-500/90 px-2 py-0.5">
               <Star class="h-2.5 w-2.5 text-black" />
-              <span class="text-[9px] font-bold text-black">Featured</span>
+              <span class="text-[9px] font-bold text-black">En vedette</span>
             </div>
 
             <!-- Cover -->
@@ -277,7 +279,7 @@ onMounted(async () => {
         <div v-if="localRooms.length > 0" class="mb-8">
           <div class="flex items-center gap-2 mb-4">
             <History class="h-5 w-5 text-foreground-muted" />
-            <h2 class="text-lg font-bold text-foreground">My Tier Lists</h2>
+            <h2 class="text-lg font-bold text-foreground">Mes Tier Lists</h2>
           </div>
           <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
             <div
@@ -302,7 +304,7 @@ onMounted(async () => {
         <!-- Published lists (auth) -->
         <template v-if="user">
           <div v-if="myLists.length > 0">
-            <h2 class="text-lg font-bold text-foreground mb-4">Published Lists</h2>
+            <h2 class="text-lg font-bold text-foreground mb-4">Listes publiées</h2>
             <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
               <div
                 v-for="tl in myLists"
@@ -336,8 +338,8 @@ onMounted(async () => {
         </template>
 
         <div v-if="localRooms.length === 0 && myLists.length === 0" class="text-center py-16">
-          <p class="text-foreground-muted text-lg">No tier lists yet</p>
-          <p class="text-foreground-subtle text-sm mt-1">Create or clone a tier list to see it here!</p>
+          <p class="text-foreground-muted text-lg">Aucune tier list pour le moment</p>
+          <p class="text-foreground-subtle text-sm mt-1">Créez ou clonez une tier list pour la voir ici !</p>
         </div>
       </template>
     </main>

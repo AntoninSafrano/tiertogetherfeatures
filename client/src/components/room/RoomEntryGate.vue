@@ -31,7 +31,7 @@ onMounted(async () => {
 function continueAsGuest() {
   const name = guestName.value.trim()
   if (name.length < 2) {
-    guestError.value = 'Nickname must be at least 2 characters'
+    guestError.value = 'Le pseudo doit contenir au moins 2 caractères'
     return
   }
   guestError.value = ''
@@ -48,7 +48,7 @@ function signInWithGoogle() {
 <template>
   <!-- Loading check -->
   <div v-if="checking || authLoading" class="flex min-h-screen items-center justify-center bg-background">
-    <p class="text-sm text-foreground-muted">Checking identity...</p>
+    <p class="text-sm text-foreground-muted">Vérification de l'identité...</p>
   </div>
 
   <!-- Gate UI -->
@@ -59,7 +59,7 @@ function signInWithGoogle() {
         <div class="mb-2 flex items-center gap-3">
           <Crown class="h-6 w-6 text-primary" :stroke-width="2.5" />
           <h1 class="text-xl sm:text-2xl font-bold tracking-tight text-foreground">
-            Join Room
+            Rejoindre la Room
           </h1>
           <span class="ml-auto rounded border border-border-hover bg-surface-hover px-2 py-0.5 font-mono text-xs text-foreground-muted">
             {{ roomId }}
@@ -67,7 +67,7 @@ function signInWithGoogle() {
         </div>
 
         <p class="mb-6 text-sm text-foreground-muted">
-          Choose how you want to join this session.
+          Choisissez comment rejoindre cette session.
         </p>
 
         <!-- Separator -->
@@ -83,13 +83,13 @@ function signInWithGoogle() {
           @click="signInWithGoogle"
         >
           <LogIn class="h-4 w-4" />
-          Sign in with Google
+          Se connecter avec Google
         </button>
 
         <!-- Or separator -->
         <div class="mb-4 flex items-center gap-3">
           <div class="h-px flex-1 bg-border-hover" />
-          <span class="text-xs text-foreground-subtle">or</span>
+          <span class="text-xs text-foreground-subtle">ou</span>
           <div class="h-px flex-1 bg-border-hover" />
         </div>
 
@@ -100,7 +100,7 @@ function signInWithGoogle() {
             <input
               v-model="guestName"
               type="text"
-              placeholder="Guest Nickname"
+              placeholder="Pseudo invité"
               maxlength="20"
               class="w-full rounded-lg border border-border bg-surface-hover/80 py-2.5 pl-10 pr-4 text-sm text-foreground placeholder:text-foreground-subtle transition-all duration-300 focus:border-primary/50 focus:outline-none focus:ring-2 focus:ring-primary/20"
               @keyup.enter="continueAsGuest"
@@ -114,7 +114,7 @@ function signInWithGoogle() {
             :disabled="!guestName.trim()"
             @click="continueAsGuest"
           >
-            Continue as Guest
+            Continuer en tant qu'invité
           </button>
         </div>
       </div>

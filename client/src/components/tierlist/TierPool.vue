@@ -36,7 +36,7 @@ function onDragChange(evt: any) {
 <template>
   <div class="p-4">
     <div class="mb-3 flex items-center gap-2">
-      <h3 class="text-sm font-semibold text-foreground">Unranked</h3>
+      <h3 class="text-sm font-semibold text-foreground">Non classés</h3>
       <span class="rounded-full bg-surface-active px-2 py-0.5 text-xs font-medium text-foreground-muted">
         {{ pool.length }}
       </span>
@@ -66,7 +66,7 @@ function onDragChange(evt: any) {
         class="pointer-events-none absolute inset-0 flex flex-col items-center justify-center gap-2"
       >
         <LayoutGrid class="h-8 w-8 text-foreground-subtle" />
-        <span class="text-sm text-foreground-subtle">Drag items here or upload above</span>
+        <span class="text-sm text-foreground-subtle">Glissez des éléments ici ou ajoutez-en ci-dessus</span>
       </div>
     </div>
   </div>

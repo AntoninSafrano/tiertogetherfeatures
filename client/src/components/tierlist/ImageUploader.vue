@@ -50,7 +50,7 @@ async function processFiles(files: File[]) {
       uploadProgress.value.current++
     } catch (err) {
       console.error(`[Upload] Failed for ${file.name}:`, err)
-      error.value = `Failed to upload ${file.name}`
+      error.value = `Échec du téléchargement de ${file.name}`
       uploadProgress.value.current++
     }
   }
@@ -113,7 +113,7 @@ async function searchImages() {
     const data = await res.json()
 
     if (!res.ok) {
-      error.value = data.error || 'Search failed'
+      error.value = data.error || 'Échec de la recherche'
       searchResults.value = []
       return
     }
@@ -121,7 +121,7 @@ async function searchImages() {
     searchResults.value = data
   } catch (err) {
     console.error('[ImageSearch] Error:', err)
-    error.value = 'Search failed'
+    error.value = 'Échec de la recherche'
     searchResults.value = []
   } finally {
     isSearching.value = false
@@ -190,7 +190,7 @@ onUnmounted(() => {
         <input
           v-model="searchQuery"
           type="text"
-          placeholder="Search images..."
+          placeholder="Rechercher des images..."
           class="w-full rounded-lg border border-border-hover bg-surface py-2 pl-9 pr-3 text-sm text-foreground placeholder-foreground-muted outline-none transition-colors focus:border-primary/30"
           @input="onSearchInput"
           @keydown="onSearchKeydown"
@@ -221,7 +221,7 @@ onUnmounted(() => {
         <input
           v-model="labelInput"
           type="text"
-          placeholder="Label"
+          placeholder="Libellé"
           maxlength="50"
           class="flex-1 rounded border border-border-hover bg-surface-hover px-2 py-1 text-sm text-foreground placeholder-foreground-muted outline-none focus:border-primary/30"
           @keydown.enter="confirmAddImage"
@@ -230,7 +230,7 @@ onUnmounted(() => {
           class="rounded bg-primary px-3 py-1 text-sm font-semibold text-white transition-colors hover:bg-primary-hover"
           @click="confirmAddImage"
         >
-          Add
+          Ajouter
         </button>
         <button
           class="rounded p-1 text-foreground-muted transition-colors hover:text-foreground"
@@ -269,7 +269,7 @@ onUnmounted(() => {
     <!-- Separator -->
     <div v-if="searchQuery || searchResults.length > 0" class="flex items-center gap-3 px-4 py-2">
       <div class="h-px flex-1 bg-border-hover" />
-      <span class="text-xs text-foreground-muted">or upload manually</span>
+      <span class="text-xs text-foreground-muted">ou télécharger manuellement</span>
       <div class="h-px flex-1 bg-border-hover" />
     </div>
 
@@ -287,19 +287,19 @@ onUnmounted(() => {
       <div v-if="isUploading" class="flex items-center justify-center gap-3">
         <div class="h-5 w-5 animate-spin rounded-full border-2 border-white/20 border-t-primary" />
         <span class="text-sm text-foreground-muted">
-          Uploading {{ uploadProgress.current }}/{{ uploadProgress.total }}...
+          Téléchargement {{ uploadProgress.current }}/{{ uploadProgress.total }}...
         </span>
       </div>
 
       <div v-else class="flex items-center justify-center gap-2">
         <ImagePlus class="h-5 w-5 text-foreground-muted" />
         <p class="text-sm text-foreground-muted">
-          Drop images, paste, or
+          Glissez des images, collez, ou
           <button
             class="font-semibold text-primary transition-colors hover:text-primary-hover"
             @click="triggerFileInput"
           >
-            browse
+            parcourir
           </button>
         </p>
       </div>

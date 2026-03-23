@@ -35,7 +35,7 @@ function getInitials(name: string): string {
     <div class="flex flex-col items-center gap-2">
       <Users class="h-4 w-4 text-foreground-muted" />
       <span class="text-[10px] font-bold tracking-widest text-foreground-muted uppercase [writing-mode:vertical-lr]">
-        Users
+        Joueurs
       </span>
       <span class="flex h-5 min-w-5 items-center justify-center rounded-full bg-primary/80 px-1 text-[10px] font-bold text-white">
         {{ store.users.length }}
@@ -60,7 +60,7 @@ function getInitials(name: string): string {
       <div class="flex items-center justify-between border-b border-border-hover px-4 py-3">
         <div class="flex items-center gap-2">
           <Users class="h-4 w-4 text-primary" />
-          <span class="font-mono text-xs font-bold tracking-wider text-foreground uppercase">Collaborators</span>
+          <span class="font-mono text-xs font-bold tracking-wider text-foreground uppercase">Collaborateurs</span>
           <span class="flex h-5 min-w-5 items-center justify-center rounded-full bg-primary/20 px-1 text-[10px] font-bold text-primary">
             {{ store.users.length }}
           </span>
@@ -76,7 +76,7 @@ function getInitials(name: string): string {
       <!-- User List -->
       <div class="flex-1 overflow-y-auto px-3 py-3 space-y-1">
         <div v-if="sortedUsers.length === 0" class="flex h-full items-center justify-center">
-          <p class="text-xs text-foreground-subtle">No users connected</p>
+          <p class="text-xs text-foreground-subtle">Aucun utilisateur connecté</p>
         </div>
 
         <div
@@ -118,7 +118,7 @@ function getInitials(name: string): string {
               />
             </div>
             <span class="text-[10px] text-foreground-muted">
-              {{ u.isGuest ? 'Guest' : 'Google' }}
+              {{ u.isGuest ? 'Invité' : 'Google' }}
             </span>
           </div>
         </div>

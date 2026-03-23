@@ -127,14 +127,14 @@ function onDragChange(evt: any) {
       <div v-if="!readonly" class="absolute -right-0 top-0 bottom-0 flex flex-col items-center justify-center gap-0.5 sm:opacity-0 sm:group-hover/row:opacity-100 transition-opacity duration-200 z-10 translate-x-full px-1">
         <button
           class="p-1 rounded hover:bg-surface-active text-foreground-muted hover:text-foreground transition-colors"
-          title="Move up"
+          title="Monter"
           @click.stop="store.reorderRow({ rowId: rowData.id, direction: 'up' })"
         >
           <ArrowUp class="h-3.5 w-3.5" />
         </button>
         <button
           class="p-1 rounded hover:bg-surface-active text-foreground-muted hover:text-foreground transition-colors"
-          title="Change color"
+          title="Changer la couleur"
           @click.stop="openColorPicker"
         >
           <Palette class="h-3.5 w-3.5" />
@@ -150,14 +150,14 @@ function onDragChange(evt: any) {
         </button>
         <button
           class="p-1 rounded hover:bg-surface-active text-foreground-muted hover:text-foreground transition-colors"
-          title="Move down"
+          title="Descendre"
           @click.stop="store.reorderRow({ rowId: rowData.id, direction: 'down' })"
         >
           <ArrowDown class="h-3.5 w-3.5" />
         </button>
         <button
           class="p-1 rounded hover:bg-red-500/20 text-foreground-muted hover:text-red-400 transition-colors"
-          title="Delete row"
+          title="Supprimer la ligne"
           @click.stop="showDeleteConfirm = true"
         >
           <Trash2 class="h-3.5 w-3.5" />
@@ -198,20 +198,20 @@ function onDragChange(evt: any) {
         @click.self="showDeleteConfirm = false"
       >
         <div class="rounded-2xl border border-border-hover bg-surface p-6 shadow-2xl max-w-sm w-full mx-4">
-          <h3 class="text-lg font-bold text-foreground mb-2">Delete Row "{{ rowData.label }}"?</h3>
-          <p class="text-sm text-foreground-muted mb-4">Items will be moved back to the pool.</p>
+          <h3 class="text-lg font-bold text-foreground mb-2">Supprimer la ligne "{{ rowData.label }}" ?</h3>
+          <p class="text-sm text-foreground-muted mb-4">Les éléments seront remis dans le pool.</p>
           <div class="flex gap-3 justify-end">
             <button
               class="px-4 py-2 rounded-lg text-sm text-foreground-muted hover:bg-surface-hover transition-colors"
               @click="showDeleteConfirm = false"
             >
-              Cancel
+              Annuler
             </button>
             <button
               class="px-4 py-2 rounded-lg text-sm bg-red-500/20 text-red-400 hover:bg-red-500/30 transition-colors"
               @click="confirmDelete"
             >
-              Delete
+              Supprimer
             </button>
           </div>
         </div>

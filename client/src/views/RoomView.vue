@@ -50,7 +50,7 @@ async function onGateReady(payload: { username: string; avatar: string; isGuest:
   if (res.success) {
     gateResolved.value = true
   } else {
-    error.value = res.error ?? 'Failed to join room'
+    error.value = res.error ?? 'Impossible de rejoindre la room'
     gateResolved.value = true // Show error in main view
   }
 }
@@ -85,17 +85,17 @@ function goHome() {
           {{ roomId }}
         </Badge>
         <Badge v-if="isDemo" variant="secondary">
-          Demo Mode
+          Mode Démo
         </Badge>
         <Badge v-else variant="secondary">
-          {{ store.users.length }} online
+          {{ store.users.length }} en ligne
         </Badge>
       </div>
     </header>
 
     <!-- Loading -->
     <main v-if="isLoading" class="flex flex-1 items-center justify-center">
-      <p class="text-foreground-muted">Joining room...</p>
+      <p class="text-foreground-muted">Connexion à la room...</p>
     </main>
 
     <!-- Error -->
@@ -105,7 +105,7 @@ function goHome() {
         class="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary-hover"
         @click="goHome"
       >
-        Back to Home
+        Retour à l'accueil
       </button>
     </main>
 
