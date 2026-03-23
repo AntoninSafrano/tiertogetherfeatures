@@ -9,7 +9,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@fontsource/outfit": "^5.2.8",
+    "@fontsource/inter": "^5.2.8",
     "@tiertogether/shared": "*",
     "@vueuse/core": "^12.4.0",
     "class-variance-authority": "^0.7.1",

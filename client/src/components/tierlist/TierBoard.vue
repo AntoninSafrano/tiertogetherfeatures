@@ -13,7 +13,7 @@ const store = useRoomStore()
 <template>
   <div class="mx-auto w-full max-w-5xl space-y-6">
     <!-- Title -->
-    <h2 class="text-center text-3xl font-extrabold tracking-tight text-foreground">
+    <h2 class="text-center text-xl sm:text-2xl lg:text-3xl font-extrabold tracking-tight text-foreground">
       {{ store.title }}
     </h2>
 
@@ -21,7 +21,7 @@ const store = useRoomStore()
     <TierToolbar />
 
     <!-- Tier Rows -->
-    <div id="tier-rows-container" class="overflow-hidden rounded-xl border border-white/10 shadow-2xl">
+    <div id="tier-rows-container" class="overflow-hidden rounded-xl border border-border-hover shadow-2xl">
       <TierRow
         v-for="(row, index) in store.rows"
         :key="row.id"
@@ -31,21 +31,21 @@ const store = useRoomStore()
 
     <!-- Add Row Button -->
     <button
-      class="w-full flex items-center justify-center gap-2 rounded-lg border border-dashed border-white/10 py-2 text-sm text-zinc-500 hover:text-primary hover:border-primary/30 transition-all duration-300"
+      class="w-full flex items-center justify-center gap-2 rounded-lg border border-dashed border-border-hover py-2 text-sm text-foreground-muted hover:text-primary hover:border-primary/30 transition-all duration-300"
       @click="store.addRow()"
     >
       <Plus class="h-4 w-4" />
-      Add Tier
+      Ajouter un Tier
     </button>
 
     <!-- Focus Mode vs Staging Area -->
     <Transition name="fade" mode="out-in">
-      <div v-if="store.isFocusMode" key="focus" class="rounded-xl border border-white/10 bg-white/[0.03]">
+      <div v-if="store.isFocusMode" key="focus" class="rounded-xl border border-border-hover bg-surface/20">
         <FocusView />
       </div>
-      <div v-else key="pool" class="overflow-hidden rounded-xl border border-white/10 bg-white/[0.03]">
+      <div v-else key="pool" class="overflow-hidden rounded-xl border border-border-hover bg-surface/20">
         <ImageUploader />
-        <div class="border-t border-white/5" />
+        <div class="border-t border-border" />
         <TierPool />
       </div>
     </Transition>

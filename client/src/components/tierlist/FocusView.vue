@@ -44,20 +44,20 @@ function onDragChange(evt: any) {
 </script>
 
 <template>
-  <div class="flex flex-col items-center gap-6 py-8">
+  <div class="flex flex-col items-center gap-6 py-4 sm:py-8">
     <!-- All ranked state -->
     <template v-if="store.pool.length === 0">
       <div class="flex flex-col items-center gap-3 py-12">
         <PartyPopper class="h-16 w-16 text-primary" />
-        <p class="text-xl font-bold text-foreground">All items ranked!</p>
-        <p class="text-sm text-foreground-muted">Every item has been placed in a tier.</p>
+        <p class="text-xl font-bold text-foreground">Tous les éléments classés !</p>
+        <p class="text-sm text-foreground-muted">Chaque élément a été placé dans un tier.</p>
       </div>
     </template>
 
     <!-- Focus card -->
     <template v-else>
       <p class="text-sm font-medium text-foreground-muted">
-        Classify this item — drag it to a tier
+        Classez cet élément — glissez-le vers un tier
       </p>
 
       <!-- Draggable card (pull only, no drop back) -->
@@ -75,7 +75,7 @@ function onDragChange(evt: any) {
       >
         <template #item="{ element }">
           <div
-            class="relative h-56 w-56 cursor-grab rounded-2xl border border-white/10 bg-surface shadow-2xl ring-0 ring-primary/30 transition-all duration-200 hover:scale-[1.03] hover:ring-2 active:cursor-grabbing sm:h-64 sm:w-64"
+            class="relative h-44 w-44 sm:h-56 sm:w-56 cursor-grab rounded-2xl border border-border-hover bg-surface shadow-2xl ring-0 ring-primary/30 transition-all duration-200 hover:scale-[1.03] hover:ring-2 active:cursor-grabbing md:h-64 md:w-64"
           >
             <!-- Image mode -->
             <img
@@ -116,17 +116,17 @@ function onDragChange(evt: any) {
       <div class="flex items-center gap-4">
         <button
           v-if="store.isHost"
-          class="flex items-center gap-2 rounded-lg border border-white/10 bg-white/5 px-4 py-2 text-sm font-medium text-foreground-muted transition-colors hover:bg-white/10 hover:text-foreground"
+          class="flex items-center gap-2 rounded-lg border border-border-hover bg-surface-hover px-4 py-2 text-sm font-medium text-foreground-muted transition-colors hover:bg-surface-active hover:text-foreground"
           @click="store.skipCurrentItem()"
         >
           <SkipForward class="h-4 w-4" />
-          Skip / Later
+          Passer / Plus tard
         </button>
       </div>
 
       <!-- Remaining counter -->
       <p class="text-xs text-foreground-subtle">
-        {{ remainingCount }} item{{ remainingCount !== 1 ? 's' : '' }} remaining
+        {{ remainingCount }} élément{{ remainingCount !== 1 ? 's' : '' }} restant{{ remainingCount !== 1 ? 's' : '' }}
       </p>
     </template>
   </div>

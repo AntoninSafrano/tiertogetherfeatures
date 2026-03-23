@@ -3,7 +3,7 @@ import { ref, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useSocket } from '@/composables/useSocket'
 import { useRoomStore } from '@/stores/room'
-import { User, Type, Hash, Layers, Terminal, SlidersHorizontal } from 'lucide-vue-next'
+import { User, Type, Hash, Crown, Terminal, SlidersHorizontal } from 'lucide-vue-next'
 
 const router = useRouter()
 const store = useRoomStore()
@@ -62,7 +62,7 @@ onUnmounted(() => {
 
 async function createRoom() {
   if (!usernameInput.value.trim() || !tierListName.value.trim()) {
-    error.value = 'Please fill in all fields'
+    error.value = 'Veuillez remplir tous les champs'
     return
   }
 
@@ -76,13 +76,13 @@ async function createRoom() {
   if (res.success && res.roomId) {
     router.push({ name: 'room', params: { id: res.roomId } })
   } else {
-    error.value = res.error ?? 'Failed to create room'
+    error.value = res.error ?? 'Échec de la création'
   }
 }
 
 async function joinRoom() {
   if (!usernameInput.value.trim() || !roomIdInput.value.trim()) {
-    error.value = 'Please enter your name and room code'
+    error.value = 'Veuillez entrer votre nom et le code de la room'
     return
   }
 
@@ -96,7 +96,7 @@ async function joinRoom() {
   if (res.success && res.roomId) {
     router.push({ name: 'room', params: { id: res.roomId } })
   } else {
-    error.value = res.error ?? 'Failed to join room'
+    error.value = res.error ?? 'Échec de la connexion'
   }
 }
 
@@ -108,7 +108,7 @@ function tryDemo() {
 <template>
   <div
     ref="parallaxRef"
-    class="noise-bg flex min-h-screen flex-col bg-zinc-950"
+    class="noise-bg flex min-h-screen flex-col bg-background"
     :style="{
       '--px': `${mouseX * -12}px`,
       '--py': `${mouseY * -12}px`,
@@ -121,15 +121,15 @@ function tryDemo() {
         <span class="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
         <span class="relative inline-flex h-2 w-2 rounded-full bg-emerald-500" />
       </span>
-      <span class="font-mono text-xs text-zinc-600">SYSTEM ONLINE</span>
+      <span class="font-mono text-xs text-foreground-subtle">EN LIGNE</span>
     </div>
 
     <!-- Main content -->
-    <main class="flex flex-1 items-center justify-center px-4 py-12">
+    <main class="flex flex-1 items-center justify-center px-4 py-6 sm:py-12">
       <div class="relative z-10 w-full max-w-lg">
         <!-- Lobby Card -->
         <div
-          class="rounded-2xl border border-white/10 bg-zinc-900/50 p-8 shadow-2xl shadow-black/50 transition-all duration-700 ease-out"
+          class="rounded-2xl border border-border-hover bg-surface/50 p-5 sm:p-8 shadow-2xl shadow-black/50 transition-all duration-700 ease-out"
           :class="step >= 1 ? 'translate-y-0 opacity-100' : 'translate-y-6 opacity-0'"
         >
           <!-- Header -->
@@ -137,8 +137,8 @@ function tryDemo() {
             class="mb-2 flex items-center gap-3 transition-all duration-500 ease-out"
             :class="step >= 2 ? 'translate-y-0 opacity-100' : 'translate-y-3 opacity-0'"
           >
-            <Layers class="h-6 w-6 text-primary" :stroke-width="2.5" />
-            <h1 class="text-2xl font-bold tracking-tight text-white">
+            <Crown class="h-6 w-6 text-primary" :stroke-width="2.5" />
+            <h1 class="text-xl sm:text-2xl font-bold tracking-tight text-foreground">
               TierTogether
             </h1>
             <span class="border border-primary/40 bg-primary/5 px-1.5 py-px font-mono text-[9px] font-bold tracking-widest text-primary/80 uppercase">
@@ -148,17 +148,17 @@ function tryDemo() {
 
           <!-- Subtitle -->
           <p
-            class="mb-6 text-sm text-zinc-400 transition-all duration-500 ease-out"
+            class="mb-6 text-sm text-foreground-muted transition-all duration-500 ease-out"
             :class="step >= 2 ? 'translate-y-0 opacity-100' : 'translate-y-3 opacity-0'"
           >
-            Instant Multiplayer Ranking.
+            Classement multijoueur instantané.
           </p>
 
           <!-- Separator -->
           <div class="mb-6 flex items-center gap-2">
-            <div class="h-px flex-1 border-b border-dashed border-white/10" />
-            <span class="text-[8px] text-zinc-700">&bull;</span>
-            <div class="h-px flex-1 border-b border-dashed border-white/10" />
+            <div class="h-px flex-1 border-b border-dashed border-border-hover" />
+            <span class="text-[8px] text-foreground-subtle">&bull;</span>
+            <div class="h-px flex-1 border-b border-dashed border-border-hover" />
           </div>
 
           <!-- Error -->
@@ -171,28 +171,28 @@ function tryDemo() {
             class="mb-6 transition-all duration-500 ease-out"
             :class="step >= 3 ? 'translate-y-0 opacity-100' : 'translate-y-3 opacity-0'"
           >
-            <label for="username" class="mb-1.5 flex items-center gap-1.5 font-mono text-[11px] font-medium tracking-wider text-zinc-500 uppercase">
+            <label for="username" class="mb-1.5 flex items-center gap-1.5 font-mono text-[11px] font-medium tracking-wider text-foreground-muted uppercase">
               <Terminal class="h-3 w-3" />
-              Display Name
+              Pseudo
             </label>
             <div class="relative">
-              <User class="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-600" />
+              <User class="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-foreground-subtle" />
               <input
                 id="username"
                 v-model="usernameInput"
                 type="text"
-                placeholder="Your name"
+                placeholder="Votre pseudo"
                 maxlength="20"
-                class="home-input w-full rounded-lg border border-white/5 bg-zinc-800/80 py-2.5 pl-10 pr-4 text-sm text-foreground placeholder:text-zinc-600 transition-all duration-300 focus:border-primary/50 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:shadow-[0_0_12px_rgba(145,71,255,0.15)]"
+                class="home-input w-full rounded-lg border border-border bg-surface-hover/80 py-2.5 pl-10 pr-4 text-sm text-foreground placeholder:text-foreground-subtle transition-all duration-300 focus:border-primary/50 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:shadow-[0_0_12px_rgba(99,102,241,0.15)]"
               />
             </div>
           </div>
 
           <!-- Separator -->
           <div class="mb-6 flex items-center gap-2">
-            <div class="h-px flex-1 border-b border-dashed border-white/10" />
-            <span class="text-[8px] text-zinc-700">&bull;</span>
-            <div class="h-px flex-1 border-b border-dashed border-white/10" />
+            <div class="h-px flex-1 border-b border-dashed border-border-hover" />
+            <span class="text-[8px] text-foreground-subtle">&bull;</span>
+            <div class="h-px flex-1 border-b border-dashed border-border-hover" />
           </div>
 
           <!-- Session Config -->
@@ -200,23 +200,23 @@ function tryDemo() {
             class="transition-all duration-500 ease-out"
             :class="step >= 4 ? 'translate-y-0 opacity-100' : 'translate-y-3 opacity-0'"
           >
-            <p class="mb-4 flex items-center gap-1.5 font-mono text-[11px] font-medium tracking-wider text-zinc-500 uppercase">
+            <p class="mb-4 flex items-center gap-1.5 font-mono text-[11px] font-medium tracking-wider text-foreground-muted uppercase">
               <SlidersHorizontal class="h-3 w-3" />
-              Session Config
+              Configuration
             </p>
 
             <!-- Create / Join Grid -->
-            <div class="grid grid-cols-2 gap-3">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <!-- Create -->
               <div class="space-y-3">
                 <div class="relative">
-                  <Type class="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-600" />
+                  <Type class="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-foreground-subtle" />
                   <input
                     v-model="tierListName"
                     type="text"
-                    placeholder="Room name"
+                    placeholder="Nom de la room"
                     maxlength="100"
-                    class="home-input w-full rounded-lg border border-white/5 bg-zinc-800/80 py-2.5 pl-10 pr-3 text-sm text-foreground placeholder:text-zinc-600 transition-all duration-300 focus:border-primary/50 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:shadow-[0_0_12px_rgba(145,71,255,0.15)]"
+                    class="home-input w-full rounded-lg border border-border bg-surface-hover/80 py-2.5 pl-10 pr-3 text-sm text-foreground placeholder:text-foreground-subtle transition-all duration-300 focus:border-primary/50 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:shadow-[0_0_12px_rgba(99,102,241,0.15)]"
                   />
                 </div>
                 <button
@@ -224,28 +224,28 @@ function tryDemo() {
                   class="w-full rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-white shadow-md shadow-primary/15 transition-all duration-300 ease-out hover:scale-[1.03] hover:bg-primary-hover hover:shadow-lg hover:shadow-primary/25 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:scale-100"
                   @click="createRoom"
                 >
-                  {{ isLoading ? 'Creating...' : 'Create' }}
+                  {{ isLoading ? 'Création...' : 'Créer' }}
                 </button>
               </div>
 
               <!-- Join -->
               <div class="space-y-3">
                 <div class="relative">
-                  <Hash class="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-600" />
+                  <Hash class="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-foreground-subtle" />
                   <input
                     v-model="roomIdInput"
                     type="text"
-                    placeholder="Room code"
+                    placeholder="Code de la room"
                     maxlength="50"
-                    class="home-input w-full rounded-lg border border-white/5 bg-zinc-800/80 py-2.5 pl-10 pr-3 text-sm text-foreground placeholder:text-zinc-600 transition-all duration-300 focus:border-primary/50 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:shadow-[0_0_12px_rgba(145,71,255,0.15)]"
+                    class="home-input w-full rounded-lg border border-border bg-surface-hover/80 py-2.5 pl-10 pr-3 text-sm text-foreground placeholder:text-foreground-subtle transition-all duration-300 focus:border-primary/50 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:shadow-[0_0_12px_rgba(99,102,241,0.15)]"
                   />
                 </div>
                 <button
                   :disabled="!isConnected || isLoading"
-                  class="w-full rounded-lg border border-white/10 bg-transparent px-4 py-2.5 text-sm font-semibold text-zinc-300 transition-all duration-300 ease-out hover:scale-[1.03] hover:border-white hover:bg-white/5 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:scale-100"
+                  class="w-full rounded-lg border border-border-hover bg-transparent px-4 py-2.5 text-sm font-semibold text-foreground transition-all duration-300 ease-out hover:scale-[1.03] hover:border-foreground hover:bg-surface-hover active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:scale-100"
                   @click="joinRoom"
                 >
-                  {{ isLoading ? 'Joining...' : 'Join' }}
+                  {{ isLoading ? 'Connexion...' : 'Rejoindre' }}
                 </button>
               </div>
             </div>
@@ -258,13 +258,13 @@ function tryDemo() {
           :class="step >= 5 ? 'translate-y-0 opacity-100' : 'translate-y-4 opacity-0'"
         >
           <button
-            class="text-sm text-zinc-500 transition-colors hover:text-zinc-300 hover:underline"
+            class="text-sm text-foreground-muted transition-colors hover:text-foreground hover:underline"
             @click="tryDemo"
           >
-            Solo Mode (Offline)
+            Mode Solo (Hors ligne)
           </button>
-          <span class="flex items-center gap-1.5 font-mono text-[10px] text-zinc-600">
-            <span class="h-1.5 w-1.5 rounded-full" :class="isConnected ? 'bg-emerald-500' : 'bg-zinc-600'" />
+          <span class="flex items-center gap-1.5 font-mono text-[10px] text-foreground-subtle">
+            <span class="h-1.5 w-1.5 rounded-full" :class="isConnected ? 'bg-emerald-500' : 'bg-foreground-subtle'" />
             v1.0.0
           </span>
         </div>
@@ -273,8 +273,8 @@ function tryDemo() {
 
     <!-- Footer -->
     <footer class="relative z-10 px-6 py-4">
-      <div class="flex items-center justify-between text-xs text-zinc-600">
-        <span>Built with Vue & Socket.io</span>
+      <div class="flex items-center justify-between text-xs text-foreground-subtle">
+        <span>Construit avec Vue & Socket.io</span>
         <span>&copy; {{ new Date().getFullYear() }} TierTogether</span>
       </div>
     </footer>
