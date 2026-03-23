@@ -1,4 +1,5 @@
 import { ref, readonly, computed } from 'vue'
+import { API_BASE } from '@/config'
 
 export interface AuthUser {
   id: string
@@ -10,8 +11,6 @@ export interface AuthUser {
 const user = ref<AuthUser | null>(null)
 const isLoading = ref(false)
 const authError = ref<string | null>(null)
-
-const API_BASE = 'http://localhost:3001'
 
 export function useAuth() {
   async function fetchUser() {

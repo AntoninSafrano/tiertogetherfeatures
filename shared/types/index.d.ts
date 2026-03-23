@@ -24,6 +24,8 @@ export interface RoomUser {
     id: string;
     username: string;
     color: string;
+    avatar?: string;
+    isGuest?: boolean;
 }
 export interface Room {
     id: string;
@@ -111,10 +113,14 @@ export interface ChatMessage {
 export interface CreateRoomPayload {
     username: string;
     tierListName: string;
+    avatar?: string;
+    isGuest?: boolean;
 }
 export interface JoinRoomPayload {
     username: string;
     roomId: string;
+    avatar?: string;
+    isGuest?: boolean;
 }
 export interface MoveItemPayload {
     itemId: string;
@@ -162,23 +168,23 @@ export declare const tierRowSchema: z.ZodObject<{
         imageUrl?: string | undefined;
     }>, "many">;
 }, "strip", z.ZodTypeAny, {
-    id: string;
-    label: string;
-    color: string;
     items: {
         id: string;
         label: string;
         imageUrl: string;
     }[];
-}, {
     id: string;
     label: string;
     color: string;
+}, {
     items: {
         id: string;
         label: string;
         imageUrl?: string | undefined;
     }[];
+    id: string;
+    label: string;
+    color: string;
 }>;
 export declare const tierListSchema: z.ZodObject<{
     id: z.ZodString;
@@ -201,23 +207,23 @@ export declare const tierListSchema: z.ZodObject<{
             imageUrl?: string | undefined;
         }>, "many">;
     }, "strip", z.ZodTypeAny, {
-        id: string;
-        label: string;
-        color: string;
         items: {
             id: string;
             label: string;
             imageUrl: string;
         }[];
-    }, {
         id: string;
         label: string;
         color: string;
+    }, {
         items: {
             id: string;
             label: string;
             imageUrl?: string | undefined;
         }[];
+        id: string;
+        label: string;
+        color: string;
     }>, "many">;
     pool: z.ZodArray<z.ZodObject<{
         id: z.ZodString;
@@ -237,14 +243,14 @@ export declare const tierListSchema: z.ZodObject<{
     id: string;
     title: string;
     rows: {
-        id: string;
-        label: string;
-        color: string;
         items: {
             id: string;
             label: string;
             imageUrl: string;
         }[];
+        id: string;
+        label: string;
+        color: string;
     }[];
     pool: {
         id: string;
@@ -256,14 +262,14 @@ export declare const tierListSchema: z.ZodObject<{
     id: string;
     title: string;
     rows: {
-        id: string;
-        label: string;
-        color: string;
         items: {
             id: string;
             label: string;
             imageUrl?: string | undefined;
         }[];
+        id: string;
+        label: string;
+        color: string;
     }[];
     pool: {
         id: string;
@@ -286,11 +292,11 @@ export declare const joinRoomSchema: z.ZodObject<{
     username: z.ZodString;
     roomId: z.ZodString;
 }, "strip", z.ZodTypeAny, {
-    roomId: string;
     username: string;
+    roomId: string;
 }, {
-    roomId: string;
     username: string;
+    roomId: string;
 }>;
 export declare const moveItemSchema: z.ZodObject<{
     itemId: z.ZodString;

@@ -3,8 +3,7 @@ import { ref, onMounted, onUnmounted } from 'vue'
 import { useCloudinary } from '@/composables/useCloudinary'
 import { useSocket } from '@/composables/useSocket'
 import { ImagePlus, Search, X } from 'lucide-vue-next'
-
-const API_BASE = 'http://localhost:3001'
+import { API_BASE } from '@/config'
 
 const { uploadImage } = useCloudinary()
 const { socket } = useSocket()

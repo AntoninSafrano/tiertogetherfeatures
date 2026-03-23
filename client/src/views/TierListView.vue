@@ -6,12 +6,11 @@ import TierRow from '@/components/tierlist/TierRow.vue'
 import TierItem from '@/components/tierlist/TierItem.vue'
 import { useRoomStore } from '@/stores/room'
 import { ArrowLeft, Download, Calendar, LayoutGrid, Copy, Settings2 } from 'lucide-vue-next'
+import { API_BASE } from '@/config'
 
 const route = useRoute()
 const router = useRouter()
 const roomStore = useRoomStore()
-
-const API_BASE = 'http://localhost:3001'
 
 interface TierListData {
   _id: string

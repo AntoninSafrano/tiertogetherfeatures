@@ -5,11 +5,10 @@ import { useAuth } from '@/composables/useAuth'
 import NavBar from '@/components/NavBar.vue'
 import { Search, Download, Clock, TrendingUp, User, Gamepad2, UtensilsCrossed, Tv, Music, Film, Dumbbell, MoreHorizontal, Star, History } from 'lucide-vue-next'
 import { Badge } from '@/components/ui/badge'
+import { API_BASE } from '@/config'
 
 const router = useRouter()
 const { user, fetchUser } = useAuth()
-
-const API_BASE = 'http://localhost:3001'
 
 interface PublicTierList {
   _id: string

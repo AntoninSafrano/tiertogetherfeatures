@@ -1,6 +1,7 @@
 import { shallowRef, ref, readonly } from 'vue'
 import { io, type Socket } from 'socket.io-client'
 import type { ClientToServerEvents, ServerToClientEvents } from '@tiertogether/shared'
+import { API_BASE } from '@/config'
 
 type TypedSocket = Socket<ServerToClientEvents, ClientToServerEvents>
 
@@ -15,7 +16,7 @@ export function useSocket() {
   function connect() {
     if (socket.value?.connected) return
 
-    const newSocket: TypedSocket = io('http://localhost:3001', {
+    const newSocket: TypedSocket = io(API_BASE, {
       transports: ['websocket', 'polling'],
       reconnection: true,
       reconnectionAttempts: 5,

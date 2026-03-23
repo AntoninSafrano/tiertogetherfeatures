@@ -1,4 +1,5 @@
 import express from 'express'
+import path from 'path'
 import { createServer } from 'http'
 import { Server } from 'socket.io'
 import cors from 'cors'
@@ -55,6 +56,14 @@ io.use(createRateLimiter())
 
 // Register socket event handlers
 registerSocketHandlers(io)
+
+// ─── Serve client in production ─────────────────────────────────────
+if (env.NODE_ENV === 'production') {
+  app.use(express.static(path.join(__dirname, '../../client/dist')))
+  app.get('*', (_req, res) => {
+    res.sendFile(path.join(__dirname, '../../client/dist/index.html'))
+  })
+}
 
 // ─── Start ──────────────────────────────────────────────────────────
 async function start(): Promise<void> {

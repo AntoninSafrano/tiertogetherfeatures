@@ -41,6 +41,8 @@ export interface RoomUser {
   id: string
   username: string
   color: string
+  avatar?: string
+  isGuest?: boolean
 }
 
 export interface Room {
@@ -140,11 +142,15 @@ export interface ChatMessage {
 export interface CreateRoomPayload {
   username: string
   tierListName: string
+  avatar?: string
+  isGuest?: boolean
 }
 
 export interface JoinRoomPayload {
   username: string
   roomId: string
+  avatar?: string
+  isGuest?: boolean
 }
 
 export interface MoveItemPayload {

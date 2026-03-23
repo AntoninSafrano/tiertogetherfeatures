@@ -3,6 +3,7 @@ import { ref, computed } from 'vue'
 import { useRoomStore } from '@/stores/room'
 import { useAuth } from '@/composables/useAuth'
 import { X, Globe, Lock, Tag, LogIn } from 'lucide-vue-next'
+import { API_BASE } from '@/config'
 
 const emit = defineEmits<{
   close: []
@@ -10,7 +11,6 @@ const emit = defineEmits<{
 
 const store = useRoomStore()
 const { user } = useAuth()
-const API_BASE = 'http://localhost:3001'
 
 const isPublic = ref(true)
 const category = ref('Other')
