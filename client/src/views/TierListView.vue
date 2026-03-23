@@ -148,7 +148,7 @@ onMounted(() => {
       <template v-else-if="tierlist">
         <!-- Header -->
         <div class="mb-6">
-          <h1 class="text-2xl font-extrabold tracking-tight text-foreground mb-3">{{ tierlist.title }}</h1>
+          <h1 class="text-xl sm:text-2xl font-extrabold tracking-tight text-foreground mb-3">{{ tierlist.title }}</h1>
           <div class="flex flex-wrap items-center gap-3 text-sm text-foreground-muted">
             <span :class="['rounded-full px-2.5 py-0.5 text-xs font-medium', getCategoryColor(tierlist.category)]">
               {{ tierlist.category }}

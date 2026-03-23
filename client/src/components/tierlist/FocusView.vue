@@ -44,7 +44,7 @@ function onDragChange(evt: any) {
 </script>
 
 <template>
-  <div class="flex flex-col items-center gap-6 py-8">
+  <div class="flex flex-col items-center gap-6 py-4 sm:py-8">
     <!-- All ranked state -->
     <template v-if="store.pool.length === 0">
       <div class="flex flex-col items-center gap-3 py-12">
@@ -75,7 +75,7 @@ function onDragChange(evt: any) {
       >
         <template #item="{ element }">
           <div
-            class="relative h-56 w-56 cursor-grab rounded-2xl border border-border-hover bg-surface shadow-2xl ring-0 ring-primary/30 transition-all duration-200 hover:scale-[1.03] hover:ring-2 active:cursor-grabbing sm:h-64 sm:w-64"
+            class="relative h-44 w-44 sm:h-56 sm:w-56 cursor-grab rounded-2xl border border-border-hover bg-surface shadow-2xl ring-0 ring-primary/30 transition-all duration-200 hover:scale-[1.03] hover:ring-2 active:cursor-grabbing md:h-64 md:w-64"
           >
             <!-- Image mode -->
             <img

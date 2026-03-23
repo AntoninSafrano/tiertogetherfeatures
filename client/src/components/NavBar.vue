@@ -33,7 +33,7 @@ async function handleLogout() {
           class="inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm text-foreground-muted hover:bg-surface-hover hover:text-foreground transition-colors"
         >
           <Plus class="h-4 w-4" />
-          Create
+          <span class="hidden sm:inline">Create</span>
         </router-link>
 
         <router-link
@@ -41,7 +41,7 @@ async function handleLogout() {
           class="inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm text-foreground-muted hover:bg-surface-hover hover:text-foreground transition-colors"
         >
           <Hash class="h-4 w-4" />
-          Join
+          <span class="hidden sm:inline">Join</span>
         </router-link>
 
         <!-- Auth -->

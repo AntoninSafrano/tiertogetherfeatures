@@ -54,11 +54,11 @@ function signInWithGoogle() {
   <!-- Gate UI -->
   <div v-else class="noise-bg flex min-h-screen items-center justify-center bg-background px-4">
     <div class="w-full max-w-md">
-      <div class="rounded-2xl border border-border-hover bg-surface/50 p-8 shadow-2xl shadow-black/50">
+      <div class="rounded-2xl border border-border-hover bg-surface/50 p-5 sm:p-8 shadow-2xl shadow-black/50">
         <!-- Header -->
         <div class="mb-2 flex items-center gap-3">
           <Crown class="h-6 w-6 text-primary" :stroke-width="2.5" />
-          <h1 class="text-2xl font-bold tracking-tight text-foreground">
+          <h1 class="text-xl sm:text-2xl font-bold tracking-tight text-foreground">
             Join Room
           </h1>
           <span class="ml-auto rounded border border-border-hover bg-surface-hover px-2 py-0.5 font-mono text-xs text-foreground-muted">

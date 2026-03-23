@@ -54,7 +54,7 @@ function getInitials(name: string): string {
   >
     <div
       v-if="isOpen"
-      class="fixed left-0 top-0 z-50 flex h-full w-72 flex-col border-r border-border-hover bg-background/95 backdrop-blur-md"
+      class="fixed left-0 top-0 z-50 flex h-full w-full sm:w-72 flex-col border-r border-border-hover bg-background/95 backdrop-blur-md"
     >
       <!-- Header -->
       <div class="flex items-center justify-between border-b border-border-hover px-4 py-3">

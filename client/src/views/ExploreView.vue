@@ -24,8 +24,7 @@ interface PublicTierList {
   createdAt: string
 }
 
-const featuredLists = ref<PublicTierList[]>([])
-const isFeaturedLoading = ref(true)
+const featuredIds = ref<Set<string>>(new Set())
 const tierlists = ref<PublicTierList[]>([])
 const isLoading = ref(true)
 const searchQuery = ref('')
@@ -91,15 +90,12 @@ async function fetchMyLists() {
 }
 
 async function fetchFeatured() {
-  isFeaturedLoading.value = true
   try {
     const res = await fetch(`${API_BASE}/api/tierlists/featured`)
     const data = await res.json()
-    featuredLists.value = data.tierlists || []
+    featuredIds.value = new Set((data.tierlists || []).map((t: PublicTierList) => t._id))
   } catch {
-    featuredLists.value = []
-  } finally {
-    isFeaturedLoading.value = false
+    featuredIds.value = new Set()
   }
 }
 
@@ -175,64 +171,8 @@ onMounted(async () => {
       </div>
 
       <template v-if="activeTab === 'explore'">
-        <!-- Featured Templates -->
-        <div v-if="isFeaturedLoading" class="mb-10">
-          <div class="flex items-center gap-2 mb-4">
-            <div class="h-6 w-48 rounded bg-surface-hover animate-pulse" />
-          </div>
-          <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <div v-for="i in 4" :key="i" class="animate-pulse rounded-xl border border-border bg-surface p-4">
-              <div class="h-40 rounded-lg bg-surface-hover mb-3" />
-              <div class="h-4 w-3/4 rounded bg-surface-hover mb-2" />
-              <div class="h-3 w-1/2 rounded bg-surface-hover" />
-            </div>
-          </div>
-        </div>
-
-        <div v-else-if="featuredLists.length > 0" class="mb-10">
-          <div class="flex items-center gap-2 mb-4">
-            <Star class="h-5 w-5 text-yellow-400" />
-            <h2 class="text-xl font-bold text-foreground">Featured Templates</h2>
-          </div>
-          <div class="grid grid-cols-2 gap-3 sm:grid-cols-3">
-            <div
-              v-for="tl in featuredLists"
-              :key="tl._id"
-              class="group rounded-lg border border-border-hover bg-surface overflow-hidden shadow-lg hover:border-yellow-500/30 transition-all duration-300 cursor-pointer"
-              @click="viewTierlist(tl._id)"
-            >
-              <!-- Cover -->
-              <div class="h-28 bg-gradient-to-br from-yellow-500/10 to-surface-hover overflow-hidden">
-                <img
-                  v-if="getCoverImage(tl)"
-                  :src="getCoverImage(tl)"
-                  :alt="tl.title"
-                  class="w-full h-full object-contain group-hover:scale-105 transition-transform duration-300"
-                />
-              </div>
-
-              <!-- Info -->
-              <div class="p-3">
-                <div class="flex items-start justify-between gap-1 mb-1.5">
-                  <h3 class="font-bold text-foreground text-sm line-clamp-1 group-hover:text-yellow-400 transition-colors">
-                    {{ tl.title }}
-                  </h3>
-                  <span :class="['shrink-0 rounded-full px-1.5 py-0.5 text-[9px] font-medium', getCategoryColor(tl.category)]">
-                    {{ tl.category }}
-                  </span>
-                </div>
-
-                <div class="flex items-center gap-1 text-[10px] text-foreground-muted">
-                  <Download class="h-2.5 w-2.5" />
-                  {{ tl.downloads || 0 }} downloads
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
         <!-- Search -->
-        <div class="relative mb-6">
+        <div class="relative mb-5">
           <Search class="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-foreground-muted" />
           <input
             v-model="searchQuery"
@@ -243,8 +183,8 @@ onMounted(async () => {
           />
         </div>
 
-        <!-- Categories -->
-        <div class="flex flex-wrap gap-2 mb-6">
+        <!-- Categories + Sort -->
+        <div class="flex flex-wrap items-center gap-2 mb-6">
           <button
             v-for="cat in categories"
             :key="cat.label"
@@ -254,27 +194,28 @@ onMounted(async () => {
             <component :is="cat.icon" class="h-3.5 w-3.5" />
             {{ cat.label }}
           </button>
-        </div>
 
-        <!-- Sort -->
-        <div class="flex gap-2 mb-6">
-          <button
-            v-for="s in sortOptions"
-            :key="s.value"
-            :class="['inline-flex items-center gap-1 rounded-md px-2.5 py-1 text-xs transition-colors', activeSort === s.value ? 'bg-surface-active text-foreground' : 'text-foreground-muted hover:text-foreground']"
-            @click="activeSort = s.value"
-          >
-            <component :is="s.icon" class="h-3 w-3" />
-            {{ s.label }}
-          </button>
+          <div class="ml-auto flex gap-1">
+            <button
+              v-for="s in sortOptions"
+              :key="s.value"
+              :class="['inline-flex items-center gap-1 rounded-md px-2.5 py-1.5 text-xs transition-colors', activeSort === s.value ? 'bg-surface-active text-foreground' : 'text-foreground-muted hover:text-foreground']"
+              @click="activeSort = s.value"
+            >
+              <component :is="s.icon" class="h-3 w-3" />
+              {{ s.label }}
+            </button>
+          </div>
         </div>
 
         <!-- Grid -->
-        <div v-if="isLoading" class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          <div v-for="i in 6" :key="i" class="animate-pulse rounded-xl border border-border bg-surface p-4">
-            <div class="h-32 rounded-lg bg-surface-hover mb-3" />
-            <div class="h-4 w-3/4 rounded bg-surface-hover mb-2" />
-            <div class="h-3 w-1/2 rounded bg-surface-hover" />
+        <div v-if="isLoading" class="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+          <div v-for="i in 8" :key="i" class="animate-pulse rounded-lg border border-border bg-surface overflow-hidden">
+            <div class="h-24 bg-surface-hover" />
+            <div class="p-3 space-y-2">
+              <div class="h-3.5 w-3/4 rounded bg-surface-hover" />
+              <div class="h-3 w-1/2 rounded bg-surface-hover" />
+            </div>
           </div>
         </div>
 
@@ -287,9 +228,16 @@ onMounted(async () => {
           <div
             v-for="tl in tierlists"
             :key="tl._id"
-            class="group rounded-lg border border-border-hover bg-surface overflow-hidden shadow-lg hover:border-primary/30 transition-all duration-300 cursor-pointer"
+            class="group relative rounded-lg border bg-surface overflow-hidden shadow-lg transition-all duration-300 cursor-pointer"
+            :class="featuredIds.has(tl._id) ? 'border-yellow-500/20 hover:border-yellow-500/40' : 'border-border-hover hover:border-primary/30'"
             @click="viewTierlist(tl._id)"
           >
+            <!-- Featured badge -->
+            <div v-if="featuredIds.has(tl._id)" class="absolute top-1.5 left-1.5 z-10 flex items-center gap-1 rounded-full bg-yellow-500/90 px-2 py-0.5">
+              <Star class="h-2.5 w-2.5 text-black" />
+              <span class="text-[9px] font-bold text-black">Featured</span>
+            </div>
+
             <!-- Cover -->
             <div class="h-24 bg-gradient-to-br from-primary/20 to-surface-hover overflow-hidden">
               <img

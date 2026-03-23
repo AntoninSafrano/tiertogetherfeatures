@@ -13,7 +13,7 @@ const store = useRoomStore()
 <template>
   <div class="mx-auto w-full max-w-5xl space-y-6">
     <!-- Title -->
-    <h2 class="text-center text-3xl font-extrabold tracking-tight text-foreground">
+    <h2 class="text-center text-xl sm:text-2xl lg:text-3xl font-extrabold tracking-tight text-foreground">
       {{ store.title }}
     </h2>
 

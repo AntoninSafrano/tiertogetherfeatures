@@ -125,11 +125,11 @@ function tryDemo() {
     </div>
 
     <!-- Main content -->
-    <main class="flex flex-1 items-center justify-center px-4 py-12">
+    <main class="flex flex-1 items-center justify-center px-4 py-6 sm:py-12">
       <div class="relative z-10 w-full max-w-lg">
         <!-- Lobby Card -->
         <div
-          class="rounded-2xl border border-border-hover bg-surface/50 p-8 shadow-2xl shadow-black/50 transition-all duration-700 ease-out"
+          class="rounded-2xl border border-border-hover bg-surface/50 p-5 sm:p-8 shadow-2xl shadow-black/50 transition-all duration-700 ease-out"
           :class="step >= 1 ? 'translate-y-0 opacity-100' : 'translate-y-6 opacity-0'"
         >
           <!-- Header -->
@@ -138,7 +138,7 @@ function tryDemo() {
             :class="step >= 2 ? 'translate-y-0 opacity-100' : 'translate-y-3 opacity-0'"
           >
             <Crown class="h-6 w-6 text-primary" :stroke-width="2.5" />
-            <h1 class="text-2xl font-bold tracking-tight text-foreground">
+            <h1 class="text-xl sm:text-2xl font-bold tracking-tight text-foreground">
               TierTogether
             </h1>
             <span class="border border-primary/40 bg-primary/5 px-1.5 py-px font-mono text-[9px] font-bold tracking-widest text-primary/80 uppercase">
@@ -206,7 +206,7 @@ function tryDemo() {
             </p>
 
             <!-- Create / Join Grid -->
-            <div class="grid grid-cols-2 gap-3">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <!-- Create -->
               <div class="space-y-3">
                 <div class="relative">

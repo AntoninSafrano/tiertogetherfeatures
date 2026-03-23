@@ -62,7 +62,7 @@ async function publish() {
       class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm"
       @click.self="emit('close')"
     >
-      <div class="rounded-2xl border border-border-hover bg-surface p-6 shadow-2xl max-w-md w-full mx-4">
+      <div class="rounded-2xl border border-border-hover bg-surface p-6 shadow-2xl max-w-md w-full mx-4 max-h-[90vh] overflow-y-auto">
         <!-- Header -->
         <div class="flex items-center justify-between mb-4">
           <h3 class="text-lg font-bold text-foreground">Publish Tier List</h3>

@@ -94,7 +94,7 @@ function onDragChange(evt: any) {
   <div class="group/row flex border-b border-border last:border-b-0 relative">
     <!-- Tier Label -->
     <div
-      class="flex w-24 shrink-0 items-center justify-center font-extrabold select-none relative overflow-hidden text-center leading-tight px-1"
+      class="flex w-16 sm:w-24 shrink-0 items-center justify-center font-extrabold select-none relative overflow-hidden text-center leading-tight px-1"
       :class="[
         rowData.label.length > 4 ? (rowData.label.length > 8 ? 'text-xs' : 'text-sm') : 'text-3xl',
         readonly ? '' : 'group/label cursor-pointer',
@@ -124,7 +124,7 @@ function onDragChange(evt: any) {
       </template>
 
       <!-- Row action buttons (show on hover) - hidden in readonly -->
-      <div v-if="!readonly" class="absolute -right-0 top-0 bottom-0 flex flex-col items-center justify-center gap-0.5 opacity-0 group-hover/row:opacity-100 transition-opacity duration-200 z-10 translate-x-full px-1">
+      <div v-if="!readonly" class="absolute -right-0 top-0 bottom-0 flex flex-col items-center justify-center gap-0.5 sm:opacity-0 sm:group-hover/row:opacity-100 transition-opacity duration-200 z-10 translate-x-full px-1">
         <button
           class="p-1 rounded hover:bg-surface-active text-foreground-muted hover:text-foreground transition-colors"
           title="Move up"

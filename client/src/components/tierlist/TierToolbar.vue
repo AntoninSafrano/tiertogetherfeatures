@@ -40,7 +40,7 @@ async function exportImage() {
 </script>
 
 <template>
-  <div class="flex items-center justify-between rounded-md border border-border-hover bg-surface/80 px-4 py-2">
+  <div class="flex flex-wrap items-center gap-2 justify-between rounded-md border border-border-hover bg-surface/80 px-2 sm:px-4 py-2">
     <!-- Left zone: Admin Controls (host only) -->
     <div v-if="store.isHost" class="flex items-center gap-3">
       <span class="font-mono text-[10px] font-medium tracking-wider text-foreground-muted uppercase">
