@@ -61,6 +61,29 @@ export const useRoomStore = defineStore('room', () => {
     }
   }
 
+  // ─── Auto-rejoin on reconnect ───────────────────────────────────
+  let reconnectRegistered = false
+
+  function setupReconnect() {
+    if (reconnectRegistered) return
+    reconnectRegistered = true
+    const { onReconnect } = useSocket()
+    onReconnect(() => {
+      const roomId = currentRoom.value?.id
+      if (roomId && username.value) {
+        console.log('[Room] Reconnecting to room', roomId)
+        const { socket } = useSocket()
+        socket.value?.emit('room:join', { username: username.value, roomId }, (res: RoomResponse) => {
+          if (res.success) {
+            console.log('[Room] Rejoined room', roomId)
+          } else {
+            console.error('[Room] Failed to rejoin:', res.error)
+          }
+        })
+      }
+    })
+  }
+
   // ─── Socket Event Binding ───────────────────────────────────────
   let boundSocket: object | null = null
 
@@ -68,6 +91,7 @@ export const useRoomStore = defineStore('room', () => {
     const { socket } = useSocket()
     if (!socket.value || socket.value === boundSocket) return
     boundSocket = socket.value
+    setupReconnect()
 
     socket.value.on('room:state', (room: Room) => {
       currentRoom.value = room
@@ -249,6 +273,7 @@ export const useRoomStore = defineStore('room', () => {
     const { socket, connect } = useSocket()
     connect()
     bindEvents()
+    localStorage.setItem('tt-guest-name', user)
 
     return new Promise((resolve) => {
       socket.value!.emit('room:create', { username: user, tierListName, avatar, isGuest }, (res: RoomResponse) => {
@@ -264,6 +289,7 @@ export const useRoomStore = defineStore('room', () => {
     const { socket, connect } = useSocket()
     connect()
     bindEvents()
+    localStorage.setItem('tt-guest-name', user)
 
     return new Promise((resolve) => {
       socket.value!.emit('room:join', { username: user, roomId, avatar, isGuest }, resolve)

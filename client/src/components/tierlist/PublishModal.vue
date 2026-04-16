@@ -2,7 +2,8 @@
 import { ref, computed } from 'vue'
 import { useRoomStore } from '@/stores/room'
 import { useAuth } from '@/composables/useAuth'
-import { X, Globe, Lock, Tag, LogIn } from 'lucide-vue-next'
+import { useCloudinary } from '@/composables/useCloudinary'
+import { X, Globe, Lock, Tag, LogIn, ImagePlus, Upload, Loader2 } from 'lucide-vue-next'
 import { API_BASE } from '@/config'
 
 const emit = defineEmits<{
@@ -17,17 +18,68 @@ const category = ref('Other')
 const isPublishing = ref(false)
 const error = ref('')
 const success = ref(false)
+const customCover = ref('')
 
 const categories = ['Gaming', 'Food', 'Anime', 'Music', 'Movies', 'Sports', 'Other']
 
-const coverImage = computed(() => {
+const autoCover = computed(() => {
   for (const row of store.rows) {
     for (const item of row.items) {
       if (item.imageUrl) return item.imageUrl
     }
   }
+  for (const item of store.pool) {
+    if (item.imageUrl) return item.imageUrl
+  }
   return ''
 })
+
+const coverImage = computed(() => customCover.value || autoCover.value)
+
+// All images from the tier list (rows + pool) for picker
+const allImages = computed(() => {
+  const imgs: { url: string; label: string }[] = []
+  for (const row of store.rows) {
+    for (const item of row.items) {
+      if (item.imageUrl) imgs.push({ url: item.imageUrl, label: item.label })
+    }
+  }
+  for (const item of store.pool) {
+    if (item.imageUrl) imgs.push({ url: item.imageUrl, label: item.label })
+  }
+  return imgs
+})
+
+const showImagePicker = ref(false)
+const isUploading = ref(false)
+const isDragOver = ref(false)
+const { uploadImage } = useCloudinary()
+const fileInput = ref<HTMLInputElement | null>(null)
+
+async function handleFile(file: File) {
+  if (!file.type.startsWith('image/')) return
+  isUploading.value = true
+  try {
+    const url = await uploadImage(file)
+    customCover.value = url
+    showImagePicker.value = false
+  } catch {
+    error.value = 'Échec de l\'upload'
+  } finally {
+    isUploading.value = false
+  }
+}
+
+function onFileSelected(e: Event) {
+  const file = (e.target as HTMLInputElement).files?.[0]
+  if (file) handleFile(file)
+}
+
+function onDrop(e: DragEvent) {
+  isDragOver.value = false
+  const file = e.dataTransfer?.files[0]
+  if (file) handleFile(file)
+}
 
 async function publish() {
   if (!store.currentRoom?.tierList?.id) return
@@ -39,7 +91,7 @@ async function publish() {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       credentials: 'include',
-      body: JSON.stringify({ isPublic: isPublic.value, category: category.value }),
+      body: JSON.stringify({ isPublic: isPublic.value, category: category.value, coverImage: coverImage.value }),
     })
     const data = await res.json()
     if (data.success) {
@@ -95,14 +147,59 @@ async function publish() {
         </template>
 
         <template v-else>
-          <!-- Preview card -->
+          <!-- Preview card + cover picker -->
           <div class="rounded-xl border border-border-hover bg-surface-hover/50 overflow-hidden mb-4">
-            <div class="h-24 bg-gradient-to-br from-primary/20 to-surface-hover overflow-hidden">
+            <div
+              class="relative h-28 bg-gradient-to-br from-primary/20 to-surface-hover overflow-hidden cursor-pointer group"
+              @click="showImagePicker = !showImagePicker"
+            >
               <img v-if="coverImage" :src="coverImage" class="w-full h-full object-cover" />
+              <div class="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                <div class="flex items-center gap-2 text-white text-xs font-medium">
+                  <ImagePlus class="h-4 w-4" />
+                  Changer la couverture
+                </div>
+              </div>
             </div>
             <div class="p-3">
               <p class="font-bold text-sm text-foreground">{{ store.title }}</p>
               <p class="text-xs text-foreground-muted">{{ store.rows.length }} tiers</p>
+            </div>
+          </div>
+
+          <!-- Image picker -->
+          <div v-if="showImagePicker" class="mb-4">
+            <label class="text-xs font-medium text-foreground-muted uppercase tracking-wider mb-2 block">Choisir une couverture</label>
+
+            <!-- Upload from PC (click or drag & drop) -->
+            <input ref="fileInput" type="file" accept="image/*" class="hidden" @change="onFileSelected" />
+            <div
+              :class="['w-full mb-2 flex flex-col items-center justify-center gap-1.5 rounded-lg border-2 border-dashed py-5 text-sm transition-all cursor-pointer',
+                isDragOver ? 'border-primary bg-primary/10 text-primary' : 'border-border-hover text-foreground-muted hover:text-primary hover:border-primary/30',
+                isUploading ? 'opacity-50 pointer-events-none' : '']"
+              @click="fileInput?.click()"
+              @dragover.prevent="isDragOver = true"
+              @dragleave="isDragOver = false"
+              @drop.prevent="onDrop"
+            >
+              <Loader2 v-if="isUploading" class="h-5 w-5 animate-spin" />
+              <Upload v-else class="h-5 w-5" />
+              <span class="font-medium">{{ isUploading ? 'Upload en cours...' : 'Glisser une image ici' }}</span>
+              <span v-if="!isUploading" class="text-xs text-foreground-subtle">ou cliquer pour parcourir</span>
+            </div>
+
+            <!-- Or pick from tier list -->
+            <div v-if="allImages.length > 0" class="grid grid-cols-6 gap-1.5 max-h-40 overflow-y-auto rounded-lg border border-border p-2 bg-surface">
+              <button
+                v-for="img in allImages"
+                :key="img.url"
+                :class="['rounded-md overflow-hidden border-2 transition-all aspect-square',
+                  coverImage === img.url ? 'border-primary' : 'border-transparent hover:border-border-hover']"
+                :title="img.label"
+                @click="customCover = img.url; showImagePicker = false"
+              >
+                <img :src="img.url" :alt="img.label" class="w-full h-full object-cover" />
+              </button>
             </div>
           </div>
 

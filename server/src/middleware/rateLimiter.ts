@@ -18,7 +18,6 @@ export function createRateLimiter() {
   return (socket: Socket, next: (err?: Error) => void) => {
     const key = socket.id
 
-    const originalOnEvent = socket.onAny
     socket.onAny(() => {
       const now = Date.now()
       const entry = limits.get(key)

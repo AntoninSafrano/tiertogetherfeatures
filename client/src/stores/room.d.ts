@@ -28,6 +28,8 @@ export declare const useRoomStore: import("pinia").StoreDefinition<"room", Pick<
             id: string;
             username: string;
             color: string;
+            avatar?: string | undefined;
+            isGuest?: boolean | undefined;
         }[];
         hostId: string;
         isLocked: boolean;
@@ -60,6 +62,8 @@ export declare const useRoomStore: import("pinia").StoreDefinition<"room", Pick<
             id: string;
             username: string;
             color: string;
+            avatar?: string | undefined;
+            isGuest?: boolean | undefined;
         }[];
         hostId: string;
         isLocked: boolean;
@@ -70,16 +74,20 @@ export declare const useRoomStore: import("pinia").StoreDefinition<"room", Pick<
         id: string;
         username: string;
         color: string;
+        avatar?: string | undefined;
+        isGuest?: boolean | undefined;
     }[], RoomUser[] | {
         id: string;
         username: string;
         color: string;
+        avatar?: string | undefined;
+        isGuest?: boolean | undefined;
     }[]>;
     username: import("vue").Ref<string, string>;
     setRoom: (room: Room) => void;
     clearRoom: () => void;
-    createRoom: (tierListName: string, user: string) => Promise<RoomResponse>;
-    joinRoom: (roomId: string, user: string) => Promise<RoomResponse>;
+    createRoom: (tierListName: string, user: string, avatar?: string, isGuest?: boolean) => Promise<RoomResponse>;
+    joinRoom: (roomId: string, user: string, avatar?: string, isGuest?: boolean) => Promise<RoomResponse>;
     title: import("vue").Ref<string, string>;
     rows: import("vue").Ref<{
         id: string;
@@ -132,6 +140,7 @@ export declare const useRoomStore: import("pinia").StoreDefinition<"room", Pick<
     reorderRow: (data: RowReorderPayload) => void;
     addRow: (data?: RowAddPayload) => void;
     bindEvents: () => void;
+    saveRoomToHistory: (roomId: string, titleName: string) => void;
 }, "title" | "rows" | "pool" | "username" | "users" | "isLocked" | "isFocusMode" | "currentRoom">, Pick<{
     currentRoom: import("vue").Ref<{
         id: string;
@@ -161,6 +170,8 @@ export declare const useRoomStore: import("pinia").StoreDefinition<"room", Pick<
             id: string;
             username: string;
             color: string;
+            avatar?: string | undefined;
+            isGuest?: boolean | undefined;
         }[];
         hostId: string;
         isLocked: boolean;
@@ -193,6 +204,8 @@ export declare const useRoomStore: import("pinia").StoreDefinition<"room", Pick<
             id: string;
             username: string;
             color: string;
+            avatar?: string | undefined;
+            isGuest?: boolean | undefined;
         }[];
         hostId: string;
         isLocked: boolean;
@@ -203,16 +216,20 @@ export declare const useRoomStore: import("pinia").StoreDefinition<"room", Pick<
         id: string;
         username: string;
         color: string;
+        avatar?: string | undefined;
+        isGuest?: boolean | undefined;
     }[], RoomUser[] | {
         id: string;
         username: string;
         color: string;
+        avatar?: string | undefined;
+        isGuest?: boolean | undefined;
     }[]>;
     username: import("vue").Ref<string, string>;
     setRoom: (room: Room) => void;
     clearRoom: () => void;
-    createRoom: (tierListName: string, user: string) => Promise<RoomResponse>;
-    joinRoom: (roomId: string, user: string) => Promise<RoomResponse>;
+    createRoom: (tierListName: string, user: string, avatar?: string, isGuest?: boolean) => Promise<RoomResponse>;
+    joinRoom: (roomId: string, user: string, avatar?: string, isGuest?: boolean) => Promise<RoomResponse>;
     title: import("vue").Ref<string, string>;
     rows: import("vue").Ref<{
         id: string;
@@ -265,6 +282,7 @@ export declare const useRoomStore: import("pinia").StoreDefinition<"room", Pick<
     reorderRow: (data: RowReorderPayload) => void;
     addRow: (data?: RowAddPayload) => void;
     bindEvents: () => void;
+    saveRoomToHistory: (roomId: string, titleName: string) => void;
 }, "isInRoom" | "isHost" | "currentFocusItem">, Pick<{
     currentRoom: import("vue").Ref<{
         id: string;
@@ -294,6 +312,8 @@ export declare const useRoomStore: import("pinia").StoreDefinition<"room", Pick<
             id: string;
             username: string;
             color: string;
+            avatar?: string | undefined;
+            isGuest?: boolean | undefined;
         }[];
         hostId: string;
         isLocked: boolean;
@@ -326,6 +346,8 @@ export declare const useRoomStore: import("pinia").StoreDefinition<"room", Pick<
             id: string;
             username: string;
             color: string;
+            avatar?: string | undefined;
+            isGuest?: boolean | undefined;
         }[];
         hostId: string;
         isLocked: boolean;
@@ -336,16 +358,20 @@ export declare const useRoomStore: import("pinia").StoreDefinition<"room", Pick<
         id: string;
         username: string;
         color: string;
+        avatar?: string | undefined;
+        isGuest?: boolean | undefined;
     }[], RoomUser[] | {
         id: string;
         username: string;
         color: string;
+        avatar?: string | undefined;
+        isGuest?: boolean | undefined;
     }[]>;
     username: import("vue").Ref<string, string>;
     setRoom: (room: Room) => void;
     clearRoom: () => void;
-    createRoom: (tierListName: string, user: string) => Promise<RoomResponse>;
-    joinRoom: (roomId: string, user: string) => Promise<RoomResponse>;
+    createRoom: (tierListName: string, user: string, avatar?: string, isGuest?: boolean) => Promise<RoomResponse>;
+    joinRoom: (roomId: string, user: string, avatar?: string, isGuest?: boolean) => Promise<RoomResponse>;
     title: import("vue").Ref<string, string>;
     rows: import("vue").Ref<{
         id: string;
@@ -398,4 +424,5 @@ export declare const useRoomStore: import("pinia").StoreDefinition<"room", Pick<
     reorderRow: (data: RowReorderPayload) => void;
     addRow: (data?: RowAddPayload) => void;
     bindEvents: () => void;
-}, "setRoom" | "clearRoom" | "createRoom" | "joinRoom" | "moveItem" | "emitMove" | "resetRoom" | "toggleLock" | "toggleFocusMode" | "skipCurrentItem" | "loadTierList" | "initDemo" | "handleDragAdded" | "handleDragRemoved" | "updateRow" | "deleteRow" | "reorderRow" | "addRow" | "bindEvents">>;
+    saveRoomToHistory: (roomId: string, titleName: string) => void;
+}, "setRoom" | "clearRoom" | "createRoom" | "joinRoom" | "moveItem" | "emitMove" | "resetRoom" | "toggleLock" | "toggleFocusMode" | "skipCurrentItem" | "loadTierList" | "initDemo" | "handleDragAdded" | "handleDragRemoved" | "updateRow" | "deleteRow" | "reorderRow" | "addRow" | "bindEvents" | "saveRoomToHistory">>;

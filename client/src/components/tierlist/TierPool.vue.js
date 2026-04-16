@@ -2,7 +2,7 @@ import { computed } from 'vue';
 import draggable from 'vuedraggable';
 import { useRoomStore } from '@/stores/room';
 import TierItem from './TierItem.vue';
-import { Layers } from 'lucide-vue-next';
+import { LayoutGrid } from 'lucide-vue-next';
 const store = useRoomStore();
 const isDragDisabled = computed(() => store.isLocked && !store.isHost);
 const pool = computed({
@@ -41,7 +41,7 @@ __VLS_asFunctionalElement(__VLS_intrinsicElements.h3, __VLS_intrinsicElements.h3
     ...{ class: "text-sm font-semibold text-foreground" },
 });
 __VLS_asFunctionalElement(__VLS_intrinsicElements.span, __VLS_intrinsicElements.span)({
-    ...{ class: "rounded-full bg-white/10 px-2 py-0.5 text-xs font-medium text-foreground-muted" },
+    ...{ class: "rounded-full bg-surface-active px-2 py-0.5 text-xs font-medium text-foreground-muted" },
 });
 (__VLS_ctx.pool.length);
 __VLS_asFunctionalElement(__VLS_intrinsicElements.div, __VLS_intrinsicElements.div)({
@@ -98,8 +98,8 @@ if (__VLS_ctx.pool.length === 0) {
     __VLS_asFunctionalElement(__VLS_intrinsicElements.div, __VLS_intrinsicElements.div)({
         ...{ class: "pointer-events-none absolute inset-0 flex flex-col items-center justify-center gap-2" },
     });
-    const __VLS_11 = {}.Layers;
-    /** @type {[typeof __VLS_components.Layers, ]} */ ;
+    const __VLS_11 = {}.LayoutGrid;
+    /** @type {[typeof __VLS_components.LayoutGrid, ]} */ ;
     // @ts-ignore
     const __VLS_12 = __VLS_asFunctionalComponent(__VLS_11, new __VLS_11({
         ...{ class: "h-8 w-8 text-foreground-subtle" },
@@ -120,7 +120,7 @@ if (__VLS_ctx.pool.length === 0) {
 /** @type {__VLS_StyleScopedClasses['font-semibold']} */ ;
 /** @type {__VLS_StyleScopedClasses['text-foreground']} */ ;
 /** @type {__VLS_StyleScopedClasses['rounded-full']} */ ;
-/** @type {__VLS_StyleScopedClasses['bg-white/10']} */ ;
+/** @type {__VLS_StyleScopedClasses['bg-surface-active']} */ ;
 /** @type {__VLS_StyleScopedClasses['px-2']} */ ;
 /** @type {__VLS_StyleScopedClasses['py-0.5']} */ ;
 /** @type {__VLS_StyleScopedClasses['text-xs']} */ ;
@@ -151,7 +151,7 @@ const __VLS_self = (await import('vue')).defineComponent({
         return {
             draggable: draggable,
             TierItem: TierItem,
-            Layers: Layers,
+            LayoutGrid: LayoutGrid,
             isDragDisabled: isDragDisabled,
             pool: pool,
             onDragChange: onDragChange,

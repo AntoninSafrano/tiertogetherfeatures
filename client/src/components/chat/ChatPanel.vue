@@ -1,14 +1,12 @@
 <script setup lang="ts">
 import { ref, nextTick, watch } from 'vue'
 import { useSocket } from '@/composables/useSocket'
-import { useRoomStore } from '@/stores/room'
 import type { ChatMessage } from '@tiertogether/shared'
-import { MessageSquare, Send, X } from 'lucide-vue-next'
+import { Send, ChevronDown } from 'lucide-vue-next'
 
 const { socket } = useSocket()
-const store = useRoomStore()
 
-const isOpen = ref(false)
+const isExpanded = ref(false)
 const messages = ref<ChatMessage[]>([])
 const input = ref('')
 const unreadCount = ref(0)
@@ -20,14 +18,13 @@ function scrollToBottom() {
   })
 }
 
-// Listen for incoming messages
 watch(
   () => socket.value,
   (sock) => {
     if (!sock) return
     sock.on('chat:message', (msg: ChatMessage) => {
       messages.value.push(msg)
-      if (!isOpen.value) {
+      if (!isExpanded.value) {
         unreadCount.value++
       }
       scrollToBottom()
@@ -36,9 +33,9 @@ watch(
   { immediate: true },
 )
 
-function toggle() {
-  isOpen.value = !isOpen.value
-  if (isOpen.value) {
+function toggleExpand() {
+  isExpanded.value = !isExpanded.value
+  if (isExpanded.value) {
     unreadCount.value = 0
     scrollToBottom()
   }
@@ -49,6 +46,11 @@ function sendMessage() {
   if (!text || !socket.value?.connected) return
   socket.value.emit('chat:send', { text })
   input.value = ''
+  if (!isExpanded.value) {
+    isExpanded.value = true
+    unreadCount.value = 0
+  }
+  scrollToBottom()
 }
 
 function formatTime(ts: number): string {
@@ -57,102 +59,83 @@ function formatTime(ts: number): string {
 </script>
 
 <template>
-  <!-- Closed tab -->
-  <button
-    v-if="!isOpen"
-    class="fixed right-0 top-1/2 z-40 -translate-y-1/2 rounded-l-lg border border-r-0 border-border-hover bg-surface/90 px-2 py-4 backdrop-blur-sm transition-colors hover:bg-surface-hover"
-    @click="toggle"
-  >
-    <div class="flex flex-col items-center gap-2">
-      <MessageSquare class="h-4 w-4 text-foreground-muted" />
-      <span class="text-[10px] font-bold tracking-widest text-foreground-muted uppercase [writing-mode:vertical-lr]">
-        Chat
-      </span>
-      <!-- Notification badge -->
-      <span
-        v-if="unreadCount > 0"
-        class="flex h-5 min-w-5 items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-bold text-white"
-      >
-        {{ unreadCount > 99 ? '99+' : unreadCount }}
-      </span>
-    </div>
-  </button>
-
-  <!-- Open panel -->
-  <Transition
-    enter-active-class="transition-transform duration-300 ease-out"
-    enter-from-class="translate-x-full"
-    enter-to-class="translate-x-0"
-    leave-active-class="transition-transform duration-200 ease-in"
-    leave-from-class="translate-x-0"
-    leave-to-class="translate-x-full"
-  >
-    <div
-      v-if="isOpen"
-      class="fixed right-0 top-0 z-50 flex h-full w-full sm:w-80 flex-col border-l border-border-hover bg-background/95 backdrop-blur-md"
+  <div class="fixed bottom-0 left-0 right-0 z-40">
+    <!-- Messages area (expandable) -->
+    <Transition
+      enter-active-class="transition-all duration-200 ease-out"
+      enter-from-class="max-h-0 opacity-0"
+      enter-to-class="max-h-[300px] opacity-100"
+      leave-active-class="transition-all duration-150 ease-in"
+      leave-from-class="max-h-[300px] opacity-100"
+      leave-to-class="max-h-0 opacity-0"
     >
-      <!-- Header -->
-      <div class="flex items-center justify-between border-b border-border-hover px-4 py-3">
-        <div class="flex items-center gap-2">
-          <MessageSquare class="h-4 w-4 text-primary" />
-          <span class="font-mono text-xs font-bold tracking-wider text-foreground uppercase">Comms</span>
-        </div>
-        <button
-          class="rounded-md p-1 text-foreground-muted transition-colors hover:bg-surface-hover hover:text-foreground"
-          @click="toggle"
-        >
-          <X class="h-4 w-4" />
-        </button>
-      </div>
-
-      <!-- Messages -->
-      <div class="flex-1 space-y-1 overflow-y-auto px-3 py-3">
+      <div
+        v-if="isExpanded"
+        class="h-[300px] overflow-y-auto border-t border-border bg-[#0D0D0D]/95 backdrop-blur-md px-4 sm:px-6 py-3 space-y-3"
+      >
         <div v-if="messages.length === 0" class="flex h-full items-center justify-center">
-          <p class="text-xs text-foreground-subtle">Aucun message pour le moment</p>
+          <p class="text-sm text-foreground-subtle">Aucun message pour le moment</p>
         </div>
 
         <div
           v-for="msg in messages"
           :key="msg.id"
-          class="group rounded-md px-2 py-1.5 transition-colors hover:bg-surface/20"
+          class="flex items-start gap-2.5"
         >
-          <div class="flex items-baseline gap-2">
-            <span
-              class="text-xs font-semibold"
-              :style="{ color: msg.color }"
-            >
-              {{ msg.username }}
-              <span v-if="msg.isHost" class="ml-0.5 text-[9px] font-bold text-yellow-500">HÔTE</span>
-            </span>
-            <span class="text-[10px] text-foreground-subtle opacity-0 transition-opacity group-hover:opacity-100">
-              {{ formatTime(msg.timestamp) }}
-            </span>
+          <div
+            class="w-6 h-6 rounded-full shrink-0 flex items-center justify-center text-[9px] font-bold text-white mt-0.5"
+            :style="{ backgroundColor: msg.color }"
+          >
+            {{ msg.username.slice(0, 2).toUpperCase() }}
           </div>
-          <p class="text-sm leading-snug text-foreground">{{ msg.text }}</p>
+          <div class="min-w-0">
+            <div class="flex items-baseline gap-2">
+              <span class="text-xs font-semibold" :style="{ color: msg.color }">{{ msg.username }}</span>
+              <span class="text-[10px] text-foreground-subtle">{{ formatTime(msg.timestamp) }}</span>
+            </div>
+            <p class="text-[13px] leading-relaxed text-foreground-muted break-words">{{ msg.text }}</p>
+          </div>
         </div>
 
         <div ref="messagesEnd" />
       </div>
+    </Transition>
 
-      <!-- Input -->
-      <div class="border-t border-border-hover p-3">
-        <form class="flex gap-2" @submit.prevent="sendMessage">
-          <input
-            v-model="input"
-            type="text"
-            placeholder="Message..."
-            maxlength="500"
-            class="flex-1 rounded-lg border border-border-hover bg-surface-hover px-3 py-2 text-sm text-foreground placeholder:text-foreground-subtle focus:border-primary/50 focus:outline-none focus:ring-1 focus:ring-primary/30"
-          />
-          <button
-            type="submit"
-            :disabled="!input.trim()"
-            class="rounded-lg bg-primary px-3 py-2 text-white transition-colors hover:bg-primary-hover disabled:opacity-30"
-          >
-            <Send class="h-4 w-4" />
-          </button>
-        </form>
-      </div>
+    <!-- Input bar (always visible) -->
+    <div class="border-t border-border bg-[#0D0D0D] px-4 sm:px-6 py-2.5 flex items-center gap-3">
+      <button
+        class="shrink-0 flex items-center gap-1.5 text-foreground-muted hover:text-foreground transition-colors"
+        @click="toggleExpand"
+      >
+        <ChevronDown
+          class="h-4 w-4 transition-transform"
+          :class="isExpanded ? 'rotate-0' : 'rotate-180'"
+        />
+        <span class="text-xs font-medium">Chat</span>
+        <span
+          v-if="unreadCount > 0"
+          class="flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-[10px] font-bold text-white"
+        >
+          {{ unreadCount > 99 ? '99+' : unreadCount }}
+        </span>
+      </button>
+
+      <form class="flex flex-1 gap-2" @submit.prevent="sendMessage">
+        <input
+          v-model="input"
+          type="text"
+          placeholder="Envoyer un message..."
+          maxlength="500"
+          class="flex-1 rounded-lg border border-border bg-surface h-9 px-3 text-[13px] text-foreground placeholder:text-foreground-subtle focus:border-primary/50 focus:outline-none focus:ring-1 focus:ring-primary/20"
+        />
+        <button
+          type="submit"
+          :disabled="!input.trim()"
+          class="w-9 h-9 rounded-lg bg-primary flex items-center justify-center text-white transition-colors hover:bg-primary-hover disabled:opacity-30"
+        >
+          <Send class="h-4 w-4" />
+        </button>
+      </form>
     </div>
-  </Transition>
+  </div>
 </template>

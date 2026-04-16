@@ -1,13 +1,11 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { useRoomStore } from '@/stores/room'
-import { useAuth } from '@/composables/useAuth'
 import { Lock, Unlock, RotateCcw, Download, Maximize, Upload } from 'lucide-vue-next'
 import { toPng } from 'html-to-image'
 import PublishModal from './PublishModal.vue'
 
 const store = useRoomStore()
-const { user } = useAuth()
 const isExporting = ref(false)
 const showPublishModal = ref(false)
 

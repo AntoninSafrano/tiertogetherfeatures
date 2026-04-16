@@ -176,7 +176,7 @@ export const useRoomStore = defineStore('room', () => {
     }
     function addRow(data) {
         const { socket } = useSocket();
-        const payload = data || { label: 'New', color: '#9147ff' };
+        const payload = data || { label: 'New', color: '#6366f1' };
         if (socket.value?.connected)
             socket.value.emit('row:add', payload);
     }
@@ -204,20 +204,32 @@ export const useRoomStore = defineStore('room', () => {
             socket.value.emit('item:skip');
         }
     }
-    function createRoom(tierListName, user) {
+    function saveRoomToHistory(roomId, titleName) {
+        const history = JSON.parse(localStorage.getItem('tt-my-rooms') || '[]');
+        if (!history.some((r) => r.roomId === roomId)) {
+            history.unshift({ roomId, title: titleName, createdAt: new Date().toISOString() });
+            localStorage.setItem('tt-my-rooms', JSON.stringify(history.slice(0, 50)));
+        }
+    }
+    function createRoom(tierListName, user, avatar = '', isGuest = true) {
         const { socket, connect } = useSocket();
         connect();
         bindEvents();
         return new Promise((resolve) => {
-            socket.value.emit('room:create', { username: user, tierListName }, resolve);
+            socket.value.emit('room:create', { username: user, tierListName, avatar, isGuest }, (res) => {
+                if (res.success && res.roomId) {
+                    saveRoomToHistory(res.roomId, tierListName);
+                }
+                resolve(res);
+            });
         });
     }
-    function joinRoom(roomId, user) {
+    function joinRoom(roomId, user, avatar = '', isGuest = true) {
         const { socket, connect } = useSocket();
         connect();
         bindEvents();
         return new Promise((resolve) => {
-            socket.value.emit('room:join', { username: user, roomId }, resolve);
+            socket.value.emit('room:join', { username: user, roomId, avatar, isGuest }, resolve);
         });
     }
     // ─── Local TierList Mutations ───────────────────────────────────
@@ -341,5 +353,7 @@ export const useRoomStore = defineStore('room', () => {
         addRow,
         // Events
         bindEvents,
+        // History
+        saveRoomToHistory,
     };
 });

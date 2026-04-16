@@ -113,14 +113,14 @@ onMounted(() => {
   <div class="min-h-screen bg-background">
     <NavBar />
 
-    <main class="mx-auto max-w-4xl px-4 py-8">
+    <main class="mx-auto max-w-4xl px-4 sm:px-10 py-8">
       <!-- Back button -->
       <button
         class="inline-flex items-center gap-1.5 text-sm text-foreground-muted hover:text-foreground transition-colors mb-6"
         @click="router.push({ name: 'explore' })"
       >
         <ArrowLeft class="h-4 w-4" />
-        Retour à l'exploration
+        Back to explore
       </button>
 
       <!-- Loading -->
@@ -139,7 +139,7 @@ onMounted(() => {
           class="mt-4 rounded-lg bg-surface-hover border border-border-hover px-4 py-2 text-sm text-foreground hover:bg-surface-active transition-colors"
           @click="router.push({ name: 'explore' })"
         >
-          Retour à l'exploration
+          Back to explore
         </button>
       </div>
 
@@ -147,18 +147,18 @@ onMounted(() => {
       <template v-else-if="tierlist">
         <!-- Header -->
         <div class="mb-6">
-          <h1 class="text-xl sm:text-2xl font-extrabold tracking-tight text-foreground mb-3">{{ tierlist.title }}</h1>
+          <h1 class="text-xl sm:text-2xl font-bold tracking-tight text-foreground mb-3">{{ tierlist.title }}</h1>
           <div class="flex flex-wrap items-center gap-3 text-sm text-foreground-muted">
             <span :class="['rounded-full px-2.5 py-0.5 text-xs font-medium', getCategoryColor(tierlist.category)]">
               {{ tierlist.category }}
             </span>
             <span class="inline-flex items-center gap-1">
               <Download class="h-3.5 w-3.5" />
-              {{ tierlist.downloads || 0 }} téléchargements
+              {{ tierlist.downloads || 0 }} downloads
             </span>
             <span class="inline-flex items-center gap-1">
               <LayoutGrid class="h-3.5 w-3.5" />
-              {{ totalItems }} éléments
+              {{ totalItems }} items
             </span>
             <span class="inline-flex items-center gap-1">
               <Calendar class="h-3.5 w-3.5" />
@@ -170,12 +170,12 @@ onMounted(() => {
         <!-- Use Template button -->
         <div class="mb-6">
           <button
-            class="inline-flex items-center gap-2 rounded-lg bg-primary px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-primary/25 hover:bg-primary/90 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+            class="inline-flex items-center gap-2 rounded-lg bg-primary px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-primary/25 hover:bg-primary-hover transition-all disabled:opacity-50 disabled:cursor-not-allowed"
             :disabled="isCloning"
             @click="cloneAndUse"
           >
             <Copy class="h-4 w-4" />
-            {{ isCloning ? 'Création...' : 'Utiliser comme modèle' }}
+            {{ isCloning ? 'Creating...' : 'Use as template' }}
           </button>
         </div>
 
@@ -228,7 +228,7 @@ onMounted(() => {
 
         <!-- Pool -->
         <div v-if="tierlist.pool.length > 0" class="mt-6">
-          <h2 class="text-sm font-semibold text-foreground-muted mb-3">Pool ({{ tierlist.pool.length }} éléments)</h2>
+          <h2 class="text-sm font-semibold text-foreground-muted mb-3">Pool ({{ tierlist.pool.length }} items)</h2>
           <div class="rounded-xl border border-border-hover bg-surface p-4">
             <div class="flex flex-wrap gap-2">
               <TierItem v-for="item in tierlist.pool" :key="item.id" :item="item" />

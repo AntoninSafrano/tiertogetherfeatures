@@ -9,7 +9,7 @@ const { user } = useAuth();
 const isExporting = ref(false);
 const showPublishModal = ref(false);
 function resetRankings() {
-    if (!confirm('Move all items back to the pool?'))
+    if (!confirm('Remettre tous les éléments dans le pool ?'))
         return;
     store.resetRoom();
 }
@@ -20,7 +20,7 @@ async function exportImage() {
     isExporting.value = true;
     try {
         const dataUrl = await toPng(target, {
-            backgroundColor: '#09090b',
+            backgroundColor: '#0c0d14',
             pixelRatio: 2,
         });
         const link = document.createElement('a');
@@ -40,18 +40,18 @@ const __VLS_ctx = {};
 let __VLS_components;
 let __VLS_directives;
 __VLS_asFunctionalElement(__VLS_intrinsicElements.div, __VLS_intrinsicElements.div)({
-    ...{ class: "flex items-center justify-between rounded-md border border-white/10 bg-zinc-900/80 px-4 py-2" },
+    ...{ class: "flex flex-wrap items-center gap-2 justify-between rounded-md border border-border-hover bg-surface/80 px-2 sm:px-4 py-2" },
 });
 if (__VLS_ctx.store.isHost) {
     __VLS_asFunctionalElement(__VLS_intrinsicElements.div, __VLS_intrinsicElements.div)({
         ...{ class: "flex items-center gap-3" },
     });
     __VLS_asFunctionalElement(__VLS_intrinsicElements.span, __VLS_intrinsicElements.span)({
-        ...{ class: "font-mono text-[10px] font-medium tracking-wider text-zinc-500 uppercase" },
+        ...{ class: "font-mono text-[10px] font-medium tracking-wider text-foreground-muted uppercase" },
     });
     __VLS_asFunctionalElement(__VLS_intrinsicElements.button, __VLS_intrinsicElements.button)({
         ...{ onClick: (__VLS_ctx.resetRankings) },
-        ...{ class: "inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium text-zinc-400 transition-colors hover:bg-red-500/10 hover:text-red-400" },
+        ...{ class: "inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium text-foreground-muted transition-colors hover:bg-red-500/10 hover:text-red-400" },
     });
     const __VLS_0 = {}.RotateCcw;
     /** @type {[typeof __VLS_components.RotateCcw, ]} */ ;
@@ -68,7 +68,7 @@ if (__VLS_ctx.store.isHost) {
                     return;
                 __VLS_ctx.store.toggleLock();
             } },
-        ...{ class: "inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium text-zinc-400 transition-colors hover:bg-orange-500/10 hover:text-orange-400" },
+        ...{ class: "inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium text-foreground-muted transition-colors hover:bg-orange-500/10 hover:text-orange-400" },
     });
     if (__VLS_ctx.store.isLocked) {
         const __VLS_4 = {}.Lock;
@@ -92,7 +92,7 @@ if (__VLS_ctx.store.isHost) {
             ...{ class: "h-3.5 w-3.5" },
         }, ...__VLS_functionalComponentArgsRest(__VLS_9));
     }
-    (__VLS_ctx.store.isLocked ? 'Unlock' : 'Lock');
+    (__VLS_ctx.store.isLocked ? 'Déverrouiller' : 'Verrouiller');
     __VLS_asFunctionalElement(__VLS_intrinsicElements.button, __VLS_intrinsicElements.button)({
         ...{ onClick: (...[$event]) => {
                 if (!(__VLS_ctx.store.isHost))
@@ -103,7 +103,7 @@ if (__VLS_ctx.store.isHost) {
                 'inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition-colors',
                 __VLS_ctx.store.isFocusMode
                     ? 'bg-primary/20 text-primary ring-1 ring-primary/50'
-                    : 'text-zinc-400 hover:bg-violet-500/10 hover:text-violet-400',
+                    : 'text-foreground-muted hover:bg-primary/10 hover:text-primary',
             ]) },
     });
     const __VLS_12 = {}.Maximize;
@@ -122,29 +122,25 @@ else {
 __VLS_asFunctionalElement(__VLS_intrinsicElements.div, __VLS_intrinsicElements.div)({
     ...{ class: "flex items-center gap-2" },
 });
-if (__VLS_ctx.user) {
-    __VLS_asFunctionalElement(__VLS_intrinsicElements.button, __VLS_intrinsicElements.button)({
-        ...{ onClick: (...[$event]) => {
-                if (!(__VLS_ctx.user))
-                    return;
-                __VLS_ctx.showPublishModal = true;
-            } },
-        ...{ class: "inline-flex items-center gap-1.5 rounded-md border border-primary/30 px-3 py-1.5 text-xs font-medium text-primary transition-colors hover:bg-primary/10" },
-    });
-    const __VLS_16 = {}.Upload;
-    /** @type {[typeof __VLS_components.Upload, ]} */ ;
-    // @ts-ignore
-    const __VLS_17 = __VLS_asFunctionalComponent(__VLS_16, new __VLS_16({
-        ...{ class: "h-3.5 w-3.5" },
-    }));
-    const __VLS_18 = __VLS_17({
-        ...{ class: "h-3.5 w-3.5" },
-    }, ...__VLS_functionalComponentArgsRest(__VLS_17));
-}
+__VLS_asFunctionalElement(__VLS_intrinsicElements.button, __VLS_intrinsicElements.button)({
+    ...{ onClick: (...[$event]) => {
+            __VLS_ctx.showPublishModal = true;
+        } },
+    ...{ class: "inline-flex items-center gap-1.5 rounded-md border border-primary/30 px-3 py-1.5 text-xs font-medium text-primary transition-colors hover:bg-primary/10" },
+});
+const __VLS_16 = {}.Upload;
+/** @type {[typeof __VLS_components.Upload, ]} */ ;
+// @ts-ignore
+const __VLS_17 = __VLS_asFunctionalComponent(__VLS_16, new __VLS_16({
+    ...{ class: "h-3.5 w-3.5" },
+}));
+const __VLS_18 = __VLS_17({
+    ...{ class: "h-3.5 w-3.5" },
+}, ...__VLS_functionalComponentArgsRest(__VLS_17));
 __VLS_asFunctionalElement(__VLS_intrinsicElements.button, __VLS_intrinsicElements.button)({
     ...{ onClick: (__VLS_ctx.exportImage) },
     disabled: (__VLS_ctx.isExporting),
-    ...{ class: "inline-flex items-center gap-1.5 rounded-md border border-white/10 px-3 py-1.5 text-xs font-medium text-zinc-300 transition-colors hover:bg-white/5 hover:text-white disabled:opacity-50" },
+    ...{ class: "inline-flex items-center gap-1.5 rounded-md border border-border-hover px-3 py-1.5 text-xs font-medium text-foreground transition-colors hover:bg-surface-hover hover:text-foreground disabled:opacity-50" },
 });
 const __VLS_20 = {}.Download;
 /** @type {[typeof __VLS_components.Download, ]} */ ;
@@ -155,7 +151,7 @@ const __VLS_21 = __VLS_asFunctionalComponent(__VLS_20, new __VLS_20({
 const __VLS_22 = __VLS_21({
     ...{ class: "h-3.5 w-3.5" },
 }, ...__VLS_functionalComponentArgsRest(__VLS_21));
-(__VLS_ctx.isExporting ? 'Exporting...' : 'Export Image');
+(__VLS_ctx.isExporting ? 'Export...' : 'Exporter');
 if (__VLS_ctx.showPublishModal) {
     /** @type {[typeof PublishModal, ]} */ ;
     // @ts-ignore
@@ -178,13 +174,16 @@ if (__VLS_ctx.showPublishModal) {
     var __VLS_26;
 }
 /** @type {__VLS_StyleScopedClasses['flex']} */ ;
+/** @type {__VLS_StyleScopedClasses['flex-wrap']} */ ;
 /** @type {__VLS_StyleScopedClasses['items-center']} */ ;
+/** @type {__VLS_StyleScopedClasses['gap-2']} */ ;
 /** @type {__VLS_StyleScopedClasses['justify-between']} */ ;
 /** @type {__VLS_StyleScopedClasses['rounded-md']} */ ;
 /** @type {__VLS_StyleScopedClasses['border']} */ ;
-/** @type {__VLS_StyleScopedClasses['border-white/10']} */ ;
-/** @type {__VLS_StyleScopedClasses['bg-zinc-900/80']} */ ;
-/** @type {__VLS_StyleScopedClasses['px-4']} */ ;
+/** @type {__VLS_StyleScopedClasses['border-border-hover']} */ ;
+/** @type {__VLS_StyleScopedClasses['bg-surface/80']} */ ;
+/** @type {__VLS_StyleScopedClasses['px-2']} */ ;
+/** @type {__VLS_StyleScopedClasses['sm:px-4']} */ ;
 /** @type {__VLS_StyleScopedClasses['py-2']} */ ;
 /** @type {__VLS_StyleScopedClasses['flex']} */ ;
 /** @type {__VLS_StyleScopedClasses['items-center']} */ ;
@@ -193,7 +192,7 @@ if (__VLS_ctx.showPublishModal) {
 /** @type {__VLS_StyleScopedClasses['text-[10px]']} */ ;
 /** @type {__VLS_StyleScopedClasses['font-medium']} */ ;
 /** @type {__VLS_StyleScopedClasses['tracking-wider']} */ ;
-/** @type {__VLS_StyleScopedClasses['text-zinc-500']} */ ;
+/** @type {__VLS_StyleScopedClasses['text-foreground-muted']} */ ;
 /** @type {__VLS_StyleScopedClasses['uppercase']} */ ;
 /** @type {__VLS_StyleScopedClasses['inline-flex']} */ ;
 /** @type {__VLS_StyleScopedClasses['items-center']} */ ;
@@ -203,7 +202,7 @@ if (__VLS_ctx.showPublishModal) {
 /** @type {__VLS_StyleScopedClasses['py-1.5']} */ ;
 /** @type {__VLS_StyleScopedClasses['text-xs']} */ ;
 /** @type {__VLS_StyleScopedClasses['font-medium']} */ ;
-/** @type {__VLS_StyleScopedClasses['text-zinc-400']} */ ;
+/** @type {__VLS_StyleScopedClasses['text-foreground-muted']} */ ;
 /** @type {__VLS_StyleScopedClasses['transition-colors']} */ ;
 /** @type {__VLS_StyleScopedClasses['hover:bg-red-500/10']} */ ;
 /** @type {__VLS_StyleScopedClasses['hover:text-red-400']} */ ;
@@ -217,7 +216,7 @@ if (__VLS_ctx.showPublishModal) {
 /** @type {__VLS_StyleScopedClasses['py-1.5']} */ ;
 /** @type {__VLS_StyleScopedClasses['text-xs']} */ ;
 /** @type {__VLS_StyleScopedClasses['font-medium']} */ ;
-/** @type {__VLS_StyleScopedClasses['text-zinc-400']} */ ;
+/** @type {__VLS_StyleScopedClasses['text-foreground-muted']} */ ;
 /** @type {__VLS_StyleScopedClasses['transition-colors']} */ ;
 /** @type {__VLS_StyleScopedClasses['hover:bg-orange-500/10']} */ ;
 /** @type {__VLS_StyleScopedClasses['hover:text-orange-400']} */ ;
@@ -250,15 +249,15 @@ if (__VLS_ctx.showPublishModal) {
 /** @type {__VLS_StyleScopedClasses['gap-1.5']} */ ;
 /** @type {__VLS_StyleScopedClasses['rounded-md']} */ ;
 /** @type {__VLS_StyleScopedClasses['border']} */ ;
-/** @type {__VLS_StyleScopedClasses['border-white/10']} */ ;
+/** @type {__VLS_StyleScopedClasses['border-border-hover']} */ ;
 /** @type {__VLS_StyleScopedClasses['px-3']} */ ;
 /** @type {__VLS_StyleScopedClasses['py-1.5']} */ ;
 /** @type {__VLS_StyleScopedClasses['text-xs']} */ ;
 /** @type {__VLS_StyleScopedClasses['font-medium']} */ ;
-/** @type {__VLS_StyleScopedClasses['text-zinc-300']} */ ;
+/** @type {__VLS_StyleScopedClasses['text-foreground']} */ ;
 /** @type {__VLS_StyleScopedClasses['transition-colors']} */ ;
-/** @type {__VLS_StyleScopedClasses['hover:bg-white/5']} */ ;
-/** @type {__VLS_StyleScopedClasses['hover:text-white']} */ ;
+/** @type {__VLS_StyleScopedClasses['hover:bg-surface-hover']} */ ;
+/** @type {__VLS_StyleScopedClasses['hover:text-foreground']} */ ;
 /** @type {__VLS_StyleScopedClasses['disabled:opacity-50']} */ ;
 /** @type {__VLS_StyleScopedClasses['h-3.5']} */ ;
 /** @type {__VLS_StyleScopedClasses['w-3.5']} */ ;
@@ -274,7 +273,6 @@ const __VLS_self = (await import('vue')).defineComponent({
             Upload: Upload,
             PublishModal: PublishModal,
             store: store,
-            user: user,
             isExporting: isExporting,
             showPublishModal: showPublishModal,
             resetRankings: resetRankings,

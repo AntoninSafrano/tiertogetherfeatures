@@ -13,6 +13,16 @@ const router = createRouter({
             component: () => import('@/views/CreateView.vue'),
         },
         {
+            path: '/auth',
+            name: 'auth',
+            component: () => import('@/views/AuthView.vue'),
+        },
+        {
+            path: '/tierlist/:id',
+            name: 'tierlist-view',
+            component: () => import('@/views/TierListView.vue'),
+        },
+        {
             path: '/room/:id',
             name: 'room',
             component: () => import('@/views/RoomView.vue'),

@@ -1,6 +1,9 @@
-import { z } from 'zod';
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.createItemSchema = exports.moveItemSchema = exports.joinRoomSchema = exports.createRoomSchema = exports.tierListSchema = exports.tierRowSchema = exports.tierItemSchema = exports.DEFAULT_TIERS = void 0;
+const zod_1 = require("zod");
 // ─── Default Tiers ──────────────────────────────────────────────────
-export const DEFAULT_TIERS = [
+exports.DEFAULT_TIERS = [
     { id: 'tier-s', label: 'S', color: '#FF7F7F' },
     { id: 'tier-a', label: 'A', color: '#FFBF7F' },
     { id: 'tier-b', label: 'B', color: '#FFDF7F' },
@@ -8,39 +11,39 @@ export const DEFAULT_TIERS = [
     { id: 'tier-d', label: 'D', color: '#7FFFFF' },
 ];
 // ─── Zod Schemas (shared validation) ────────────────────────────────
-export const tierItemSchema = z.object({
-    id: z.string().min(1),
-    imageUrl: z.string().default(''),
-    label: z.string().min(1).max(50),
+exports.tierItemSchema = zod_1.z.object({
+    id: zod_1.z.string().min(1),
+    imageUrl: zod_1.z.string().default(''),
+    label: zod_1.z.string().min(1).max(50),
 });
-export const tierRowSchema = z.object({
-    id: z.string().min(1),
-    label: z.string().min(1).max(10),
-    color: z.string().regex(/^#[0-9A-Fa-f]{6}$/),
-    items: z.array(tierItemSchema),
+exports.tierRowSchema = zod_1.z.object({
+    id: zod_1.z.string().min(1),
+    label: zod_1.z.string().min(1).max(10),
+    color: zod_1.z.string().regex(/^#[0-9A-Fa-f]{6}$/),
+    items: zod_1.z.array(exports.tierItemSchema),
 });
-export const tierListSchema = z.object({
-    id: z.string().min(1),
-    title: z.string().min(1).max(100),
-    rows: z.array(tierRowSchema),
-    pool: z.array(tierItemSchema),
-    ownerId: z.string().min(1),
+exports.tierListSchema = zod_1.z.object({
+    id: zod_1.z.string().min(1),
+    title: zod_1.z.string().min(1).max(100),
+    rows: zod_1.z.array(exports.tierRowSchema),
+    pool: zod_1.z.array(exports.tierItemSchema),
+    ownerId: zod_1.z.string().min(1),
 });
-export const createRoomSchema = z.object({
-    username: z.string().min(1).max(20).trim(),
-    tierListName: z.string().min(1).max(100).trim(),
+exports.createRoomSchema = zod_1.z.object({
+    username: zod_1.z.string().min(1).max(20).trim(),
+    tierListName: zod_1.z.string().min(1).max(100).trim(),
 });
-export const joinRoomSchema = z.object({
-    username: z.string().min(1).max(20).trim(),
-    roomId: z.string().min(1).max(50).trim(),
+exports.joinRoomSchema = zod_1.z.object({
+    username: zod_1.z.string().min(1).max(20).trim(),
+    roomId: zod_1.z.string().min(1).max(50).trim(),
 });
-export const moveItemSchema = z.object({
-    itemId: z.string().min(1),
-    fromRowId: z.string().nullable(),
-    toRowId: z.string().nullable(),
-    toIndex: z.number().int().min(0),
+exports.moveItemSchema = zod_1.z.object({
+    itemId: zod_1.z.string().min(1),
+    fromRowId: zod_1.z.string().nullable(),
+    toRowId: zod_1.z.string().nullable(),
+    toIndex: zod_1.z.number().int().min(0),
 });
-export const createItemSchema = z.object({
-    imageUrl: z.string().url(),
-    label: z.string().min(1).max(50).trim(),
+exports.createItemSchema = zod_1.z.object({
+    imageUrl: zod_1.z.string().url(),
+    label: zod_1.z.string().min(1).max(50).trim(),
 });

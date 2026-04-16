@@ -12,21 +12,31 @@ const socket = shallowRef<TypedSocket | null>(null)
 const isConnected = ref(false)
 const connectionError = ref<string | null>(null)
 
+// Callbacks that get called on reconnection
+const reconnectCallbacks: (() => void)[] = []
+
 export function useSocket() {
   function connect() {
     if (socket.value?.connected) return
+    if (socket.value) return // already created, just disconnected — Socket.io will auto-reconnect
 
     const newSocket: TypedSocket = io(API_BASE, {
       transports: ['websocket', 'polling'],
       reconnection: true,
-      reconnectionAttempts: 5,
+      reconnectionAttempts: Infinity,
       reconnectionDelay: 1000,
+      reconnectionDelayMax: 10000,
     })
 
     newSocket.on('connect', () => {
       isConnected.value = true
       connectionError.value = null
       console.log('[Socket] Connected:', newSocket.id)
+    })
+
+    newSocket.io.on('reconnect', () => {
+      console.log('[Socket] Reconnected:', newSocket.id)
+      reconnectCallbacks.forEach((cb) => cb())
     })
 
     newSocket.on('disconnect', (reason) => {
@@ -48,11 +58,16 @@ export function useSocket() {
     isConnected.value = false
   }
 
+  function onReconnect(cb: () => void) {
+    reconnectCallbacks.push(cb)
+  }
+
   return {
     socket,
     isConnected: readonly(isConnected),
     connectionError: readonly(connectionError),
     connect,
     disconnect,
+    onReconnect,
   }
 }

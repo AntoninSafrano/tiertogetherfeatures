@@ -47,8 +47,8 @@ const io = new Server<
   SocketData
 >(httpServer, {
   cors: corsOptions,
-  pingInterval: 25000,
-  pingTimeout: 20000,
+  pingInterval: 10000,
+  pingTimeout: 30000,
 })
 
 // Apply rate limiting middleware

@@ -15,7 +15,21 @@ import {
   DEFAULT_TIERS,
 } from '@tiertogether/shared'
 import { randomUUID } from 'crypto'
+import jwt from 'jsonwebtoken'
 import { TierListModel } from '../models/TierList'
+import { env } from '../config/env'
+
+function getAuthUserId(socket: TypedSocket): string | null {
+  try {
+    const cookieHeader = socket.handshake.headers.cookie || ''
+    const match = cookieHeader.match(/token=([^;]+)/)
+    if (!match) return null
+    const decoded = jwt.verify(match[1], env.JWT_SECRET) as { userId: string }
+    return decoded.userId
+  } catch {
+    return null
+  }
+}
 
 type TypedServer = Server<ClientToServerEvents, ServerToClientEvents, InterServerEvents, SocketData>
 type TypedSocket = Socket<ClientToServerEvents, ServerToClientEvents, InterServerEvents, SocketData>
@@ -35,12 +49,14 @@ export function registerRoomHandlers(io: TypedServer, socket: TypedSocket): void
       const color = generateUserColor()
 
       // Persist in MongoDB
+      const authUserId = getAuthUserId(socket)
       await TierListModel.create({
         roomId,
         title: parsed.data.tierListName,
         rows: DEFAULT_TIERS.map((t) => ({ ...t, items: [] })),
         pool: [],
         ownerId: socket.id,
+        ...(authUserId && { authorId: authUserId }),
       })
 
       // Join Socket.io room
@@ -74,20 +90,39 @@ export function registerRoomHandlers(io: TypedServer, socket: TypedSocket): void
     const { roomId, username } = parsed.data
 
     try {
-      // Find or create the tier list in MongoDB
-      let tierList = await TierListModel.findOne({ roomId })
+      // Find the tier list in MongoDB
+      const tierList = await TierListModel.findOne({ roomId })
       if (!tierList) {
-        tierList = await TierListModel.create({
-          roomId,
-          title: 'Untitled Tier List',
-          rows: DEFAULT_TIERS.map((t) => ({ ...t, items: [] })),
-          pool: [],
-          ownerId: socket.id,
-        })
-        console.log(`[Room] Room ${roomId} not found, created with defaults`)
+        callback({ success: false, error: 'Room not found' })
+        return
       }
 
-      const color = generateUserColor()
+      // Check if this is a rejoin (same username already in room)
+      const existingSockets = await io.in(roomId).fetchSockets()
+      const oldSocket = existingSockets.find((s) => s.data.username === username && s.id !== socket.id)
+      const isRejoin = !!oldSocket
+      const color = oldSocket?.data.color || generateUserColor()
+
+      // Link authenticated user to tier list if not yet linked
+      const authUserId = getAuthUserId(socket)
+      if (authUserId && !tierList.authorId) {
+        tierList.authorId = authUserId
+      }
+
+      // If rejoining, clean up old socket
+      if (oldSocket) {
+        oldSocket.leave(roomId)
+        oldSocket.data.roomId = null
+        // Transfer host if the old socket was host
+        if (tierList.ownerId === oldSocket.id) {
+          tierList.ownerId = socket.id
+        }
+      }
+
+      // Save if modified
+      if (tierList.isModified()) {
+        await tierList.save()
+      }
 
       // Join Socket.io room
       socket.join(roomId)
@@ -100,14 +135,16 @@ export function registerRoomHandlers(io: TypedServer, socket: TypedSocket): void
       const roomState = await buildRoomState(io, roomId)
       if (roomState) socket.emit('room:state', roomState)
 
-      // Notify other users
-      socket.to(roomId).emit('room:user-joined', {
-        id: socket.id,
-        username,
-        color,
-      })
+      // Notify other users (only if not a rejoin)
+      if (!isRejoin) {
+        socket.to(roomId).emit('room:user-joined', {
+          id: socket.id,
+          username,
+          color,
+        })
+      }
 
-      console.log(`[Room] ${username} joined room ${roomId}`)
+      console.log(`[Room] ${username} ${isRejoin ? 'rejoined' : 'joined'} room ${roomId}`)
       callback({ success: true, roomId })
     } catch (err) {
       console.error('[Room] Join failed:', err)

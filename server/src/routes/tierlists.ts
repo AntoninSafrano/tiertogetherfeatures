@@ -3,7 +3,6 @@ import type { Request, Response } from 'express'
 import jwt from 'jsonwebtoken'
 import { TierListModel } from '../models/TierList'
 import { env } from '../config/env'
-import { randomUUID } from 'crypto'
 
 const router = Router()
 
@@ -29,7 +28,8 @@ router.get('/api/tierlists/public', async (req: Request, res: Response) => {
       filter.category = category
     }
     if (search) {
-      filter.title = { $regex: search, $options: 'i' }
+      const escapedSearch = String(search).replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+      filter.title = { $regex: escapedSearch, $options: 'i' }
     }
 
     let sortObj: any = { downloads: -1 }
@@ -89,6 +89,14 @@ router.get('/api/tierlists/:id', async (req: Request, res: Response) => {
       res.status(404).json({ error: 'Tier list not found' })
       return
     }
+
+    const userId = getUserId(req)
+    const isOwner = userId && (tierlist.authorId === userId || tierlist.ownerId === userId)
+    if (!tierlist.isPublic && !isOwner) {
+      res.status(404).json({ error: 'Tier list not found' })
+      return
+    }
+
     res.json({ tierlist })
   } catch (err) {
     console.error('[API] Failed to fetch tierlist:', err)
@@ -111,16 +119,35 @@ router.post('/api/tierlists/:id/publish', async (req: Request, res: Response) =>
       return
     }
 
-    const { isPublic, category } = req.body
+    // Allow publish if user is the author, or if no author is set yet (claim ownership)
+    if (tierList.authorId && tierList.authorId !== userId) {
+      res.status(403).json({ error: 'Not authorized to publish this tier list' })
+      return
+    }
+
+    const { isPublic, category, coverImage } = req.body
+
+    const validCategories = ['Gaming', 'Food', 'Anime', 'Music', 'Movies', 'Sports', 'Other']
+    const safeCategory = validCategories.includes(category) ? category : 'Other'
 
     tierList.isPublic = isPublic ?? true
-    tierList.category = category || 'Other'
+    tierList.category = safeCategory
     tierList.authorId = userId
 
-    // Auto-generate cover image from first item
-    const firstRow = tierList.rows.find((r) => r.items.length > 0)
-    if (firstRow && firstRow.items[0]) {
-      tierList.coverImage = firstRow.items[0].imageUrl
+    // Use provided cover or auto-generate from first item
+    if (coverImage && typeof coverImage === 'string') {
+      tierList.coverImage = coverImage
+    } else {
+      let coverUrl = ''
+      for (const row of tierList.rows) {
+        const item = row.items.find((i) => i.imageUrl)
+        if (item) { coverUrl = item.imageUrl; break }
+      }
+      if (!coverUrl) {
+        const poolItem = tierList.pool.find((i) => i.imageUrl)
+        if (poolItem) coverUrl = poolItem.imageUrl
+      }
+      if (coverUrl) tierList.coverImage = coverUrl
     }
 
     await tierList.save()
@@ -160,6 +187,68 @@ router.post('/api/tierlists/:id/clone', async (req: Request, res: Response) => {
   } catch (err) {
     console.error('[API] Clone failed:', err)
     res.status(500).json({ error: 'Failed to clone' })
+  }
+})
+
+// DELETE /api/tierlists/:id
+router.delete('/api/tierlists/:id', async (req: Request, res: Response) => {
+  const userId = getUserId(req)
+  if (!userId) {
+    res.status(401).json({ error: 'Authentication required' })
+    return
+  }
+
+  try {
+    const tierList = await TierListModel.findById(req.params.id)
+    if (!tierList) {
+      res.status(404).json({ error: 'Tier list not found' })
+      return
+    }
+    if (tierList.authorId !== userId) {
+      res.status(403).json({ error: 'Not authorized' })
+      return
+    }
+
+    await TierListModel.findByIdAndDelete(req.params.id)
+    res.json({ success: true })
+  } catch (err) {
+    console.error('[API] Delete failed:', err)
+    res.status(500).json({ error: 'Failed to delete' })
+  }
+})
+
+// PATCH /api/tierlists/:id — update metadata (title, category, coverImage, isPublic)
+router.patch('/api/tierlists/:id', async (req: Request, res: Response) => {
+  const userId = getUserId(req)
+  if (!userId) {
+    res.status(401).json({ error: 'Authentication required' })
+    return
+  }
+
+  try {
+    const tierList = await TierListModel.findById(req.params.id)
+    if (!tierList) {
+      res.status(404).json({ error: 'Tier list not found' })
+      return
+    }
+    if (tierList.authorId !== userId) {
+      res.status(403).json({ error: 'Not authorized' })
+      return
+    }
+
+    const { title, category, coverImage, isPublic } = req.body
+    const validCategories = ['Gaming', 'Food', 'Anime', 'Music', 'Movies', 'Sports', 'Other']
+
+    if (title && typeof title === 'string') tierList.title = title.trim().slice(0, 100)
+    if (category && validCategories.includes(category)) tierList.category = category
+    if (coverImage && typeof coverImage === 'string') tierList.coverImage = coverImage
+    if (typeof isPublic === 'boolean') tierList.isPublic = isPublic
+
+    await tierList.save()
+    res.json({ success: true, tierList })
+  } catch (err) {
+    console.error('[API] Update failed:', err)
+    res.status(500).json({ error: 'Failed to update' })
   }
 })
 

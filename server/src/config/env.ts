@@ -18,3 +18,12 @@ const envSchema = z.object({
 })
 
 export const env = envSchema.parse(process.env)
+
+if (env.NODE_ENV === 'production') {
+  if (env.JWT_SECRET === 'your-jwt-secret-change-in-production') {
+    throw new Error('FATAL: JWT_SECRET must be changed in production')
+  }
+  if (env.GOOGLE_CLIENT_ID === 'YOUR_GOOGLE_CLIENT_ID') {
+    throw new Error('FATAL: GOOGLE_CLIENT_ID must be set in production')
+  }
+}

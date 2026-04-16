@@ -16,7 +16,7 @@ const __VLS_ctx = {};
 let __VLS_components;
 let __VLS_directives;
 __VLS_asFunctionalElement(__VLS_intrinsicElements.div, __VLS_intrinsicElements.div)({
-    ...{ class: "tier-item group relative aspect-square w-[76px] cursor-grab rounded-lg border border-white/10 bg-surface shadow-lg ring-0 ring-white/25 transition-all duration-200 hover:scale-105 hover:ring-1 hover:shadow-xl active:cursor-grabbing" },
+    ...{ class: "tier-item group relative aspect-square w-[60px] sm:w-[76px] cursor-grab rounded-lg border border-border-hover bg-surface shadow-lg ring-0 ring-white/25 transition-all duration-200 hover:scale-105 hover:ring-1 hover:shadow-xl active:cursor-grabbing" },
 });
 if (__VLS_ctx.item.imageUrl) {
     __VLS_asFunctionalElement(__VLS_intrinsicElements.img)({
@@ -46,11 +46,12 @@ __VLS_asFunctionalElement(__VLS_intrinsicElements.div, __VLS_intrinsicElements.d
 /** @type {__VLS_StyleScopedClasses['group']} */ ;
 /** @type {__VLS_StyleScopedClasses['relative']} */ ;
 /** @type {__VLS_StyleScopedClasses['aspect-square']} */ ;
-/** @type {__VLS_StyleScopedClasses['w-[76px]']} */ ;
+/** @type {__VLS_StyleScopedClasses['w-[60px]']} */ ;
+/** @type {__VLS_StyleScopedClasses['sm:w-[76px]']} */ ;
 /** @type {__VLS_StyleScopedClasses['cursor-grab']} */ ;
 /** @type {__VLS_StyleScopedClasses['rounded-lg']} */ ;
 /** @type {__VLS_StyleScopedClasses['border']} */ ;
-/** @type {__VLS_StyleScopedClasses['border-white/10']} */ ;
+/** @type {__VLS_StyleScopedClasses['border-border-hover']} */ ;
 /** @type {__VLS_StyleScopedClasses['bg-surface']} */ ;
 /** @type {__VLS_StyleScopedClasses['shadow-lg']} */ ;
 /** @type {__VLS_StyleScopedClasses['ring-0']} */ ;

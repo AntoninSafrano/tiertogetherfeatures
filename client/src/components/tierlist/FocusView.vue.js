@@ -38,7 +38,7 @@ const __VLS_ctx = {};
 let __VLS_components;
 let __VLS_directives;
 __VLS_asFunctionalElement(__VLS_intrinsicElements.div, __VLS_intrinsicElements.div)({
-    ...{ class: "flex flex-col items-center gap-6 py-8" },
+    ...{ class: "flex flex-col items-center gap-6 py-4 sm:py-8" },
 });
 if (__VLS_ctx.store.pool.length === 0) {
     __VLS_asFunctionalElement(__VLS_intrinsicElements.div, __VLS_intrinsicElements.div)({
@@ -102,7 +102,7 @@ else {
         const { item: __VLS_thisSlot } = __VLS_7.slots;
         const [{ element }] = __VLS_getSlotParams(__VLS_thisSlot);
         __VLS_asFunctionalElement(__VLS_intrinsicElements.div, __VLS_intrinsicElements.div)({
-            ...{ class: "relative h-56 w-56 cursor-grab rounded-2xl border border-white/10 bg-surface shadow-2xl ring-0 ring-primary/30 transition-all duration-200 hover:scale-[1.03] hover:ring-2 active:cursor-grabbing sm:h-64 sm:w-64" },
+            ...{ class: "relative h-44 w-44 sm:h-56 sm:w-56 cursor-grab rounded-2xl border border-border-hover bg-surface shadow-2xl ring-0 ring-primary/30 transition-all duration-200 hover:scale-[1.03] hover:ring-2 active:cursor-grabbing md:h-64 md:w-64" },
         });
         if (element.imageUrl) {
             __VLS_asFunctionalElement(__VLS_intrinsicElements.img)({
@@ -147,7 +147,7 @@ else {
                         return;
                     __VLS_ctx.store.skipCurrentItem();
                 } },
-            ...{ class: "flex items-center gap-2 rounded-lg border border-white/10 bg-white/5 px-4 py-2 text-sm font-medium text-foreground-muted transition-colors hover:bg-white/10 hover:text-foreground" },
+            ...{ class: "flex items-center gap-2 rounded-lg border border-border-hover bg-surface-hover px-4 py-2 text-sm font-medium text-foreground-muted transition-colors hover:bg-surface-active hover:text-foreground" },
         });
         const __VLS_12 = {}.SkipForward;
         /** @type {[typeof __VLS_components.SkipForward, ]} */ ;
@@ -164,12 +164,14 @@ else {
     });
     (__VLS_ctx.remainingCount);
     (__VLS_ctx.remainingCount !== 1 ? 's' : '');
+    (__VLS_ctx.remainingCount !== 1 ? 's' : '');
 }
 /** @type {__VLS_StyleScopedClasses['flex']} */ ;
 /** @type {__VLS_StyleScopedClasses['flex-col']} */ ;
 /** @type {__VLS_StyleScopedClasses['items-center']} */ ;
 /** @type {__VLS_StyleScopedClasses['gap-6']} */ ;
-/** @type {__VLS_StyleScopedClasses['py-8']} */ ;
+/** @type {__VLS_StyleScopedClasses['py-4']} */ ;
+/** @type {__VLS_StyleScopedClasses['sm:py-8']} */ ;
 /** @type {__VLS_StyleScopedClasses['flex']} */ ;
 /** @type {__VLS_StyleScopedClasses['flex-col']} */ ;
 /** @type {__VLS_StyleScopedClasses['items-center']} */ ;
@@ -190,12 +192,14 @@ else {
 /** @type {__VLS_StyleScopedClasses['items-center']} */ ;
 /** @type {__VLS_StyleScopedClasses['justify-center']} */ ;
 /** @type {__VLS_StyleScopedClasses['relative']} */ ;
-/** @type {__VLS_StyleScopedClasses['h-56']} */ ;
-/** @type {__VLS_StyleScopedClasses['w-56']} */ ;
+/** @type {__VLS_StyleScopedClasses['h-44']} */ ;
+/** @type {__VLS_StyleScopedClasses['w-44']} */ ;
+/** @type {__VLS_StyleScopedClasses['sm:h-56']} */ ;
+/** @type {__VLS_StyleScopedClasses['sm:w-56']} */ ;
 /** @type {__VLS_StyleScopedClasses['cursor-grab']} */ ;
 /** @type {__VLS_StyleScopedClasses['rounded-2xl']} */ ;
 /** @type {__VLS_StyleScopedClasses['border']} */ ;
-/** @type {__VLS_StyleScopedClasses['border-white/10']} */ ;
+/** @type {__VLS_StyleScopedClasses['border-border-hover']} */ ;
 /** @type {__VLS_StyleScopedClasses['bg-surface']} */ ;
 /** @type {__VLS_StyleScopedClasses['shadow-2xl']} */ ;
 /** @type {__VLS_StyleScopedClasses['ring-0']} */ ;
@@ -205,8 +209,8 @@ else {
 /** @type {__VLS_StyleScopedClasses['hover:scale-[1.03]']} */ ;
 /** @type {__VLS_StyleScopedClasses['hover:ring-2']} */ ;
 /** @type {__VLS_StyleScopedClasses['active:cursor-grabbing']} */ ;
-/** @type {__VLS_StyleScopedClasses['sm:h-64']} */ ;
-/** @type {__VLS_StyleScopedClasses['sm:w-64']} */ ;
+/** @type {__VLS_StyleScopedClasses['md:h-64']} */ ;
+/** @type {__VLS_StyleScopedClasses['md:w-64']} */ ;
 /** @type {__VLS_StyleScopedClasses['h-full']} */ ;
 /** @type {__VLS_StyleScopedClasses['w-full']} */ ;
 /** @type {__VLS_StyleScopedClasses['rounded-2xl']} */ ;
@@ -245,15 +249,15 @@ else {
 /** @type {__VLS_StyleScopedClasses['gap-2']} */ ;
 /** @type {__VLS_StyleScopedClasses['rounded-lg']} */ ;
 /** @type {__VLS_StyleScopedClasses['border']} */ ;
-/** @type {__VLS_StyleScopedClasses['border-white/10']} */ ;
-/** @type {__VLS_StyleScopedClasses['bg-white/5']} */ ;
+/** @type {__VLS_StyleScopedClasses['border-border-hover']} */ ;
+/** @type {__VLS_StyleScopedClasses['bg-surface-hover']} */ ;
 /** @type {__VLS_StyleScopedClasses['px-4']} */ ;
 /** @type {__VLS_StyleScopedClasses['py-2']} */ ;
 /** @type {__VLS_StyleScopedClasses['text-sm']} */ ;
 /** @type {__VLS_StyleScopedClasses['font-medium']} */ ;
 /** @type {__VLS_StyleScopedClasses['text-foreground-muted']} */ ;
 /** @type {__VLS_StyleScopedClasses['transition-colors']} */ ;
-/** @type {__VLS_StyleScopedClasses['hover:bg-white/10']} */ ;
+/** @type {__VLS_StyleScopedClasses['hover:bg-surface-active']} */ ;
 /** @type {__VLS_StyleScopedClasses['hover:text-foreground']} */ ;
 /** @type {__VLS_StyleScopedClasses['h-4']} */ ;
 /** @type {__VLS_StyleScopedClasses['w-4']} */ ;

@@ -1,5 +1,6 @@
 import { shallowRef, ref, readonly } from 'vue';
 import { io } from 'socket.io-client';
+import { API_BASE } from '@/config';
 // shallowRef: Vue tracks the ref itself but does NOT deep-proxy the Socket
 // object. This is critical because Socket.io mutates internal properties
 // (_callbacks, _opts, etc.) and Vue's reactive proxy breaks that.
@@ -10,7 +11,7 @@ export function useSocket() {
     function connect() {
         if (socket.value?.connected)
             return;
-        const newSocket = io('http://localhost:3001', {
+        const newSocket = io(API_BASE, {
             transports: ['websocket', 'polling'],
             reconnection: true,
             reconnectionAttempts: 5,

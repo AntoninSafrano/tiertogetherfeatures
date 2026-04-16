@@ -2,7 +2,7 @@ import { ref, onMounted, onUnmounted } from 'vue';
 import { useCloudinary } from '@/composables/useCloudinary';
 import { useSocket } from '@/composables/useSocket';
 import { ImagePlus, Search, X } from 'lucide-vue-next';
-const API_BASE = 'http://localhost:3001';
+import { API_BASE } from '@/config';
 const { uploadImage } = useCloudinary();
 const { socket } = useSocket();
 const fileInput = ref(null);
@@ -41,7 +41,7 @@ async function processFiles(files) {
         }
         catch (err) {
             console.error(`[Upload] Failed for ${file.name}:`, err);
-            error.value = `Failed to upload ${file.name}`;
+            error.value = `Échec du téléchargement de ${file.name}`;
             uploadProgress.value.current++;
         }
     }
@@ -96,7 +96,7 @@ async function searchImages() {
         });
         const data = await res.json();
         if (!res.ok) {
-            error.value = data.error || 'Search failed';
+            error.value = data.error || 'Échec de la recherche';
             searchResults.value = [];
             return;
         }
@@ -104,7 +104,7 @@ async function searchImages() {
     }
     catch (err) {
         console.error('[ImageSearch] Error:', err);
-        error.value = 'Search failed';
+        error.value = 'Échec de la recherche';
         searchResults.value = [];
     }
     finally {
@@ -173,18 +173,18 @@ const __VLS_0 = {}.Search;
 /** @type {[typeof __VLS_components.Search, ]} */ ;
 // @ts-ignore
 const __VLS_1 = __VLS_asFunctionalComponent(__VLS_0, new __VLS_0({
-    ...{ class: "absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-500" },
+    ...{ class: "absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-foreground-muted" },
 }));
 const __VLS_2 = __VLS_1({
-    ...{ class: "absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-500" },
+    ...{ class: "absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-foreground-muted" },
 }, ...__VLS_functionalComponentArgsRest(__VLS_1));
 __VLS_asFunctionalElement(__VLS_intrinsicElements.input)({
     ...{ onInput: (__VLS_ctx.onSearchInput) },
     ...{ onKeydown: (__VLS_ctx.onSearchKeydown) },
     value: (__VLS_ctx.searchQuery),
     type: "text",
-    placeholder: "Search images...",
-    ...{ class: "w-full rounded-lg border border-white/10 bg-zinc-900 py-2 pl-9 pr-3 text-sm text-white placeholder-zinc-500 outline-none transition-colors focus:border-primary/30" },
+    placeholder: "Rechercher des images...",
+    ...{ class: "w-full rounded-lg border border-border-hover bg-surface py-2 pl-9 pr-3 text-sm text-foreground placeholder-foreground-muted outline-none transition-colors focus:border-primary/30" },
 });
 if (__VLS_ctx.isSearching) {
     __VLS_asFunctionalElement(__VLS_intrinsicElements.div, __VLS_intrinsicElements.div)({
@@ -193,7 +193,7 @@ if (__VLS_ctx.isSearching) {
     for (const [i] of __VLS_getVForSourceType((8))) {
         __VLS_asFunctionalElement(__VLS_intrinsicElements.div)({
             key: (i),
-            ...{ class: "aspect-square animate-pulse rounded-lg bg-zinc-800" },
+            ...{ class: "aspect-square animate-pulse rounded-lg bg-surface-hover" },
         });
     }
 }
@@ -203,7 +203,7 @@ else if (__VLS_ctx.searchResults.length > 0) {
     });
     if (__VLS_ctx.selectedImage) {
         __VLS_asFunctionalElement(__VLS_intrinsicElements.div, __VLS_intrinsicElements.div)({
-            ...{ class: "mb-2 flex items-center gap-2 rounded-lg border border-primary/30 bg-zinc-900 p-2" },
+            ...{ class: "mb-2 flex items-center gap-2 rounded-lg border border-primary/30 bg-surface p-2" },
         });
         __VLS_asFunctionalElement(__VLS_intrinsicElements.img)({
             src: (__VLS_ctx.selectedImage.thumbnail),
@@ -214,9 +214,9 @@ else if (__VLS_ctx.searchResults.length > 0) {
             ...{ onKeydown: (__VLS_ctx.confirmAddImage) },
             value: (__VLS_ctx.labelInput),
             type: "text",
-            placeholder: "Label",
+            placeholder: "Libellé",
             maxlength: "50",
-            ...{ class: "flex-1 rounded border border-white/10 bg-zinc-800 px-2 py-1 text-sm text-white placeholder-zinc-500 outline-none focus:border-primary/30" },
+            ...{ class: "flex-1 rounded border border-border-hover bg-surface-hover px-2 py-1 text-sm text-foreground placeholder-foreground-muted outline-none focus:border-primary/30" },
         });
         __VLS_asFunctionalElement(__VLS_intrinsicElements.button, __VLS_intrinsicElements.button)({
             ...{ onClick: (__VLS_ctx.confirmAddImage) },
@@ -224,7 +224,7 @@ else if (__VLS_ctx.searchResults.length > 0) {
         });
         __VLS_asFunctionalElement(__VLS_intrinsicElements.button, __VLS_intrinsicElements.button)({
             ...{ onClick: (__VLS_ctx.cancelSelection) },
-            ...{ class: "rounded p-1 text-zinc-400 transition-colors hover:text-white" },
+            ...{ class: "rounded p-1 text-foreground-muted transition-colors hover:text-foreground" },
         });
         const __VLS_4 = {}.X;
         /** @type {[typeof __VLS_components.X, ]} */ ;
@@ -252,7 +252,7 @@ else if (__VLS_ctx.searchResults.length > 0) {
             ...{ class: "group relative aspect-square overflow-hidden rounded-lg border transition-all duration-200" },
             ...{ class: (__VLS_ctx.selectedImage?.imageUrl === img.imageUrl
                     ? 'border-primary ring-2 ring-primary'
-                    : 'border-white/5 hover:border-primary/30') },
+                    : 'border-border hover:border-primary/30') },
         });
         __VLS_asFunctionalElement(__VLS_intrinsicElements.img)({
             src: (img.thumbnail),
@@ -273,13 +273,13 @@ if (__VLS_ctx.searchQuery || __VLS_ctx.searchResults.length > 0) {
         ...{ class: "flex items-center gap-3 px-4 py-2" },
     });
     __VLS_asFunctionalElement(__VLS_intrinsicElements.div)({
-        ...{ class: "h-px flex-1 bg-white/10" },
+        ...{ class: "h-px flex-1 bg-border-hover" },
     });
     __VLS_asFunctionalElement(__VLS_intrinsicElements.span, __VLS_intrinsicElements.span)({
-        ...{ class: "text-xs text-zinc-500" },
+        ...{ class: "text-xs text-foreground-muted" },
     });
     __VLS_asFunctionalElement(__VLS_intrinsicElements.div)({
-        ...{ class: "h-px flex-1 bg-white/10" },
+        ...{ class: "h-px flex-1 bg-border-hover" },
     });
 }
 __VLS_asFunctionalElement(__VLS_intrinsicElements.div, __VLS_intrinsicElements.div)({
@@ -303,7 +303,7 @@ if (__VLS_ctx.isUploading) {
         ...{ class: "h-5 w-5 animate-spin rounded-full border-2 border-white/20 border-t-primary" },
     });
     __VLS_asFunctionalElement(__VLS_intrinsicElements.span, __VLS_intrinsicElements.span)({
-        ...{ class: "text-sm text-zinc-400" },
+        ...{ class: "text-sm text-foreground-muted" },
     });
     (__VLS_ctx.uploadProgress.current);
     (__VLS_ctx.uploadProgress.total);
@@ -316,13 +316,13 @@ else {
     /** @type {[typeof __VLS_components.ImagePlus, ]} */ ;
     // @ts-ignore
     const __VLS_9 = __VLS_asFunctionalComponent(__VLS_8, new __VLS_8({
-        ...{ class: "h-5 w-5 text-zinc-500" },
+        ...{ class: "h-5 w-5 text-foreground-muted" },
     }));
     const __VLS_10 = __VLS_9({
-        ...{ class: "h-5 w-5 text-zinc-500" },
+        ...{ class: "h-5 w-5 text-foreground-muted" },
     }, ...__VLS_functionalComponentArgsRest(__VLS_9));
     __VLS_asFunctionalElement(__VLS_intrinsicElements.p, __VLS_intrinsicElements.p)({
-        ...{ class: "text-sm text-zinc-500" },
+        ...{ class: "text-sm text-foreground-muted" },
     });
     __VLS_asFunctionalElement(__VLS_intrinsicElements.button, __VLS_intrinsicElements.button)({
         ...{ onClick: (__VLS_ctx.triggerFileInput) },
@@ -347,18 +347,18 @@ if (__VLS_ctx.error) {
 /** @type {__VLS_StyleScopedClasses['h-4']} */ ;
 /** @type {__VLS_StyleScopedClasses['w-4']} */ ;
 /** @type {__VLS_StyleScopedClasses['-translate-y-1/2']} */ ;
-/** @type {__VLS_StyleScopedClasses['text-zinc-500']} */ ;
+/** @type {__VLS_StyleScopedClasses['text-foreground-muted']} */ ;
 /** @type {__VLS_StyleScopedClasses['w-full']} */ ;
 /** @type {__VLS_StyleScopedClasses['rounded-lg']} */ ;
 /** @type {__VLS_StyleScopedClasses['border']} */ ;
-/** @type {__VLS_StyleScopedClasses['border-white/10']} */ ;
-/** @type {__VLS_StyleScopedClasses['bg-zinc-900']} */ ;
+/** @type {__VLS_StyleScopedClasses['border-border-hover']} */ ;
+/** @type {__VLS_StyleScopedClasses['bg-surface']} */ ;
 /** @type {__VLS_StyleScopedClasses['py-2']} */ ;
 /** @type {__VLS_StyleScopedClasses['pl-9']} */ ;
 /** @type {__VLS_StyleScopedClasses['pr-3']} */ ;
 /** @type {__VLS_StyleScopedClasses['text-sm']} */ ;
-/** @type {__VLS_StyleScopedClasses['text-white']} */ ;
-/** @type {__VLS_StyleScopedClasses['placeholder-zinc-500']} */ ;
+/** @type {__VLS_StyleScopedClasses['text-foreground']} */ ;
+/** @type {__VLS_StyleScopedClasses['placeholder-foreground-muted']} */ ;
 /** @type {__VLS_StyleScopedClasses['outline-none']} */ ;
 /** @type {__VLS_StyleScopedClasses['transition-colors']} */ ;
 /** @type {__VLS_StyleScopedClasses['focus:border-primary/30']} */ ;
@@ -372,7 +372,7 @@ if (__VLS_ctx.error) {
 /** @type {__VLS_StyleScopedClasses['aspect-square']} */ ;
 /** @type {__VLS_StyleScopedClasses['animate-pulse']} */ ;
 /** @type {__VLS_StyleScopedClasses['rounded-lg']} */ ;
-/** @type {__VLS_StyleScopedClasses['bg-zinc-800']} */ ;
+/** @type {__VLS_StyleScopedClasses['bg-surface-hover']} */ ;
 /** @type {__VLS_StyleScopedClasses['px-4']} */ ;
 /** @type {__VLS_StyleScopedClasses['pb-2']} */ ;
 /** @type {__VLS_StyleScopedClasses['mb-2']} */ ;
@@ -382,7 +382,7 @@ if (__VLS_ctx.error) {
 /** @type {__VLS_StyleScopedClasses['rounded-lg']} */ ;
 /** @type {__VLS_StyleScopedClasses['border']} */ ;
 /** @type {__VLS_StyleScopedClasses['border-primary/30']} */ ;
-/** @type {__VLS_StyleScopedClasses['bg-zinc-900']} */ ;
+/** @type {__VLS_StyleScopedClasses['bg-surface']} */ ;
 /** @type {__VLS_StyleScopedClasses['p-2']} */ ;
 /** @type {__VLS_StyleScopedClasses['h-10']} */ ;
 /** @type {__VLS_StyleScopedClasses['w-10']} */ ;
@@ -391,13 +391,13 @@ if (__VLS_ctx.error) {
 /** @type {__VLS_StyleScopedClasses['flex-1']} */ ;
 /** @type {__VLS_StyleScopedClasses['rounded']} */ ;
 /** @type {__VLS_StyleScopedClasses['border']} */ ;
-/** @type {__VLS_StyleScopedClasses['border-white/10']} */ ;
-/** @type {__VLS_StyleScopedClasses['bg-zinc-800']} */ ;
+/** @type {__VLS_StyleScopedClasses['border-border-hover']} */ ;
+/** @type {__VLS_StyleScopedClasses['bg-surface-hover']} */ ;
 /** @type {__VLS_StyleScopedClasses['px-2']} */ ;
 /** @type {__VLS_StyleScopedClasses['py-1']} */ ;
 /** @type {__VLS_StyleScopedClasses['text-sm']} */ ;
-/** @type {__VLS_StyleScopedClasses['text-white']} */ ;
-/** @type {__VLS_StyleScopedClasses['placeholder-zinc-500']} */ ;
+/** @type {__VLS_StyleScopedClasses['text-foreground']} */ ;
+/** @type {__VLS_StyleScopedClasses['placeholder-foreground-muted']} */ ;
 /** @type {__VLS_StyleScopedClasses['outline-none']} */ ;
 /** @type {__VLS_StyleScopedClasses['focus:border-primary/30']} */ ;
 /** @type {__VLS_StyleScopedClasses['rounded']} */ ;
@@ -411,9 +411,9 @@ if (__VLS_ctx.error) {
 /** @type {__VLS_StyleScopedClasses['hover:bg-primary-hover']} */ ;
 /** @type {__VLS_StyleScopedClasses['rounded']} */ ;
 /** @type {__VLS_StyleScopedClasses['p-1']} */ ;
-/** @type {__VLS_StyleScopedClasses['text-zinc-400']} */ ;
+/** @type {__VLS_StyleScopedClasses['text-foreground-muted']} */ ;
 /** @type {__VLS_StyleScopedClasses['transition-colors']} */ ;
-/** @type {__VLS_StyleScopedClasses['hover:text-white']} */ ;
+/** @type {__VLS_StyleScopedClasses['hover:text-foreground']} */ ;
 /** @type {__VLS_StyleScopedClasses['h-4']} */ ;
 /** @type {__VLS_StyleScopedClasses['w-4']} */ ;
 /** @type {__VLS_StyleScopedClasses['grid']} */ ;
@@ -456,12 +456,12 @@ if (__VLS_ctx.error) {
 /** @type {__VLS_StyleScopedClasses['py-2']} */ ;
 /** @type {__VLS_StyleScopedClasses['h-px']} */ ;
 /** @type {__VLS_StyleScopedClasses['flex-1']} */ ;
-/** @type {__VLS_StyleScopedClasses['bg-white/10']} */ ;
+/** @type {__VLS_StyleScopedClasses['bg-border-hover']} */ ;
 /** @type {__VLS_StyleScopedClasses['text-xs']} */ ;
-/** @type {__VLS_StyleScopedClasses['text-zinc-500']} */ ;
+/** @type {__VLS_StyleScopedClasses['text-foreground-muted']} */ ;
 /** @type {__VLS_StyleScopedClasses['h-px']} */ ;
 /** @type {__VLS_StyleScopedClasses['flex-1']} */ ;
-/** @type {__VLS_StyleScopedClasses['bg-white/10']} */ ;
+/** @type {__VLS_StyleScopedClasses['bg-border-hover']} */ ;
 /** @type {__VLS_StyleScopedClasses['px-4']} */ ;
 /** @type {__VLS_StyleScopedClasses['pb-3']} */ ;
 /** @type {__VLS_StyleScopedClasses['hidden']} */ ;
@@ -477,16 +477,16 @@ if (__VLS_ctx.error) {
 /** @type {__VLS_StyleScopedClasses['border-white/20']} */ ;
 /** @type {__VLS_StyleScopedClasses['border-t-primary']} */ ;
 /** @type {__VLS_StyleScopedClasses['text-sm']} */ ;
-/** @type {__VLS_StyleScopedClasses['text-zinc-400']} */ ;
+/** @type {__VLS_StyleScopedClasses['text-foreground-muted']} */ ;
 /** @type {__VLS_StyleScopedClasses['flex']} */ ;
 /** @type {__VLS_StyleScopedClasses['items-center']} */ ;
 /** @type {__VLS_StyleScopedClasses['justify-center']} */ ;
 /** @type {__VLS_StyleScopedClasses['gap-2']} */ ;
 /** @type {__VLS_StyleScopedClasses['h-5']} */ ;
 /** @type {__VLS_StyleScopedClasses['w-5']} */ ;
-/** @type {__VLS_StyleScopedClasses['text-zinc-500']} */ ;
+/** @type {__VLS_StyleScopedClasses['text-foreground-muted']} */ ;
 /** @type {__VLS_StyleScopedClasses['text-sm']} */ ;
-/** @type {__VLS_StyleScopedClasses['text-zinc-500']} */ ;
+/** @type {__VLS_StyleScopedClasses['text-foreground-muted']} */ ;
 /** @type {__VLS_StyleScopedClasses['font-semibold']} */ ;
 /** @type {__VLS_StyleScopedClasses['text-primary']} */ ;
 /** @type {__VLS_StyleScopedClasses['transition-colors']} */ ;

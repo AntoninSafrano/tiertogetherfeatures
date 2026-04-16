@@ -14,7 +14,7 @@ __VLS_asFunctionalElement(__VLS_intrinsicElements.div, __VLS_intrinsicElements.d
     ...{ class: "mx-auto w-full max-w-5xl space-y-6" },
 });
 __VLS_asFunctionalElement(__VLS_intrinsicElements.h2, __VLS_intrinsicElements.h2)({
-    ...{ class: "text-center text-3xl font-extrabold tracking-tight text-foreground" },
+    ...{ class: "text-center text-xl sm:text-2xl lg:text-3xl font-extrabold tracking-tight text-foreground" },
 });
 (__VLS_ctx.store.title);
 /** @type {[typeof TierToolbar, ]} */ ;
@@ -23,7 +23,7 @@ const __VLS_0 = __VLS_asFunctionalComponent(TierToolbar, new TierToolbar({}));
 const __VLS_1 = __VLS_0({}, ...__VLS_functionalComponentArgsRest(__VLS_0));
 __VLS_asFunctionalElement(__VLS_intrinsicElements.div, __VLS_intrinsicElements.div)({
     id: "tier-rows-container",
-    ...{ class: "overflow-hidden rounded-xl border border-white/10 shadow-2xl" },
+    ...{ class: "overflow-hidden rounded-xl border border-border-hover shadow-2xl" },
 });
 for (const [row, index] of __VLS_getVForSourceType((__VLS_ctx.store.rows))) {
     /** @type {[typeof TierRow, ]} */ ;
@@ -41,7 +41,7 @@ __VLS_asFunctionalElement(__VLS_intrinsicElements.button, __VLS_intrinsicElement
     ...{ onClick: (...[$event]) => {
             __VLS_ctx.store.addRow();
         } },
-    ...{ class: "w-full flex items-center justify-center gap-2 rounded-lg border border-dashed border-white/10 py-2 text-sm text-zinc-500 hover:text-primary hover:border-primary/30 transition-all duration-300" },
+    ...{ class: "w-full flex items-center justify-center gap-2 rounded-lg border border-dashed border-border-hover py-2 text-sm text-foreground-muted hover:text-primary hover:border-primary/30 transition-all duration-300" },
 });
 const __VLS_6 = {}.Plus;
 /** @type {[typeof __VLS_components.Plus, ]} */ ;
@@ -67,7 +67,7 @@ __VLS_13.slots.default;
 if (__VLS_ctx.store.isFocusMode) {
     __VLS_asFunctionalElement(__VLS_intrinsicElements.div, __VLS_intrinsicElements.div)({
         key: "focus",
-        ...{ class: "rounded-xl border border-white/10 bg-white/[0.03]" },
+        ...{ class: "rounded-xl border border-border-hover bg-surface/20" },
     });
     /** @type {[typeof FocusView, ]} */ ;
     // @ts-ignore
@@ -77,14 +77,14 @@ if (__VLS_ctx.store.isFocusMode) {
 else {
     __VLS_asFunctionalElement(__VLS_intrinsicElements.div, __VLS_intrinsicElements.div)({
         key: "pool",
-        ...{ class: "overflow-hidden rounded-xl border border-white/10 bg-white/[0.03]" },
+        ...{ class: "overflow-hidden rounded-xl border border-border-hover bg-surface/20" },
     });
     /** @type {[typeof ImageUploader, ]} */ ;
     // @ts-ignore
     const __VLS_17 = __VLS_asFunctionalComponent(ImageUploader, new ImageUploader({}));
     const __VLS_18 = __VLS_17({}, ...__VLS_functionalComponentArgsRest(__VLS_17));
     __VLS_asFunctionalElement(__VLS_intrinsicElements.div)({
-        ...{ class: "border-t border-white/5" },
+        ...{ class: "border-t border-border" },
     });
     /** @type {[typeof TierPool, ]} */ ;
     // @ts-ignore
@@ -97,14 +97,16 @@ var __VLS_13;
 /** @type {__VLS_StyleScopedClasses['max-w-5xl']} */ ;
 /** @type {__VLS_StyleScopedClasses['space-y-6']} */ ;
 /** @type {__VLS_StyleScopedClasses['text-center']} */ ;
-/** @type {__VLS_StyleScopedClasses['text-3xl']} */ ;
+/** @type {__VLS_StyleScopedClasses['text-xl']} */ ;
+/** @type {__VLS_StyleScopedClasses['sm:text-2xl']} */ ;
+/** @type {__VLS_StyleScopedClasses['lg:text-3xl']} */ ;
 /** @type {__VLS_StyleScopedClasses['font-extrabold']} */ ;
 /** @type {__VLS_StyleScopedClasses['tracking-tight']} */ ;
 /** @type {__VLS_StyleScopedClasses['text-foreground']} */ ;
 /** @type {__VLS_StyleScopedClasses['overflow-hidden']} */ ;
 /** @type {__VLS_StyleScopedClasses['rounded-xl']} */ ;
 /** @type {__VLS_StyleScopedClasses['border']} */ ;
-/** @type {__VLS_StyleScopedClasses['border-white/10']} */ ;
+/** @type {__VLS_StyleScopedClasses['border-border-hover']} */ ;
 /** @type {__VLS_StyleScopedClasses['shadow-2xl']} */ ;
 /** @type {__VLS_StyleScopedClasses['w-full']} */ ;
 /** @type {__VLS_StyleScopedClasses['flex']} */ ;
@@ -114,10 +116,10 @@ var __VLS_13;
 /** @type {__VLS_StyleScopedClasses['rounded-lg']} */ ;
 /** @type {__VLS_StyleScopedClasses['border']} */ ;
 /** @type {__VLS_StyleScopedClasses['border-dashed']} */ ;
-/** @type {__VLS_StyleScopedClasses['border-white/10']} */ ;
+/** @type {__VLS_StyleScopedClasses['border-border-hover']} */ ;
 /** @type {__VLS_StyleScopedClasses['py-2']} */ ;
 /** @type {__VLS_StyleScopedClasses['text-sm']} */ ;
-/** @type {__VLS_StyleScopedClasses['text-zinc-500']} */ ;
+/** @type {__VLS_StyleScopedClasses['text-foreground-muted']} */ ;
 /** @type {__VLS_StyleScopedClasses['hover:text-primary']} */ ;
 /** @type {__VLS_StyleScopedClasses['hover:border-primary/30']} */ ;
 /** @type {__VLS_StyleScopedClasses['transition-all']} */ ;
@@ -126,15 +128,15 @@ var __VLS_13;
 /** @type {__VLS_StyleScopedClasses['w-4']} */ ;
 /** @type {__VLS_StyleScopedClasses['rounded-xl']} */ ;
 /** @type {__VLS_StyleScopedClasses['border']} */ ;
-/** @type {__VLS_StyleScopedClasses['border-white/10']} */ ;
-/** @type {__VLS_StyleScopedClasses['bg-white/[0.03]']} */ ;
+/** @type {__VLS_StyleScopedClasses['border-border-hover']} */ ;
+/** @type {__VLS_StyleScopedClasses['bg-surface/20']} */ ;
 /** @type {__VLS_StyleScopedClasses['overflow-hidden']} */ ;
 /** @type {__VLS_StyleScopedClasses['rounded-xl']} */ ;
 /** @type {__VLS_StyleScopedClasses['border']} */ ;
-/** @type {__VLS_StyleScopedClasses['border-white/10']} */ ;
-/** @type {__VLS_StyleScopedClasses['bg-white/[0.03]']} */ ;
+/** @type {__VLS_StyleScopedClasses['border-border-hover']} */ ;
+/** @type {__VLS_StyleScopedClasses['bg-surface/20']} */ ;
 /** @type {__VLS_StyleScopedClasses['border-t']} */ ;
-/** @type {__VLS_StyleScopedClasses['border-white/5']} */ ;
+/** @type {__VLS_StyleScopedClasses['border-border']} */ ;
 var __VLS_dollars;
 const __VLS_self = (await import('vue')).defineComponent({
     setup() {
