@@ -8,6 +8,7 @@ import { Resend } from 'resend'
 import rateLimit from 'express-rate-limit'
 import type { Request, Response } from 'express'
 import { UserModel } from '../models/User'
+import { TierListModel } from '../models/TierList'
 import { env } from '../config/env'
 
 const router = Router()
@@ -479,6 +480,31 @@ router.get('/auth/me', async (req: Request, res: Response) => {
 router.post('/auth/logout', (_req: Request, res: Response) => {
   res.clearCookie('token')
   res.json({ success: true })
+})
+
+// DELETE /auth/account
+router.delete('/auth/account', async (req: Request, res: Response) => {
+  try {
+    const token = req.cookies?.token
+    if (!token) {
+      res.status(401).json({ error: 'Authentification requise' })
+      return
+    }
+    const decoded = jwt.verify(token, env.JWT_SECRET) as { userId: string }
+
+    // Delete user's published tierlists
+    await TierListModel.deleteMany({ authorId: decoded.userId })
+
+    // Delete user account
+    await UserModel.findByIdAndDelete(decoded.userId)
+
+    // Clear cookie
+    res.clearCookie('token', { path: '/' })
+    res.json({ success: true, message: 'Compte supprimé avec succès.' })
+  } catch (err) {
+    console.error('[Auth] Account deletion failed:', err)
+    res.status(500).json({ error: 'Échec de la suppression du compte' })
+  }
 })
 
 export default router

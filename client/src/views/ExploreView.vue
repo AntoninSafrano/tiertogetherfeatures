@@ -4,7 +4,7 @@ import { useRouter } from 'vue-router'
 import { useAuth } from '@/composables/useAuth'
 import NavBar from '@/components/NavBar.vue'
 import ErrorPopup from '@/components/ErrorPopup.vue'
-import { Search, Download, Clock, TrendingUp, Gamepad2, UtensilsCrossed, Tv, Music, Film, Dumbbell, MoreHorizontal, LayoutGrid, Star, History, Trash2, Pencil, EyeOff, Eye, X, Check, ThumbsUp, ThumbsDown } from 'lucide-vue-next'
+import { Search, Download, Clock, TrendingUp, Gamepad2, UtensilsCrossed, Tv, Music, Film, Dumbbell, MoreHorizontal, LayoutGrid, Star, History, Trash2, Pencil, EyeOff, Eye, X, Check, ThumbsUp, ThumbsDown, Share2 } from 'lucide-vue-next'
 import { API_BASE } from '@/config'
 
 const router = useRouter()
@@ -129,6 +129,31 @@ function getCategoryColor(cat: string): string {
     Other: 'bg-foreground-subtle/20 text-foreground-muted',
   }
   return colors[cat] || colors.Other!
+}
+
+function getCategoryLabel(cat: string): string {
+  const labels: Record<string, string> = {
+    Gaming: 'Jeux vidéo',
+    Food: 'Cuisine',
+    Anime: 'Anime',
+    Music: 'Musique',
+    Movies: 'Films',
+    Sports: 'Sport',
+    Other: 'Autre',
+  }
+  return labels[cat] || cat
+}
+
+async function shareTierList(e: Event, tl: PublicTierList) {
+  e.stopPropagation()
+  const url = `${window.location.origin}/tierlist/${tl._id}`
+  const title = tl.title || 'TierTogether'
+
+  if (navigator.share) {
+    await navigator.share({ title, url, text: `Découvre cette tier list : ${title}` })
+  } else {
+    await navigator.clipboard.writeText(url)
+  }
 }
 
 function getRelativeTime(dateStr: string): string {
@@ -379,7 +404,7 @@ onMounted(async () => {
             <!-- Category badge -->
             <div class="absolute top-2 right-2 z-10">
               <span :class="['rounded-full px-2 py-0.5 text-[10px] font-medium backdrop-blur-sm', getCategoryColor(tl.category)]">
-                {{ tl.category }}
+                {{ getCategoryLabel(tl.category) }}
               </span>
             </div>
 
@@ -420,6 +445,13 @@ onMounted(async () => {
                       <ThumbsDown class="h-3.5 w-3.5" />
                     </button>
                   </div>
+                  <button
+                    @click.stop="shareTierList($event, tl)"
+                    class="transition-colors text-foreground-muted hover:text-primary"
+                    title="Partager"
+                  >
+                    <Share2 class="h-3.5 w-3.5" />
+                  </button>
                 </div>
                 <span>{{ getRelativeTime(tl.createdAt) }}</span>
               </div>
@@ -511,7 +543,7 @@ onMounted(async () => {
                       v-model="editCategory"
                       class="w-full rounded border border-border bg-background px-2 py-1 text-xs text-foreground mb-2 focus:border-primary/50 focus:outline-none"
                     >
-                      <option v-for="cat in validCategories" :key="cat" :value="cat">{{ cat }}</option>
+                      <option v-for="cat in validCategories" :key="cat" :value="cat">{{ getCategoryLabel(cat) }}</option>
                     </select>
                     <div class="flex gap-2">
                       <button
@@ -580,7 +612,7 @@ onMounted(async () => {
                     <div class="flex items-center justify-between text-xs text-foreground-muted">
                       <div class="flex items-center gap-2">
                         <span :class="['rounded-full px-2 py-0.5 text-[10px] font-medium', getCategoryColor(tl.category)]">
-                          {{ tl.category }}
+                          {{ getCategoryLabel(tl.category) }}
                         </span>
                         <span v-if="(tl as any).isPublic === false" class="rounded-full px-2 py-0.5 text-[10px] font-medium bg-foreground-subtle/20 text-foreground-subtle">
                           Privée

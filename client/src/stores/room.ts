@@ -422,7 +422,7 @@ export const useRoomStore = defineStore('room', () => {
 
   /** Initialize with demo data for offline testing */
   function initDemo() {
-    title.value = 'Best Anime Characters'
+    title.value = 'Meilleurs personnages Anime'
     rows.value = DEFAULT_TIERS.map((tier) => ({ ...tier, items: [] }))
     pool.value = [
       { id: 'item-1', imageUrl: '', label: 'Naruto' },

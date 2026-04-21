@@ -5,7 +5,7 @@ import NavBar from '@/components/NavBar.vue'
 import TierRow from '@/components/tierlist/TierRow.vue'
 import TierItem from '@/components/tierlist/TierItem.vue'
 import { useRoomStore } from '@/stores/room'
-import { ArrowLeft, Download, Calendar, LayoutGrid, Copy, Settings2 } from 'lucide-vue-next'
+import { ArrowLeft, Download, Calendar, LayoutGrid, Copy, Settings2, Share2 } from 'lucide-vue-next'
 import { API_BASE } from '@/config'
 
 const route = useRoute()
@@ -104,6 +104,34 @@ function getCategoryColor(cat: string): string {
   return colors[cat] || colors.Other!
 }
 
+function getCategoryLabel(cat: string): string {
+  const labels: Record<string, string> = {
+    Gaming: 'Jeux vidéo',
+    Food: 'Cuisine',
+    Anime: 'Anime',
+    Music: 'Musique',
+    Movies: 'Films',
+    Sports: 'Sport',
+    Other: 'Autre',
+  }
+  return labels[cat] || cat
+}
+
+const shareCopied = ref(false)
+
+async function shareTierList() {
+  const url = window.location.href
+  const title = tierlist.value?.title || 'TierTogether'
+
+  if (navigator.share) {
+    await navigator.share({ title, url, text: `Découvre cette tier list : ${title}` })
+  } else {
+    await navigator.clipboard.writeText(url)
+    shareCopied.value = true
+    setTimeout(() => { shareCopied.value = false }, 2000)
+  }
+}
+
 onMounted(() => {
   fetchTierList()
 })
@@ -150,7 +178,7 @@ onMounted(() => {
           <h1 class="text-xl sm:text-2xl font-bold tracking-tight text-foreground mb-3">{{ tierlist.title }}</h1>
           <div class="flex flex-wrap items-center gap-3 text-sm text-foreground-muted">
             <span :class="['rounded-full px-2.5 py-0.5 text-xs font-medium', getCategoryColor(tierlist.category)]">
-              {{ tierlist.category }}
+              {{ getCategoryLabel(tierlist.category) }}
             </span>
             <span class="inline-flex items-center gap-1">
               <Download class="h-3.5 w-3.5" />
@@ -167,8 +195,8 @@ onMounted(() => {
           </div>
         </header>
 
-        <!-- Use Template button -->
-        <div class="mb-6">
+        <!-- Use Template + Share buttons -->
+        <div class="mb-6 flex items-center gap-3">
           <button
             class="inline-flex items-center gap-2 rounded-lg bg-primary px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-primary/25 hover:bg-primary-hover transition-all disabled:opacity-50 disabled:cursor-not-allowed"
             :disabled="isCloning"
@@ -176,6 +204,13 @@ onMounted(() => {
           >
             <Copy class="h-4 w-4" />
             {{ isCloning ? 'Création...' : 'Utiliser comme modèle' }}
+          </button>
+          <button
+            class="inline-flex items-center gap-2 rounded-lg bg-surface-hover border border-border-hover px-4 py-2.5 text-sm font-medium text-foreground hover:bg-surface-active transition-all"
+            @click="shareTierList"
+          >
+            <Share2 class="h-4 w-4" />
+            {{ shareCopied ? 'Lien copié !' : 'Partager' }}
           </button>
         </div>
 

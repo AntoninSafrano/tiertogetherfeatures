@@ -2,7 +2,8 @@
 import { onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuth } from '@/composables/useAuth'
-import { LogOut, Menu, X } from 'lucide-vue-next'
+import { LogOut, Menu, X, Trash2 } from 'lucide-vue-next'
+import { API_BASE } from '@/config'
 
 const router = useRouter()
 const { user, fetchUser, logout } = useAuth()
@@ -15,6 +16,19 @@ onMounted(() => {
 async function handleLogout() {
   await logout()
   router.push('/')
+}
+
+async function deleteAccount() {
+  if (!confirm('Êtes-vous sûr de vouloir supprimer votre compte ? Toutes vos tier lists seront supprimées. Cette action est irréversible.')) return
+  try {
+    const res = await fetch(`${API_BASE}/auth/account`, { method: 'DELETE', credentials: 'include' })
+    if (res.ok) {
+      await logout()
+      router.push('/')
+    }
+  } catch (err) {
+    console.error('Failed to delete account:', err)
+  }
 }
 </script>
 
@@ -43,8 +57,8 @@ async function handleLogout() {
 
         <!-- Auth -->
         <template v-if="user">
-          <div class="flex items-center gap-3 ml-2">
-            <div class="h-8 w-8 rounded-full bg-primary flex items-center justify-center overflow-hidden">
+          <div class="relative group/user flex items-center gap-3 ml-2">
+            <div class="h-8 w-8 rounded-full bg-primary flex items-center justify-center overflow-hidden cursor-pointer">
               <img
                 v-if="user.avatar"
                 :src="user.avatar"
@@ -60,6 +74,16 @@ async function handleLogout() {
             >
               <LogOut class="h-4 w-4" />
             </button>
+            <!-- Dropdown -->
+            <div class="absolute right-0 top-full mt-1 hidden group-hover/user:block w-48 rounded-lg border border-border-hover bg-surface shadow-xl z-50">
+              <button
+                class="flex w-full items-center gap-2 px-3 py-2 text-xs text-red-400 hover:bg-red-500/10 rounded-lg transition-colors"
+                @click="deleteAccount"
+              >
+                <Trash2 class="h-3.5 w-3.5" />
+                Supprimer mon compte
+              </button>
+            </div>
           </div>
         </template>
         <template v-else>
@@ -117,6 +141,13 @@ async function handleLogout() {
               <LogOut class="h-4 w-4" />
             </button>
           </div>
+          <button
+            class="flex items-center gap-2 px-3 py-2 text-xs text-red-400 hover:bg-red-500/10 rounded-lg transition-colors"
+            @click="deleteAccount(); mobileMenuOpen = false"
+          >
+            <Trash2 class="h-3.5 w-3.5" />
+            Supprimer mon compte
+          </button>
         </template>
         <template v-else>
           <router-link

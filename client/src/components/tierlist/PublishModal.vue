@@ -22,6 +22,16 @@ const customCover = ref('')
 
 const categories = ['Gaming', 'Food', 'Anime', 'Music', 'Movies', 'Sports', 'Other']
 
+const categoryLabels: Record<string, string> = {
+  Gaming: 'Jeux vidéo',
+  Food: 'Cuisine',
+  Anime: 'Anime',
+  Music: 'Musique',
+  Movies: 'Films',
+  Sports: 'Sport',
+  Other: 'Autre',
+}
+
 const autoCover = computed(() => {
   for (const row of store.rows) {
     for (const item of row.items) {
@@ -234,7 +244,7 @@ async function publish() {
               v-model="category"
               class="w-full rounded-lg border border-border-hover bg-surface-hover px-3 py-2 text-sm text-foreground focus:border-primary/50 focus:outline-none"
             >
-              <option v-for="cat in categories" :key="cat" :value="cat">{{ cat }}</option>
+              <option v-for="cat in categories" :key="cat" :value="cat">{{ categoryLabels[cat] || cat }}</option>
             </select>
           </div>
 
