@@ -120,7 +120,10 @@ export const useRoomStore = defineStore('room', () => {
     })
 
     socket.value.on('room:user-joined', (user: RoomUser) => {
-      users.value.push(user)
+      // Avoid duplicates (room:state already includes the full user list)
+      if (!users.value.some(u => u.id === user.id)) {
+        users.value.push(user)
+      }
     })
 
     socket.value.on('room:user-left', (userId: string) => {

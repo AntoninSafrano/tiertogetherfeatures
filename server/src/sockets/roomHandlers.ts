@@ -821,13 +821,17 @@ async function buildRoomState(io: TypedServer, roomId: string): Promise<Room | n
   const tierList = await TierListModel.findOne({ roomId })
   if (!tierList) return null
 
-  // Get connected users in this room
+  // Get connected users in this room (deduplicate by username)
   const connectedSockets = await io.in(roomId).fetchSockets()
-  const users: RoomUser[] = connectedSockets.map((s) => ({
-    id: s.id,
-    username: s.data.username || 'Anonymous',
-    color: s.data.color || '#9147ff',
-  }))
+  const seen = new Set<string>()
+  const users: RoomUser[] = []
+  for (const s of connectedSockets) {
+    const username = s.data.username || 'Anonymous'
+    if (!seen.has(username)) {
+      seen.add(username)
+      users.push({ id: s.id, username, color: s.data.color || '#9147ff' })
+    }
+  }
 
   return {
     id: roomId,
