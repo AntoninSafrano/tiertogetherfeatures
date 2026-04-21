@@ -2,14 +2,7 @@ import mongoose from 'mongoose'
 import { env } from '../config/env'
 import { TierListModel } from '../models/TierList'
 import { randomUUID } from 'crypto'
-
-const DEFAULT_TIERS = [
-  { id: 'tier-s', label: 'S', color: '#FF7F7F' },
-  { id: 'tier-a', label: 'A', color: '#FFBF7F' },
-  { id: 'tier-b', label: 'B', color: '#FFDF7F' },
-  { id: 'tier-c', label: 'C', color: '#FFFF7F' },
-  { id: 'tier-d', label: 'D', color: '#7FFFFF' },
-]
+import { DEFAULT_TIERS } from '@tiertogether/shared'
 
 interface Template {
   title: string

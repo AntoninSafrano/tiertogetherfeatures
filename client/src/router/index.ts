@@ -28,6 +28,16 @@ const router = createRouter({
       name: 'room',
       component: () => import('@/views/RoomView.vue'),
     },
+    {
+      path: '/legal',
+      name: 'legal',
+      component: () => import('@/views/LegalView.vue'),
+    },
+    {
+      path: '/:pathMatch(.*)*',
+      name: 'not-found',
+      component: () => import('@/views/NotFoundView.vue'),
+    },
   ],
 })
 

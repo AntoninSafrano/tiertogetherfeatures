@@ -1,7 +1,14 @@
 import { Router } from 'express'
+import rateLimit from 'express-rate-limit'
 import { env } from '../config/env'
 
 const router = Router()
+
+const imageSearchLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 10,
+  message: { error: 'Trop de recherches, réessayez dans 1 minute.' },
+})
 
 interface GoogleSearchItem {
   title: string
@@ -11,7 +18,7 @@ interface GoogleSearchItem {
   }
 }
 
-router.get('/api/images/search', async (req, res) => {
+router.get('/api/images/search', imageSearchLimiter, async (req, res) => {
   const query = req.query.q as string | undefined
 
   if (!env.GOOGLE_API_KEY || !env.GOOGLE_CSE_ID) {
@@ -20,6 +27,10 @@ router.get('/api/images/search', async (req, res) => {
 
   if (!query || query.trim().length === 0) {
     return res.status(400).json({ error: 'Missing search query' })
+  }
+
+  if (query.length > 200) {
+    return res.status(400).json({ error: 'Search query too long (max 200 characters)' })
   }
 
   try {

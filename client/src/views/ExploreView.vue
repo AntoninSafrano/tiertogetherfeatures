@@ -556,6 +556,17 @@ onMounted(async () => {
           <p class="text-foreground-subtle text-sm mt-1">Créez ou clonez une tier list pour commencer !</p>
         </div>
       </template>
+
+      <!-- Footer -->
+      <footer class="border-t border-border mt-12 py-6 text-center text-xs text-foreground-subtle">
+        <div class="flex items-center justify-center gap-4">
+          <router-link to="/legal" class="hover:text-foreground transition-colors">Mentions légales</router-link>
+          <span>&middot;</span>
+          <a href="mailto:support@tiertogether.fr" class="hover:text-foreground transition-colors">Contact</a>
+          <span>&middot;</span>
+          <span>&copy; 2026 TierTogether</span>
+        </div>
+      </footer>
     </main>
   </div>
 </template>

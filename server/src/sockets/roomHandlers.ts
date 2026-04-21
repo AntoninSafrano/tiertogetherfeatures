@@ -228,7 +228,9 @@ export function registerRoomHandlers(io: TypedServer, socket: TypedSocket): void
       // 2. Insert item into target container
       if (toRowId === null) {
         // To pool
-        tierList.pool.splice(toIndex, 0, movedItem)
+        const maxIndex = tierList.pool.length
+        const safeIndex = Math.max(0, Math.min(toIndex, maxIndex))
+        tierList.pool.splice(safeIndex, 0, movedItem)
       } else {
         // To a tier row
         const targetRow = tierList.rows.find((r) => r.id === toRowId)
@@ -236,7 +238,9 @@ export function registerRoomHandlers(io: TypedServer, socket: TypedSocket): void
           socket.emit('error', 'Ligne cible introuvable')
           return
         }
-        targetRow.items.splice(toIndex, 0, movedItem)
+        const maxIndex = targetRow.items.length
+        const safeIndex = Math.max(0, Math.min(toIndex, maxIndex))
+        targetRow.items.splice(safeIndex, 0, movedItem)
       }
 
       // 3. Save to MongoDB

@@ -5,12 +5,21 @@ import jwt from 'jsonwebtoken'
 import bcrypt from 'bcrypt'
 import crypto from 'crypto'
 import { Resend } from 'resend'
+import rateLimit from 'express-rate-limit'
 import type { Request, Response } from 'express'
 import { UserModel } from '../models/User'
 import { env } from '../config/env'
 
 const router = Router()
 const resend = env.RESEND_API_KEY ? new Resend(env.RESEND_API_KEY) : null
+
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 10,
+  message: { error: 'Trop de tentatives, réessayez dans 15 minutes.' },
+  standardHeaders: true,
+  legacyHeaders: false,
+})
 
 // Configure Google OAuth strategy
 passport.use(
@@ -92,7 +101,7 @@ router.get(
 )
 
 // POST /auth/register
-router.post('/auth/register', async (req: Request, res: Response) => {
+router.post('/auth/register', authLimiter, async (req: Request, res: Response) => {
   try {
     const { email, password, displayName } = req.body
 
@@ -152,7 +161,7 @@ router.post('/auth/register', async (req: Request, res: Response) => {
 })
 
 // POST /auth/login
-router.post('/auth/login', async (req: Request, res: Response) => {
+router.post('/auth/login', authLimiter, async (req: Request, res: Response) => {
   try {
     const { email, password } = req.body
 
@@ -196,7 +205,7 @@ router.post('/auth/login', async (req: Request, res: Response) => {
 })
 
 // POST /auth/verify-email
-router.post('/auth/verify-email', async (req: Request, res: Response) => {
+router.post('/auth/verify-email', authLimiter, async (req: Request, res: Response) => {
   try {
     const { email, code } = req.body
 
@@ -250,7 +259,7 @@ router.post('/auth/verify-email', async (req: Request, res: Response) => {
 })
 
 // POST /auth/resend-verification
-router.post('/auth/resend-verification', async (req: Request, res: Response) => {
+router.post('/auth/resend-verification', authLimiter, async (req: Request, res: Response) => {
   try {
     const { email } = req.body
     if (!email) {
@@ -292,7 +301,7 @@ router.post('/auth/resend-verification', async (req: Request, res: Response) => 
 })
 
 // POST /auth/forgot-password
-router.post('/auth/forgot-password', async (req: Request, res: Response) => {
+router.post('/auth/forgot-password', authLimiter, async (req: Request, res: Response) => {
   try {
     const { email } = req.body
     if (!email) {
@@ -337,7 +346,7 @@ router.post('/auth/forgot-password', async (req: Request, res: Response) => {
 })
 
 // POST /auth/reset-password
-router.post('/auth/reset-password', async (req: Request, res: Response) => {
+router.post('/auth/reset-password', authLimiter, async (req: Request, res: Response) => {
   try {
     const { email, code, newPassword } = req.body
 

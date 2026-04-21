@@ -18,6 +18,8 @@
     "mongoose": "^8.9.5",
     "passport": "^0.7.0",
     "passport-google-oauth20": "^2.0.0",
+    "express-rate-limit": "^7.5.0",
+    "helmet": "^8.0.0",
     "resend": "^6.9.4",
     "socket.io": "^4.8.1",
     "zod": "^3.23.8"

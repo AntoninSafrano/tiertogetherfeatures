@@ -8,3 +8,10 @@ Thumbs.db
 .vite/
 *.tsbuildinfo
 .env.production
+
+# IDE artifacts
+client/src/**/*.vue.js
+client/src/**/*.vue.d.ts
+client/src/**/*.d.ts
+!client/src/env.d.ts
+!client/src/vite-env.d.ts
