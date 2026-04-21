@@ -253,8 +253,12 @@ router.post('/api/tierlists/:id/vote', async (req: Request, res: Response) => {
 
     // Ensure fields exist (for old documents)
     if (!tierlist.voters) tierlist.voters = []
-    if (!tierlist.upvotes) tierlist.upvotes = 0
-    if (!tierlist.downvotes) tierlist.downvotes = 0
+    if (typeof tierlist.upvotes !== 'number' || isNaN(tierlist.upvotes)) tierlist.upvotes = 0
+    if (typeof tierlist.downvotes !== 'number' || isNaN(tierlist.downvotes)) tierlist.downvotes = 0
+
+    // Recalculate from voters array to ensure consistency
+    tierlist.upvotes = tierlist.voters.filter(v => v.vote === 1).length
+    tierlist.downvotes = tierlist.voters.filter(v => v.vote === -1).length
 
     // Find existing vote
     const existingVoteIdx = tierlist.voters.findIndex(v => v.userId === userId)

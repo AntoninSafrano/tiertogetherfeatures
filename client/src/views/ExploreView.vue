@@ -176,11 +176,17 @@ function onSearchInput() {
   searchTimeout = setTimeout(() => fetchTierlists(), 300)
 }
 
+const votingInProgress = ref<Set<string>>(new Set())
+
 async function vote(tierlist: PublicTierList, voteValue: 1 | -1) {
   if (!user.value) {
     router.push({ name: 'auth' })
     return
   }
+
+  // Block double-clicks
+  if (votingInProgress.value.has(tierlist._id)) return
+  votingInProgress.value.add(tierlist._id)
 
   // If the user clicks the same vote again, remove it (toggle)
   const newVote = tierlist.userVote === voteValue ? 0 : voteValue
@@ -200,6 +206,8 @@ async function vote(tierlist: PublicTierList, voteValue: 1 | -1) {
     }
   } catch {
     // Silent fail
+  } finally {
+    votingInProgress.value.delete(tierlist._id)
   }
 }
 
