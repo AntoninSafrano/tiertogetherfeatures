@@ -124,7 +124,7 @@ function onDragChange(evt: any) {
       </template>
 
       <!-- Row action buttons (show on hover) - hidden in readonly -->
-      <div v-if="!readonly" class="absolute -right-0 top-0 bottom-0 flex flex-col items-center justify-center gap-0.5 sm:opacity-0 sm:group-hover/row:opacity-100 transition-opacity duration-200 z-10 translate-x-full px-1">
+      <div v-if="!readonly" class="absolute -right-0 top-0 bottom-0 flex flex-col items-center justify-center gap-0.5 opacity-100 sm:opacity-0 sm:group-hover/row:opacity-100 transition-opacity duration-200 z-10 sm:translate-x-full sm:group-hover/row:translate-x-0 bg-surface/80 sm:bg-transparent px-1">
         <button
           class="p-1 rounded hover:bg-surface-active text-foreground-muted hover:text-foreground transition-colors"
           title="Monter"

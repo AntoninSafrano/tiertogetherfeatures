@@ -281,18 +281,9 @@ export function registerRoomHandlers(io: TypedServer, socket: TypedSocket): void
       socket.data.roomId = roomId
       socket.data.color = color
 
-      // Send full room state to the joining user
+      // Send full room state to ALL users in the room (ensures sync)
       const roomState = await buildRoomState(io, roomId)
-      if (roomState) socket.emit('room:state', roomState)
-
-      // Notify other users (only if not a rejoin)
-      if (!isRejoin) {
-        socket.to(roomId).emit('room:user-joined', {
-          id: socket.id,
-          username,
-          color,
-        })
-      }
+      if (roomState) io.in(roomId).emit('room:state', roomState)
 
       console.log(`[Room] ${username} ${isRejoin ? 'rejoined' : 'joined'} room ${roomId}`)
       callback({ success: true, roomId })

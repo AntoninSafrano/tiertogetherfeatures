@@ -160,7 +160,7 @@ async function publish() {
           <!-- Preview card + cover picker -->
           <div class="rounded-xl border border-border-hover bg-surface-hover/50 overflow-hidden mb-4">
             <div
-              class="relative h-28 bg-gradient-to-br from-primary/20 to-surface-hover overflow-hidden cursor-pointer group"
+              class="relative aspect-video bg-gradient-to-br from-primary/20 to-surface-hover overflow-hidden cursor-pointer group"
               @click="showImagePicker = !showImagePicker"
             >
               <img v-if="coverImage" :src="coverImage" class="w-full h-full object-cover" />
