@@ -1,11 +1,12 @@
 <script setup lang="ts">
-import { onMounted } from 'vue'
+import { onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuth } from '@/composables/useAuth'
-import { LogOut } from 'lucide-vue-next'
+import { LogOut, Menu, X } from 'lucide-vue-next'
 
 const router = useRouter()
 const { user, fetchUser, logout } = useAuth()
+const mobileMenuOpen = ref(false)
 
 onMounted(() => {
   fetchUser()
@@ -25,8 +26,8 @@ async function handleLogout() {
         <span class="text-xl font-bold tracking-tight"><span class="text-primary">Tier</span><span class="text-foreground">Together</span></span>
       </router-link>
 
-      <!-- Nav links + Auth -->
-      <div class="flex items-center gap-6">
+      <!-- Desktop nav links + Auth -->
+      <div class="hidden sm:flex items-center gap-6">
         <router-link
           to="/"
           :class="['text-sm transition-colors', router.currentRoute.value.path === '/' ? 'font-semibold text-foreground' : 'font-medium text-foreground-muted hover:text-foreground']"
@@ -65,6 +66,63 @@ async function handleLogout() {
           <router-link
             to="/auth"
             class="rounded-full bg-primary px-5 py-2 text-sm font-semibold text-white hover:bg-primary-hover transition-colors"
+          >
+            Connexion
+          </router-link>
+        </template>
+      </div>
+
+      <!-- Mobile hamburger button -->
+      <button @click="mobileMenuOpen = !mobileMenuOpen" class="sm:hidden p-2 text-foreground-muted hover:text-foreground">
+        <component :is="mobileMenuOpen ? X : Menu" class="h-5 w-5" />
+      </button>
+    </div>
+
+    <!-- Mobile dropdown menu -->
+    <div v-if="mobileMenuOpen" class="sm:hidden border-t border-border bg-background/95 backdrop-blur-sm">
+      <div class="flex flex-col px-4 py-3 gap-1">
+        <router-link
+          to="/"
+          @click="mobileMenuOpen = false"
+          :class="['block rounded-lg px-3 py-2 text-sm transition-colors', router.currentRoute.value.path === '/' ? 'font-semibold text-foreground bg-surface-hover' : 'font-medium text-foreground-muted hover:text-foreground hover:bg-surface-hover']"
+        >
+          Explorer
+        </router-link>
+        <router-link
+          to="/create"
+          @click="mobileMenuOpen = false"
+          :class="['block rounded-lg px-3 py-2 text-sm transition-colors', router.currentRoute.value.path === '/create' ? 'font-semibold text-foreground bg-surface-hover' : 'font-medium text-foreground-muted hover:text-foreground hover:bg-surface-hover']"
+        >
+          Créer
+        </router-link>
+
+        <!-- Auth (mobile) -->
+        <template v-if="user">
+          <div class="flex items-center gap-3 px-3 py-2 mt-1 border-t border-border pt-3">
+            <div class="h-8 w-8 rounded-full bg-primary flex items-center justify-center overflow-hidden">
+              <img
+                v-if="user.avatar"
+                :src="user.avatar"
+                :alt="user.displayName"
+                class="h-8 w-8 rounded-full object-cover"
+              />
+              <span v-else class="text-xs font-bold text-white">{{ user.displayName?.[0]?.toUpperCase() }}</span>
+            </div>
+            <span class="text-sm font-medium text-foreground">{{ user.displayName }}</span>
+            <button
+              class="ml-auto p-1.5 rounded-lg text-foreground-muted hover:text-foreground hover:bg-surface-hover transition-colors"
+              @click="handleLogout(); mobileMenuOpen = false"
+              title="Logout"
+            >
+              <LogOut class="h-4 w-4" />
+            </button>
+          </div>
+        </template>
+        <template v-else>
+          <router-link
+            to="/auth"
+            @click="mobileMenuOpen = false"
+            class="block mt-1 rounded-full bg-primary px-5 py-2 text-center text-sm font-semibold text-white hover:bg-primary-hover transition-colors"
           >
             Connexion
           </router-link>

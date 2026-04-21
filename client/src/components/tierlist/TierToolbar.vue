@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { useRoomStore } from '@/stores/room'
-import { Lock, Unlock, RotateCcw, Download, Maximize, Upload } from 'lucide-vue-next'
+import { Lock, Unlock, RotateCcw, Download, Maximize, Upload, Vote } from 'lucide-vue-next'
 import { toPng } from 'html-to-image'
 import PublishModal from './PublishModal.vue'
 
@@ -50,7 +50,7 @@ async function exportImage() {
         @click="resetRankings"
       >
         <RotateCcw class="h-3.5 w-3.5" />
-        Tout retirer
+        <span class="hidden sm:inline">Tout retirer</span>
       </button>
 
       <button
@@ -59,7 +59,7 @@ async function exportImage() {
       >
         <Lock v-if="store.isLocked" class="h-3.5 w-3.5" />
         <Unlock v-else class="h-3.5 w-3.5" />
-        {{ store.isLocked ? 'Déverrouiller' : 'Verrouiller' }}
+        <span class="hidden sm:inline">{{ store.isLocked ? 'Déverrouiller' : 'Verrouiller' }}</span>
       </button>
 
       <button
@@ -72,7 +72,20 @@ async function exportImage() {
         @click="store.toggleFocusMode()"
       >
         <Maximize class="h-3.5 w-3.5" />
-        Mode Focus
+        <span class="hidden sm:inline">Mode Focus</span>
+      </button>
+
+      <button
+        :class="[
+          'inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition-colors',
+          store.isVoteMode
+            ? 'bg-emerald-500/20 text-emerald-400 ring-1 ring-emerald-500/50'
+            : 'text-foreground-muted hover:bg-emerald-500/10 hover:text-emerald-400',
+        ]"
+        @click="store.toggleVoteMode()"
+      >
+        <Vote class="h-3.5 w-3.5" />
+        <span class="hidden sm:inline">{{ store.isVoteMode ? 'Arrêter Vote' : 'Mode Vote' }}</span>
       </button>
     </div>
 
@@ -86,7 +99,7 @@ async function exportImage() {
         @click="showPublishModal = true"
       >
         <Upload class="h-3.5 w-3.5" />
-        Publier
+        <span class="hidden sm:inline">Publier</span>
       </button>
 
     <button
@@ -95,7 +108,7 @@ async function exportImage() {
       @click="exportImage"
     >
       <Download class="h-3.5 w-3.5" />
-      {{ isExporting ? 'Export...' : 'Exporter' }}
+      <span class="hidden sm:inline">{{ isExporting ? 'Export...' : 'Exporter' }}</span>
     </button>
     </div>
 

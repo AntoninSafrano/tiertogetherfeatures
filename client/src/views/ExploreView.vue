@@ -4,7 +4,7 @@ import { useRouter } from 'vue-router'
 import { useAuth } from '@/composables/useAuth'
 import NavBar from '@/components/NavBar.vue'
 import ErrorPopup from '@/components/ErrorPopup.vue'
-import { Search, Download, Clock, TrendingUp, Gamepad2, UtensilsCrossed, Tv, Music, Film, Dumbbell, MoreHorizontal, LayoutGrid, Star, History, Trash2, Pencil, EyeOff, Eye, X, Check } from 'lucide-vue-next'
+import { Search, Download, Clock, TrendingUp, Gamepad2, UtensilsCrossed, Tv, Music, Film, Dumbbell, MoreHorizontal, LayoutGrid, Star, History, Trash2, Pencil, EyeOff, Eye, X, Check, ThumbsUp, ThumbsDown } from 'lucide-vue-next'
 import { API_BASE } from '@/config'
 
 const router = useRouter()
@@ -17,6 +17,9 @@ interface PublicTierList {
   rows: { id: string; label: string; color: string; items: { id: string; imageUrl: string; label: string }[] }[]
   pool: { id: string; imageUrl: string; label: string }[]
   downloads: number
+  upvotes: number
+  downvotes: number
+  userVote: number | null
   category: string
   authorId: string
   coverImage: string
@@ -71,7 +74,7 @@ async function fetchTierlists() {
     }
     if (searchQuery.value) params.set('search', searchQuery.value)
 
-    const res = await fetch(`${API_BASE}/api/tierlists/public?${params}`)
+    const res = await fetch(`${API_BASE}/api/tierlists/public?${params}`, { credentials: 'include' })
     const data = await res.json()
     tierlists.value = data.tierlists || []
   } catch {
@@ -146,6 +149,33 @@ let searchTimeout: any = null
 function onSearchInput() {
   clearTimeout(searchTimeout)
   searchTimeout = setTimeout(() => fetchTierlists(), 300)
+}
+
+async function vote(tierlist: PublicTierList, voteValue: 1 | -1) {
+  if (!user.value) {
+    router.push({ name: 'auth' })
+    return
+  }
+
+  // If the user clicks the same vote again, remove it (toggle)
+  const newVote = tierlist.userVote === voteValue ? 0 : voteValue
+
+  try {
+    const res = await fetch(`${API_BASE}/api/tierlists/${tierlist._id}/vote`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({ vote: newVote }),
+    })
+    const data = await res.json()
+    if (res.ok) {
+      tierlist.upvotes = data.upvotes
+      tierlist.downvotes = data.downvotes
+      tierlist.userVote = data.userVote
+    }
+  } catch {
+    // Silent fail
+  }
 }
 
 watch([activeCategory, activeSort], () => fetchTierlists())
@@ -370,9 +400,26 @@ onMounted(async () => {
               </h3>
 
               <div class="flex items-center justify-between text-[11px] text-foreground-muted">
-                <div class="flex items-center gap-1">
-                  <Download class="h-3 w-3" />
-                  {{ tl.downloads || 0 }}
+                <div class="flex items-center gap-3">
+                  <div class="flex items-center gap-1">
+                    <Download class="h-3 w-3" />
+                    {{ tl.downloads || 0 }}
+                  </div>
+                  <div class="flex items-center gap-1.5">
+                    <button
+                      @click.stop="vote(tl, 1)"
+                      :class="['transition-colors hover:text-primary', tl.userVote === 1 ? 'text-primary' : 'text-foreground-muted']"
+                    >
+                      <ThumbsUp class="h-3.5 w-3.5" />
+                    </button>
+                    <span class="text-xs font-medium text-foreground-muted">{{ (tl.upvotes || 0) - (tl.downvotes || 0) }}</span>
+                    <button
+                      @click.stop="vote(tl, -1)"
+                      :class="['transition-colors hover:text-red-400', tl.userVote === -1 ? 'text-red-400' : 'text-foreground-muted']"
+                    >
+                      <ThumbsDown class="h-3.5 w-3.5" />
+                    </button>
+                  </div>
                 </div>
                 <span>{{ getRelativeTime(tl.createdAt) }}</span>
               </div>

@@ -52,6 +52,7 @@ export interface Room {
   hostId: string
   isLocked: boolean
   isFocusMode: boolean
+  isVoteMode: boolean
 }
 
 // ─── Socket Events ──────────────────────────────────────────────────
@@ -87,6 +88,8 @@ export interface ClientToServerEvents {
   'room:reset': () => void
   'room:lock': () => void
   'room:toggle-focus': () => void
+  'room:toggle-vote': () => void
+  'vote:cast': (data: { itemId: string; rowId: string }) => void
   'item:skip': () => void
   'chat:send': (data: { text: string }) => void
   'row:update': (data: RowUpdatePayload) => void
@@ -105,6 +108,10 @@ export interface ServerToClientEvents {
   'room:reset': (room: Room) => void
   'room:locked': (isLocked: boolean) => void
   'room:focus-toggled': (isFocusMode: boolean) => void
+  'room:vote-toggled': (isVoteMode: boolean) => void
+  'vote:started': (data: { itemId: string; totalVoters: number }) => void
+  'vote:update': (data: { itemId: string; votes: Record<string, number>; votedCount: number; totalVoters: number }) => void
+  'vote:result': (data: { itemId: string; winnerRowId: string; votes: Record<string, number> }) => void
   'item:skipped': () => void
   'chat:message': (message: ChatMessage) => void
   'error': (message: string) => void

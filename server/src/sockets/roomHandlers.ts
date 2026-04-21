@@ -44,6 +44,115 @@ function getAuthUserId(socket: TypedSocket): string | null {
 type TypedServer = Server<ClientToServerEvents, ServerToClientEvents, InterServerEvents, SocketData>
 type TypedSocket = Socket<ClientToServerEvents, ServerToClientEvents, InterServerEvents, SocketData>
 
+// ─── Vote Mode State ────────────────────────────────────────────────
+const activeVotes = new Map<string, {
+  itemId: string
+  votes: Map<string, string>  // userId -> rowId
+  voters: Set<string>         // userIds who can vote
+}>()
+
+async function startNextVote(roomId: string, io: TypedServer): Promise<void> {
+  const tierList = await TierListModel.findOne({ roomId })
+  if (!tierList || !tierList.isVoteMode) return
+
+  if (tierList.pool.length === 0) {
+    // No more items — disable vote mode
+    tierList.isVoteMode = false
+    await tierList.save()
+    activeVotes.delete(roomId)
+    io.in(roomId).emit('room:vote-toggled', false)
+    return
+  }
+
+  const item = tierList.pool[0]
+  const sockets = await io.in(roomId).fetchSockets()
+  const voterIds = new Set(sockets.map((s) => s.id))
+
+  activeVotes.set(roomId, {
+    itemId: item.id,
+    votes: new Map(),
+    voters: voterIds,
+  })
+
+  io.in(roomId).emit('vote:started', {
+    itemId: item.id,
+    totalVoters: voterIds.size,
+  })
+}
+
+async function resolveVote(roomId: string, io: TypedServer): Promise<void> {
+  const vote = activeVotes.get(roomId)
+  if (!vote) return
+
+  const tierList = await TierListModel.findOne({ roomId })
+  if (!tierList) return
+
+  // Count votes per row
+  const tally = new Map<string, number>()
+  for (const rowId of vote.votes.values()) {
+    tally.set(rowId, (tally.get(rowId) || 0) + 1)
+  }
+
+  const votesRecord: Record<string, number> = {}
+  for (const [rowId, count] of tally.entries()) {
+    votesRecord[rowId] = count
+  }
+
+  // Find the winner (most votes)
+  let maxCount = 0
+  let winners: string[] = []
+  for (const [rowId, count] of tally.entries()) {
+    if (count > maxCount) {
+      maxCount = count
+      winners = [rowId]
+    } else if (count === maxCount) {
+      winners.push(rowId)
+    }
+  }
+
+  let winnerRowId: string
+  if (winners.length === 1) {
+    winnerRowId = winners[0]
+  } else {
+    // Tie — host breaks it
+    const hostVote = vote.votes.get(tierList.ownerId)
+    if (hostVote && winners.includes(hostVote)) {
+      winnerRowId = hostVote
+    } else {
+      // Host didn't vote for any of the tied rows — pick first
+      winnerRowId = winners[0]
+    }
+  }
+
+  // Move item from pool to the winning row
+  const poolIdx = tierList.pool.findIndex((i) => i.id === vote.itemId)
+  if (poolIdx !== -1) {
+    const movedItem = tierList.pool.splice(poolIdx, 1)[0]
+    const targetRow = tierList.rows.find((r) => r.id === winnerRowId)
+    if (targetRow) {
+      targetRow.items.push(movedItem)
+    }
+    tierList.markModified('rows')
+    tierList.markModified('pool')
+    await tierList.save()
+  }
+
+  // Broadcast the result
+  io.in(roomId).emit('vote:result', {
+    itemId: vote.itemId,
+    winnerRowId,
+    votes: votesRecord,
+  })
+
+  // Clear active vote
+  activeVotes.delete(roomId)
+
+  // Auto-start next vote after 2 seconds
+  setTimeout(() => {
+    startNextVote(roomId, io)
+  }, 2000)
+}
+
 export function registerRoomHandlers(io: TypedServer, socket: TypedSocket): void {
 
   // ─── room:create ────────────────────────────────────────────────
@@ -374,6 +483,87 @@ export function registerRoomHandlers(io: TypedServer, socket: TypedSocket): void
     }
   })
 
+  // ─── room:toggle-vote ───────────────────────────────────────────
+  socket.on('room:toggle-vote', async () => {
+    const roomId = socket.data.roomId
+    if (!roomId) {
+      socket.emit('error', 'Pas dans une room')
+      return
+    }
+
+    try {
+      const tierList = await TierListModel.findOne({ roomId })
+      if (!tierList) {
+        socket.emit('error', 'Room introuvable')
+        return
+      }
+
+      if (tierList.ownerId !== socket.id) {
+        socket.emit('error', 'Seul l\'hôte peut activer/désactiver le mode vote')
+        return
+      }
+
+      tierList.isVoteMode = !tierList.isVoteMode
+      await tierList.save()
+
+      io.in(roomId).emit('room:vote-toggled', tierList.isVoteMode)
+      console.log(`[Room] Room ${roomId} vote mode ${tierList.isVoteMode ? 'enabled' : 'disabled'} by host`)
+
+      if (tierList.isVoteMode) {
+        // Start first vote
+        await startNextVote(roomId, io)
+      } else {
+        // Clear active vote
+        activeVotes.delete(roomId)
+      }
+    } catch (err) {
+      console.error('[Room] Vote toggle failed:', err)
+      socket.emit('error', 'Échec de l\'activation/désactivation du mode vote')
+    }
+  })
+
+  // ─── vote:cast ──────────────────────────────────────────────────
+  socket.on('vote:cast', async (data) => {
+    const roomId = socket.data.roomId
+    if (!roomId) {
+      socket.emit('error', 'Pas dans une room')
+      return
+    }
+
+    const vote = activeVotes.get(roomId)
+    if (!vote) {
+      socket.emit('error', 'Aucun vote en cours')
+      return
+    }
+
+    if (data.itemId !== vote.itemId) {
+      socket.emit('error', 'Vote invalide — élément incorrect')
+      return
+    }
+
+    // Record the vote (overwrite if already voted)
+    vote.votes.set(socket.id, data.rowId)
+
+    // Build vote counts per row
+    const tally: Record<string, number> = {}
+    for (const rowId of vote.votes.values()) {
+      tally[rowId] = (tally[rowId] || 0) + 1
+    }
+
+    // Broadcast update
+    io.in(roomId).emit('vote:update', {
+      itemId: vote.itemId,
+      votes: tally,
+      votedCount: vote.votes.size,
+      totalVoters: vote.voters.size,
+    })
+
+    // Check if all voters have voted
+    if (vote.votes.size >= vote.voters.size) {
+      await resolveVote(roomId, io)
+    }
+  })
+
   // ─── item:skip ────────────────────────────────────────────────
   socket.on('item:skip', async () => {
     const roomId = socket.data.roomId
@@ -642,6 +832,7 @@ async function buildRoomState(io: TypedServer, roomId: string): Promise<Room | n
     hostId: tierList.ownerId,
     isLocked: tierList.isLocked ?? false,
     isFocusMode: tierList.isFocusMode ?? false,
+    isVoteMode: tierList.isVoteMode ?? false,
   }
 }
 

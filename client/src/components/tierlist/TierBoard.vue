@@ -5,6 +5,7 @@ import TierPool from './TierPool.vue'
 import TierToolbar from './TierToolbar.vue'
 import ImageUploader from './ImageUploader.vue'
 import FocusView from './FocusView.vue'
+import VotePanel from './VotePanel.vue'
 import { Plus } from 'lucide-vue-next'
 
 const store = useRoomStore()
@@ -38,9 +39,12 @@ const store = useRoomStore()
       Ajouter un Tier
     </button>
 
-    <!-- Focus Mode vs Staging Area -->
+    <!-- Vote Mode / Focus Mode / Staging Area -->
     <Transition name="fade" mode="out-in">
-      <div v-if="store.isFocusMode" key="focus" class="rounded-xl border border-border-hover bg-surface/20">
+      <div v-if="store.isVoteMode" key="vote" class="rounded-xl border border-emerald-500/20 bg-surface/20">
+        <VotePanel />
+      </div>
+      <div v-else-if="store.isFocusMode" key="focus" class="rounded-xl border border-border-hover bg-surface/20">
         <FocusView />
       </div>
       <div v-else key="pool" class="overflow-hidden rounded-xl border border-border-hover bg-surface/20">

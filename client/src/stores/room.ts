@@ -30,6 +30,15 @@ export const useRoomStore = defineStore('room', () => {
   const isLocked = ref(false)
   const isFocusMode = ref(false)
 
+  // ─── Vote Mode ──────────────────────────────────────────────────
+  const isVoteMode = ref(false)
+  const currentVoteItem = ref<string | null>(null)
+  const voteResults = ref<Record<string, number>>({})
+  const votedCount = ref(0)
+  const totalVoters = ref(0)
+  const hasVoted = ref(false)
+  const voteWinner = ref<{ itemId: string; winnerRowId: string; votes: Record<string, number> } | null>(null)
+
   // ─── Focus Mode ───────────────────────────────────────────────
   const currentFocusItem = computed(() => pool.value[0] ?? null)
 
@@ -101,6 +110,7 @@ export const useRoomStore = defineStore('room', () => {
       pool.value = room.tierList.pool
       isLocked.value = room.isLocked ?? false
       isFocusMode.value = room.isFocusMode ?? false
+      isVoteMode.value = room.isVoteMode ?? false
     })
 
     socket.value.on('item:moved', (data: MoveItemPayload) => {
@@ -134,6 +144,48 @@ export const useRoomStore = defineStore('room', () => {
       isFocusMode.value = focused
     })
 
+    socket.value.on('room:vote-toggled', (voteMode: boolean) => {
+      isVoteMode.value = voteMode
+      if (!voteMode) {
+        currentVoteItem.value = null
+        voteResults.value = {}
+        votedCount.value = 0
+        totalVoters.value = 0
+        hasVoted.value = false
+        voteWinner.value = null
+      }
+    })
+
+    socket.value.on('vote:started', (data) => {
+      currentVoteItem.value = data.itemId
+      totalVoters.value = data.totalVoters
+      votedCount.value = 0
+      voteResults.value = {}
+      hasVoted.value = false
+      voteWinner.value = null
+    })
+
+    socket.value.on('vote:update', (data) => {
+      voteResults.value = data.votes
+      votedCount.value = data.votedCount
+      totalVoters.value = data.totalVoters
+    })
+
+    socket.value.on('vote:result', (data) => {
+      voteWinner.value = data
+      voteResults.value = data.votes
+
+      // Move item locally from pool to winning row
+      const poolIdx = pool.value.findIndex((i) => i.id === data.itemId)
+      if (poolIdx !== -1) {
+        const item = pool.value.splice(poolIdx, 1)[0]
+        const row = rows.value.find((r) => r.id === data.winnerRowId)
+        if (row) {
+          row.items.push(item)
+        }
+      }
+    })
+
     socket.value.on('item:skipped', () => {
       // Rotate first pool item to end
       if (pool.value.length > 0) {
@@ -150,6 +202,7 @@ export const useRoomStore = defineStore('room', () => {
       pool.value = room.tierList.pool
       isLocked.value = room.isLocked ?? false
       isFocusMode.value = room.isFocusMode ?? false
+      isVoteMode.value = room.isVoteMode ?? false
     })
 
     socket.value.on('row:updated', (data) => {
@@ -251,6 +304,22 @@ export const useRoomStore = defineStore('room', () => {
     const { socket } = useSocket()
     if (socket.value?.connected) {
       socket.value.emit('room:toggle-focus')
+    }
+  }
+
+  function toggleVoteMode() {
+    const { socket } = useSocket()
+    if (socket.value?.connected) {
+      socket.value.emit('room:toggle-vote')
+    }
+  }
+
+  function castVote(rowId: string) {
+    if (!currentVoteItem.value || hasVoted.value) return
+    const { socket } = useSocket()
+    if (socket.value?.connected) {
+      socket.value.emit('vote:cast', { itemId: currentVoteItem.value, rowId })
+      hasVoted.value = true
     }
   }
 
@@ -390,6 +459,13 @@ export const useRoomStore = defineStore('room', () => {
     pool.value = []
     isLocked.value = false
     isFocusMode.value = false
+    isVoteMode.value = false
+    currentVoteItem.value = null
+    voteResults.value = {}
+    votedCount.value = 0
+    totalVoters.value = 0
+    hasVoted.value = false
+    voteWinner.value = null
     boundSocket = null
   }
 
@@ -410,12 +486,21 @@ export const useRoomStore = defineStore('room', () => {
     isHost,
     isLocked,
     isFocusMode,
+    isVoteMode,
+    currentVoteItem,
+    voteResults,
+    votedCount,
+    totalVoters,
+    hasVoted,
+    voteWinner,
     currentFocusItem,
     moveItem,
     emitMove,
     resetRoom,
     toggleLock,
     toggleFocusMode,
+    toggleVoteMode,
+    castVote,
     skipCurrentItem,
     loadTierList,
     initDemo,

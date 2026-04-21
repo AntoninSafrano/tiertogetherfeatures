@@ -47,7 +47,30 @@ router.get('/api/tierlists/public', async (req: Request, res: Response) => {
       .limit(50)
       .lean()
 
-    res.json({ tierlists })
+    // If sorting by popular, sort by (upvotes - downvotes) in memory
+    if (sort === 'popular') {
+      tierlists.sort((a: any, b: any) => {
+        const scoreA = (a.upvotes || 0) - (a.downvotes || 0)
+        const scoreB = (b.upvotes || 0) - (b.downvotes || 0)
+        return scoreB - scoreA
+      })
+    }
+
+    // Include the user's vote if authenticated
+    const userId = getUserId(req)
+    const results = tierlists.map((tl: any) => {
+      const voters = tl.voters || []
+      const userVoter = userId ? voters.find((v: any) => v.userId === userId) : null
+      return {
+        ...tl,
+        upvotes: tl.upvotes || 0,
+        downvotes: tl.downvotes || 0,
+        userVote: userVoter ? userVoter.vote : null,
+        voters: undefined, // Don't expose full voters array to client
+      }
+    })
+
+    res.json({ tierlists: results })
   } catch (err) {
     console.error('[API] Failed to fetch public tierlists:', err)
     res.status(500).json({ error: 'Échec de la récupération des tier lists' })
@@ -103,7 +126,18 @@ router.get('/api/tierlists/:id', async (req: Request, res: Response) => {
       return
     }
 
-    res.json({ tierlist })
+    // Include user's vote if authenticated
+    const voters = (tierlist as any).voters || []
+    const userVoter = userId ? voters.find((v: any) => v.userId === userId) : null
+    const result = {
+      ...tierlist,
+      upvotes: (tierlist as any).upvotes || 0,
+      downvotes: (tierlist as any).downvotes || 0,
+      userVote: userVoter ? userVoter.vote : null,
+      voters: undefined, // Don't expose full voters array
+    }
+
+    res.json({ tierlist: result })
   } catch (err) {
     console.error('[API] Failed to fetch tierlist:', err)
     res.status(500).json({ error: 'Échec de la récupération de la tier list' })
@@ -193,6 +227,68 @@ router.post('/api/tierlists/:id/clone', async (req: Request, res: Response) => {
   } catch (err) {
     console.error('[API] Clone failed:', err)
     res.status(500).json({ error: 'Échec du clonage' })
+  }
+})
+
+// POST /api/tierlists/:id/vote
+router.post('/api/tierlists/:id/vote', async (req: Request, res: Response) => {
+  try {
+    const userId = getUserId(req)
+    if (!userId) {
+      res.status(401).json({ error: 'Authentification requise' })
+      return
+    }
+
+    const { vote } = req.body // 1 for upvote, -1 for downvote, 0 to remove vote
+    if (![1, -1, 0].includes(vote)) {
+      res.status(400).json({ error: 'Vote invalide' })
+      return
+    }
+
+    const tierlist = await TierListModel.findById(req.params.id)
+    if (!tierlist) {
+      res.status(404).json({ error: 'Tier list introuvable' })
+      return
+    }
+
+    // Ensure voters array exists (for old documents)
+    if (!tierlist.voters) {
+      tierlist.voters = []
+    }
+
+    // Find existing vote
+    const existingVoteIdx = tierlist.voters.findIndex(v => v.userId === userId)
+
+    if (vote === 0) {
+      // Remove vote
+      if (existingVoteIdx !== -1) {
+        const oldVote = tierlist.voters[existingVoteIdx].vote
+        if (oldVote === 1) tierlist.upvotes--
+        else tierlist.downvotes--
+        tierlist.voters.splice(existingVoteIdx, 1)
+      }
+    } else {
+      if (existingVoteIdx !== -1) {
+        // Change existing vote
+        const oldVote = tierlist.voters[existingVoteIdx].vote
+        if (oldVote !== vote) {
+          if (oldVote === 1) { tierlist.upvotes--; tierlist.downvotes++ }
+          else { tierlist.downvotes--; tierlist.upvotes++ }
+          tierlist.voters[existingVoteIdx].vote = vote
+        }
+      } else {
+        // New vote
+        tierlist.voters.push({ userId, vote })
+        if (vote === 1) tierlist.upvotes++
+        else tierlist.downvotes++
+      }
+    }
+
+    await tierlist.save()
+    res.json({ upvotes: tierlist.upvotes, downvotes: tierlist.downvotes, userVote: vote === 0 ? null : vote })
+  } catch (err) {
+    console.error('[Tierlists] Vote failed:', err)
+    res.status(500).json({ error: 'Échec du vote' })
   }
 })
 

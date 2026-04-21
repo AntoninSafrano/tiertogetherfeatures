@@ -178,7 +178,7 @@ function goHome() {
     </div>
 
     <!-- Content: Board + Side panel -->
-    <div v-else class="flex flex-1 overflow-hidden">
+    <div v-else class="flex flex-1 overflow-hidden relative">
       <!-- Tier Board -->
       <main ref="boardContainer" class="flex-1 overflow-auto p-3 sm:p-6">
         <TierBoard />
@@ -187,15 +187,15 @@ function goHome() {
       <!-- Side Panel (Joueurs / Chat) -->
       <Transition
         enter-active-class="transition-all duration-200 ease-out"
-        enter-from-class="w-0 opacity-0"
-        enter-to-class="w-[320px] opacity-100"
+        enter-from-class="translate-x-full sm:translate-x-0 sm:w-0 opacity-0"
+        enter-to-class="translate-x-0 sm:w-[320px] opacity-100"
         leave-active-class="transition-all duration-150 ease-in"
-        leave-from-class="w-[320px] opacity-100"
-        leave-to-class="w-0 opacity-0"
+        leave-from-class="translate-x-0 sm:w-[320px] opacity-100"
+        leave-to-class="translate-x-full sm:translate-x-0 sm:w-0 opacity-0"
       >
         <aside
           v-if="panelOpen && !isDemo"
-          class="w-[320px] shrink-0 border-l border-border bg-[#0D0D0D] flex flex-col overflow-hidden"
+          class="w-full sm:w-[320px] shrink-0 border-l border-border bg-[#0D0D0D] flex flex-col overflow-hidden sm:relative absolute inset-y-0 right-0 z-30 sm:z-auto"
         >
           <!-- Tabs -->
           <div class="flex border-b border-border shrink-0">
