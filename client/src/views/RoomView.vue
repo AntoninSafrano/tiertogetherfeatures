@@ -271,7 +271,7 @@ function goHome() {
 
           <!-- Players tab -->
           <template v-if="activeTab === 'players'">
-            <div class="flex-1 overflow-y-auto px-3 py-3 space-y-1">
+            <div class="flex-1 overflow-y-auto px-4 py-3 space-y-1">
               <div
                 v-for="u in sortedUsers"
                 :key="u.id"
@@ -302,6 +302,10 @@ function goHome() {
                   <span class="text-[10px] text-foreground-subtle">En ligne</span>
                 </div>
               </div>
+            </div>
+            <!-- Spacer to match chat input height -->
+            <div class="border-t border-border px-3 py-2.5 shrink-0">
+              <div class="h-9" />
             </div>
           </template>
         </aside>

@@ -1,0 +1,9 @@
+node_modules
+*/node_modules
+.git
+*.md
+.env
+.env.production
+server/.env
+client/dist
+server/dist
