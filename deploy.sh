@@ -11,7 +11,9 @@ if [ ! -f .env.production ]; then
 fi
 
 # Charger les variables
-export $(grep -v '^#' .env.production | xargs)
+set -a
+source .env.production
+set +a
 
 if [ "$JWT_SECRET" = "CHANGE_ME" ]; then
   echo "❌ Change le JWT_SECRET dans .env.production !"
