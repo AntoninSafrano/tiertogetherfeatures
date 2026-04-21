@@ -119,40 +119,149 @@ router.get('/api/tierlists/mine', async (req: Request, res: Response) => {
   }
 })
 
-// GET /api/tierlists/stats
-router.get('/api/tierlists/stats', async (_req: Request, res: Response) => {
+// GET /api/tierlists/stats (admin-only)
+router.get('/api/tierlists/stats', async (req: Request, res: Response) => {
   try {
-    const totalTierlists = await TierListModel.countDocuments({ isPublic: true })
-    const totalUsers = await UserModel.countDocuments()
+    const userId = getUserId(req)
+    if (!userId) {
+      res.status(401).json({ error: 'Authentification requise' })
+      return
+    }
 
-    // Most popular this week
+    // Check if user is admin
+    const user = await UserModel.findById(userId)
+    if (!user || user.email !== 'antonin.safrano@gmail.com') {
+      res.status(403).json({ error: 'Accès réservé aux administrateurs' })
+      return
+    }
+
+    const totalTierlists = await TierListModel.countDocuments()
+    const publicTierlists = await TierListModel.countDocuments({ isPublic: true })
+    const privateTierlists = totalTierlists - publicTierlists
+    const totalUsers = await UserModel.countDocuments()
+    const googleUsers = await UserModel.countDocuments({ authProvider: 'google' })
+    const emailUsers = await UserModel.countDocuments({ authProvider: 'email' })
+    const verifiedUsers = await UserModel.countDocuments({ emailVerified: true })
+
+    // Users registered in last 7 days
     const oneWeekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
+    const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000)
+    const newUsersWeek = await UserModel.countDocuments({ createdAt: { $gte: oneWeekAgo } })
+    const newUsersToday = await UserModel.countDocuments({ createdAt: { $gte: oneDayAgo } })
+
+    // Tierlists created in last 7 days
+    const newTierlistsWeek = await TierListModel.countDocuments({ createdAt: { $gte: oneWeekAgo } })
+    const newTierlistsToday = await TierListModel.countDocuments({ createdAt: { $gte: oneDayAgo } })
+
+    // Total downloads
+    const downloadAgg = await TierListModel.aggregate([
+      { $group: { _id: null, total: { $sum: '$downloads' } } }
+    ])
+    const totalDownloads = downloadAgg[0]?.total || 0
+
+    // Total votes cast
+    const voteAgg = await TierListModel.aggregate([
+      { $project: { voterCount: { $size: { $ifNull: ['$voters', []] } } } },
+      { $group: { _id: null, total: { $sum: '$voterCount' } } }
+    ])
+    const totalVotes = voteAgg[0]?.total || 0
+
+    // Trending this week
     const trending = await TierListModel.find({ isPublic: true, createdAt: { $gte: oneWeekAgo } })
       .sort({ downloads: -1 })
-      .limit(6)
-      .select('title category coverImage upvotes downvotes downloads roomId')
+      .limit(10)
+      .select('title category coverImage upvotes downvotes downloads roomId authorId createdAt')
       .lean()
 
-    // Top categories
+    // Top downloaded all time
+    const topDownloaded = await TierListModel.find({ isPublic: true })
+      .sort({ downloads: -1 })
+      .limit(10)
+      .select('title category coverImage upvotes downvotes downloads roomId authorId createdAt')
+      .lean()
+
+    // Top voted all time (by upvotes)
+    const topVoted = await TierListModel.find({ isPublic: true })
+      .sort({ upvotes: -1 })
+      .limit(10)
+      .select('title category coverImage upvotes downvotes downloads roomId authorId createdAt')
+      .lean()
+
+    // Categories breakdown
     const categories = await TierListModel.aggregate([
       { $match: { isPublic: true } },
-      { $group: { _id: '$category', count: { $sum: 1 } } },
+      { $group: { _id: '$category', count: { $sum: 1 }, totalDownloads: { $sum: '$downloads' } } },
       { $sort: { count: -1 } },
     ])
 
-    // Most downloaded all time
-    const topDownloaded = await TierListModel.find({ isPublic: true })
-      .sort({ downloads: -1 })
-      .limit(6)
-      .select('title category coverImage upvotes downvotes downloads roomId')
+    // Recent users (last 20)
+    const recentUsers = await UserModel.find()
+      .sort({ createdAt: -1 })
+      .limit(20)
+      .select('displayName email avatar authProvider emailVerified createdAt')
       .lean()
 
+    // Users by registration date (last 30 days, daily counts)
+    const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
+    const userGrowth = await UserModel.aggregate([
+      { $match: { createdAt: { $gte: thirtyDaysAgo } } },
+      { $group: {
+        _id: { $dateToString: { format: '%Y-%m-%d', date: '$createdAt' } },
+        count: { $sum: 1 }
+      }},
+      { $sort: { _id: 1 } }
+    ])
+
+    // Tierlists by creation date (last 30 days)
+    const tierlistGrowth = await TierListModel.aggregate([
+      { $match: { createdAt: { $gte: thirtyDaysAgo } } },
+      { $group: {
+        _id: { $dateToString: { format: '%Y-%m-%d', date: '$createdAt' } },
+        count: { $sum: 1 }
+      }},
+      { $sort: { _id: 1 } }
+    ])
+
+    // Most active authors
+    const topAuthors = await TierListModel.aggregate([
+      { $match: { isPublic: true, authorId: { $exists: true, $ne: null } } },
+      { $group: { _id: '$authorId', count: { $sum: 1 }, totalDownloads: { $sum: '$downloads' } } },
+      { $sort: { count: -1 } },
+      { $limit: 10 }
+    ])
+
+    // Resolve author names
+    const authorIds = topAuthors.map(a => a._id)
+    const authorUsers = await UserModel.find({ _id: { $in: authorIds } }).select('displayName').lean()
+    const authorNameMap = new Map(authorUsers.map((u: any) => [u._id.toString(), u.displayName]))
+
     res.json({
-      totalTierlists,
-      totalUsers,
+      overview: {
+        totalTierlists,
+        publicTierlists,
+        privateTierlists,
+        totalUsers,
+        googleUsers,
+        emailUsers,
+        verifiedUsers,
+        totalDownloads,
+        totalVotes,
+        newUsersToday,
+        newUsersWeek,
+        newTierlistsToday,
+        newTierlistsWeek,
+      },
       trending: trending.map(tl => ({ ...tl, upvotes: (tl as any).upvotes || 0, downvotes: (tl as any).downvotes || 0 })),
       topDownloaded: topDownloaded.map(tl => ({ ...tl, upvotes: (tl as any).upvotes || 0, downvotes: (tl as any).downvotes || 0 })),
+      topVoted: topVoted.map(tl => ({ ...tl, upvotes: (tl as any).upvotes || 0, downvotes: (tl as any).downvotes || 0 })),
       categories,
+      recentUsers: recentUsers.map((u: any) => ({ ...u, _id: u._id.toString() })),
+      userGrowth,
+      tierlistGrowth,
+      topAuthors: topAuthors.map(a => ({
+        ...a,
+        displayName: authorNameMap.get(a._id) || 'Inconnu',
+      })),
     })
   } catch (err) {
     console.error('[API] Failed to fetch stats:', err)

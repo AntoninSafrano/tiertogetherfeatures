@@ -43,7 +43,7 @@ const router = createRouter({
       path: '/stats',
       name: 'stats',
       component: () => import('@/views/StatsView.vue'),
-      meta: { title: 'Statistiques - TierTogether' },
+      meta: { title: 'Admin - TierTogether' },
     },
     {
       path: '/legal',

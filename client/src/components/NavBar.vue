@@ -56,13 +56,6 @@ async function deleteAccount() {
         >
           Créer
         </router-link>
-        <router-link
-          to="/stats"
-          :class="['text-sm transition-colors', router.currentRoute.value.path === '/stats' ? 'font-semibold text-foreground' : 'font-medium text-foreground-muted hover:text-foreground']"
-        >
-          Stats
-        </router-link>
-
         <!-- Auth -->
         <template v-if="user">
           <div class="relative group/user flex items-center gap-3 ml-2">
@@ -127,14 +120,6 @@ async function deleteAccount() {
         >
           Créer
         </router-link>
-        <router-link
-          to="/stats"
-          @click="mobileMenuOpen = false"
-          :class="['block rounded-lg px-3 py-2 text-sm transition-colors', router.currentRoute.value.path === '/stats' ? 'font-semibold text-foreground bg-surface-hover' : 'font-medium text-foreground-muted hover:text-foreground hover:bg-surface-hover']"
-        >
-          Stats
-        </router-link>
-
         <!-- Auth (mobile) -->
         <template v-if="user">
           <div class="flex items-center gap-3 px-3 py-2 mt-1 border-t border-border pt-3">
