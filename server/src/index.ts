@@ -21,6 +21,8 @@ import { registerSocketHandlers } from './sockets'
 import authRoutes from './routes/auth'
 import tierlistRoutes from './routes/tierlists'
 import imageRoutes from './routes/images'
+import sitemapRoutes from './routes/sitemap'
+import { loadIndexHtml, renderHtmlForPath } from './seo/renderHtml'
 
 const app = express()
 const httpServer = createServer(app)
@@ -59,6 +61,7 @@ app.use((req, res, next) => {
 app.use(authRoutes)
 app.use(tierlistRoutes)
 app.use(imageRoutes)
+app.use(sitemapRoutes)
 
 // ─── Health Check ───────────────────────────────────────────────────
 app.get('/api/health', (_req, res) => {
@@ -86,9 +89,18 @@ registerSocketHandlers(io)
 // ─── Serve client in production ─────────────────────────────────────
 if (env.NODE_ENV === 'production') {
   const clientDist = path.join(__dirname, '../../../../client/dist')
-  app.use(express.static(clientDist))
-  app.get('*', (_req, res) => {
-    res.sendFile(path.join(clientDist, 'index.html'))
+  loadIndexHtml(clientDist)
+  // Serve static assets but skip the root index.html so our SEO renderer handles it.
+  app.use(express.static(clientDist, { index: false }))
+  app.get('*', async (req, res) => {
+    try {
+      const html = await renderHtmlForPath(req.path)
+      res.set('Content-Type', 'text/html; charset=utf-8')
+      res.send(html)
+    } catch (err) {
+      console.error('[SEO] Render failed for', req.path, err)
+      res.sendFile(path.join(clientDist, 'index.html'))
+    }
   })
 }
 

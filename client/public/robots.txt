@@ -2,5 +2,8 @@ User-agent: *
 Allow: /
 Disallow: /room/
 Disallow: /auth
+Disallow: /stats
+Disallow: /api/
+Disallow: /socket.io/
 
 Sitemap: https://tiertogether.fr/sitemap.xml
