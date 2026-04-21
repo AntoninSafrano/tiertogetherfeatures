@@ -343,42 +343,40 @@ onMounted(async () => {
       </div>
 
       <section v-if="activeTab === 'explore'" aria-label="Explorer les tier lists">
-        <!-- Categories + Search row -->
-        <div class="flex items-start gap-4 mb-6">
-          <div class="flex flex-wrap items-center gap-2.5 flex-1 min-w-0">
-            <button
-              v-for="cat in categories"
-              :key="cat.value"
-              :class="[
-                'inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-xs font-medium transition-all duration-200',
-                activeCategory === cat.value
-                  ? 'bg-primary text-white'
-                  : 'bg-surface border border-border text-foreground-muted hover:bg-surface-hover hover:text-foreground'
-              ]"
-              @click="activeCategory = cat.value"
-            >
-              <component :is="cat.icon" class="h-3.5 w-3.5" />
-              {{ cat.label }}
-            </button>
-          </div>
+        <!-- Categories -->
+        <div class="flex flex-wrap items-center gap-2.5 mb-4">
+          <button
+            v-for="cat in categories"
+            :key="cat.value"
+            :class="[
+              'inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-xs font-medium transition-all duration-200',
+              activeCategory === cat.value
+                ? 'bg-primary text-white'
+                : 'bg-surface border border-border text-foreground-muted hover:bg-surface-hover hover:text-foreground'
+            ]"
+            @click="activeCategory = cat.value"
+          >
+            <component :is="cat.icon" class="h-3.5 w-3.5" />
+            {{ cat.label }}
+          </button>
+        </div>
 
-          <div class="flex items-center gap-2 flex-shrink-0">
-            <!-- Sort -->
-            <button
-              v-for="s in sortOptions"
-              :key="s.value"
-              :class="[
-                'inline-flex items-center gap-1 rounded-full px-3 py-2 text-xs transition-colors',
-                activeSort === s.value
-                  ? 'bg-surface-active text-foreground border border-border-hover'
-                  : 'text-foreground-muted hover:text-foreground'
-              ]"
-              @click="activeSort = s.value"
-            >
-              <component :is="s.icon" class="h-3 w-3" />
-              {{ s.label }}
-            </button>
-          </div>
+        <!-- Sort -->
+        <div class="flex items-center gap-2 mb-6">
+          <button
+            v-for="s in sortOptions"
+            :key="s.value"
+            :class="[
+              'inline-flex items-center gap-1 rounded-full px-3 py-2 text-xs transition-colors',
+              activeSort === s.value
+                ? 'bg-surface-active text-foreground border border-border-hover'
+                : 'text-foreground-muted hover:text-foreground'
+            ]"
+            @click="activeSort = s.value"
+          >
+            <component :is="s.icon" class="h-3 w-3" />
+            {{ s.label }}
+          </button>
         </div>
 
         <!-- Grid -->
