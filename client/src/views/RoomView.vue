@@ -25,7 +25,7 @@ const boardContainer = ref<HTMLElement | null>(null)
 useAutoScroll(boardContainer)
 
 // Side panel
-const panelOpen = ref(true)
+const panelOpen = ref(window.innerWidth >= 640)
 const activeTab = ref<'chat' | 'players'>('chat')
 const chatInput = ref('')
 const chatMessages = ref<ChatMessage[]>([])

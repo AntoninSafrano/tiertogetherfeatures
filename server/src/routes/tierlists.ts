@@ -251,10 +251,10 @@ router.post('/api/tierlists/:id/vote', async (req: Request, res: Response) => {
       return
     }
 
-    // Ensure voters array exists (for old documents)
-    if (!tierlist.voters) {
-      tierlist.voters = []
-    }
+    // Ensure fields exist (for old documents)
+    if (!tierlist.voters) tierlist.voters = []
+    if (!tierlist.upvotes) tierlist.upvotes = 0
+    if (!tierlist.downvotes) tierlist.downvotes = 0
 
     // Find existing vote
     const existingVoteIdx = tierlist.voters.findIndex(v => v.userId === userId)

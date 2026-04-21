@@ -18,11 +18,13 @@ async function handleLogout() {
   router.push('/')
 }
 
+const showDeleteConfirm = ref(false)
+
 async function deleteAccount() {
-  if (!confirm('Êtes-vous sûr de vouloir supprimer votre compte ? Toutes vos tier lists seront supprimées. Cette action est irréversible.')) return
   try {
     const res = await fetch(`${API_BASE}/auth/account`, { method: 'DELETE', credentials: 'include' })
     if (res.ok) {
+      showDeleteConfirm.value = false
       await logout()
       router.push('/')
     }
@@ -78,7 +80,7 @@ async function deleteAccount() {
             <div class="absolute right-0 top-full mt-1 hidden group-hover/user:block w-48 rounded-lg border border-border-hover bg-surface shadow-xl z-50">
               <button
                 class="flex w-full items-center gap-2 px-3 py-2 text-xs text-red-400 hover:bg-red-500/10 rounded-lg transition-colors"
-                @click="deleteAccount"
+                @click="showDeleteConfirm = true"
               >
                 <Trash2 class="h-3.5 w-3.5" />
                 Supprimer mon compte
@@ -143,7 +145,7 @@ async function deleteAccount() {
           </div>
           <button
             class="flex items-center gap-2 px-3 py-2 text-xs text-red-400 hover:bg-red-500/10 rounded-lg transition-colors"
-            @click="deleteAccount(); mobileMenuOpen = false"
+            @click="showDeleteConfirm = true; mobileMenuOpen = false"
           >
             <Trash2 class="h-3.5 w-3.5" />
             Supprimer mon compte
@@ -161,4 +163,18 @@ async function deleteAccount() {
       </div>
     </div>
   </nav>
+
+  <!-- Delete account confirmation modal -->
+  <Teleport to="body">
+    <div v-if="showDeleteConfirm" class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm" @click.self="showDeleteConfirm = false">
+      <div class="mx-4 w-full max-w-sm rounded-xl border border-border bg-surface p-6 shadow-2xl">
+        <p class="text-sm font-medium text-foreground">Supprimer votre compte ?</p>
+        <p class="mt-2 text-xs text-foreground-muted">Toutes vos tier lists seront supprimées. Cette action est irréversible.</p>
+        <div class="mt-4 flex justify-end gap-3">
+          <button class="rounded-lg px-4 py-2 text-xs font-medium text-foreground-muted hover:bg-surface-hover transition-colors" @click="showDeleteConfirm = false">Annuler</button>
+          <button class="rounded-lg bg-red-500 px-4 py-2 text-xs font-medium text-white hover:bg-red-600 transition-colors" @click="deleteAccount">Supprimer</button>
+        </div>
+      </div>
+    </div>
+  </Teleport>
 </template>

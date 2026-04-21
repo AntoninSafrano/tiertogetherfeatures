@@ -8,10 +8,15 @@ import PublishModal from './PublishModal.vue'
 const store = useRoomStore()
 const isExporting = ref(false)
 const showPublishModal = ref(false)
+const showResetConfirm = ref(false)
 
 function resetRankings() {
-  if (!confirm('Remettre tous les éléments dans le pool ?')) return
+  showResetConfirm.value = true
+}
+
+function confirmReset() {
   store.resetRoom()
+  showResetConfirm.value = false
 }
 
 async function exportImage() {
@@ -23,6 +28,13 @@ async function exportImage() {
     const dataUrl = await toPng(target, {
       backgroundColor: '#0c0d14',
       pixelRatio: 2,
+      cacheBust: true,
+      fetchRequestInit: { mode: 'cors' },
+      skipFonts: true,
+      filter: (node: HTMLElement) => {
+        // Skip problematic elements
+        return !node.classList?.contains('lucide')
+      },
     })
 
     const link = document.createElement('a')
@@ -113,5 +125,18 @@ async function exportImage() {
     </div>
 
     <PublishModal v-if="showPublishModal" @close="showPublishModal = false" />
+
+    <!-- Reset confirmation -->
+    <Teleport to="body">
+      <div v-if="showResetConfirm" class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm" @click.self="showResetConfirm = false">
+        <div class="mx-4 w-full max-w-sm rounded-xl border border-border bg-surface p-6 shadow-2xl">
+          <p class="text-sm font-medium text-foreground">Remettre tous les éléments dans le pool ?</p>
+          <div class="mt-4 flex justify-end gap-3">
+            <button class="rounded-lg px-4 py-2 text-xs font-medium text-foreground-muted hover:bg-surface-hover transition-colors" @click="showResetConfirm = false">Annuler</button>
+            <button class="rounded-lg bg-red-500 px-4 py-2 text-xs font-medium text-white hover:bg-red-600 transition-colors" @click="confirmReset">Confirmer</button>
+          </div>
+        </div>
+      </div>
+    </Teleport>
   </div>
 </template>
