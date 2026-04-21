@@ -10,10 +10,11 @@ if [ ! -f .env.production ]; then
   exit 1
 fi
 
-# Charger les variables
-set -a
-source .env.production
-set +a
+# Charger les variables (ligne par ligne pour gérer les valeurs avec caractères spéciaux)
+while IFS='=' read -r key value; do
+  [[ -z "$key" || "$key" == \#* ]] && continue
+  export "$key=$value"
+done < .env.production
 
 if [ "$JWT_SECRET" = "CHANGE_ME" ]; then
   echo "❌ Change le JWT_SECRET dans .env.production !"
