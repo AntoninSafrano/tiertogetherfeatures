@@ -285,6 +285,40 @@ export function registerRoomHandlers(io: TypedServer, socket: TypedSocket): void
       const roomState = await buildRoomState(io, roomId)
       if (roomState) io.in(roomId).emit('room:state', roomState)
 
+      // If a vote is in progress, send the current vote state to the joining user
+      const activeVote = activeVotes.get(roomId)
+      if (activeVote) {
+        // Add this user to eligible voters
+        activeVote.voters.add(socket.id)
+
+        // Send vote:started so the new user sees the current vote
+        socket.emit('vote:started', {
+          itemId: activeVote.itemId,
+          totalVoters: activeVote.voters.size,
+          timeLimit: 30, // approximate — timer already running on server
+        })
+
+        // Send current vote progress
+        const voteCounts: Record<string, number> = {}
+        for (const rowId of activeVote.votes.values()) {
+          voteCounts[rowId] = (voteCounts[rowId] || 0) + 1
+        }
+        socket.emit('vote:update', {
+          itemId: activeVote.itemId,
+          votes: voteCounts,
+          votedCount: activeVote.votes.size,
+          totalVoters: activeVote.voters.size,
+        })
+
+        // Update total voters for everyone else too
+        io.in(roomId).emit('vote:update', {
+          itemId: activeVote.itemId,
+          votes: voteCounts,
+          votedCount: activeVote.votes.size,
+          totalVoters: activeVote.voters.size,
+        })
+      }
+
       console.log(`[Room] ${username} ${isRejoin ? 'rejoined' : 'joined'} room ${roomId}`)
       callback({ success: true, roomId })
     } catch (err) {
