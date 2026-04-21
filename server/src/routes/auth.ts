@@ -13,6 +13,14 @@ import { env } from '../config/env'
 const router = Router()
 const resend = env.RESEND_API_KEY ? new Resend(env.RESEND_API_KEY) : null
 
+// A03: Input sanitization — strip NoSQL injection characters
+function sanitizeInput(str: string, maxLen: number = 500): string {
+  return str.replace(/[${}]/g, '').trim().slice(0, maxLen)
+}
+
+// A07: Account lockout tracking
+const loginAttempts = new Map<string, { count: number; lockedUntil: number }>()
+
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 10,
@@ -80,6 +88,7 @@ const cookieOptions = {
   secure: env.NODE_ENV === 'production',
   sameSite: 'lax' as const,
   maxAge: 7 * 24 * 60 * 60 * 1000,
+  path: '/',
 }
 
 // GET /auth/google
@@ -120,6 +129,12 @@ router.post('/auth/register', authLimiter, async (req: Request, res: Response) =
       return
     }
 
+    const safeDisplayName = sanitizeInput(displayName, 50)
+    if (!safeDisplayName) {
+      res.status(400).json({ error: 'Pseudo invalide' })
+      return
+    }
+
     const passwordHash = await bcrypt.hash(password, 12)
     const verificationToken = crypto.randomInt(100000, 999999).toString()
     const verificationTokenExpiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000)
@@ -127,7 +142,7 @@ router.post('/auth/register', authLimiter, async (req: Request, res: Response) =
     await UserModel.create({
       email: email.toLowerCase(),
       passwordHash,
-      displayName: displayName.trim(),
+      displayName: safeDisplayName,
       emailVerified: false,
       verificationToken,
       verificationTokenExpiresAt,
@@ -170,14 +185,42 @@ router.post('/auth/login', authLimiter, async (req: Request, res: Response) => {
       return
     }
 
-    const user = await UserModel.findOne({ email: email.toLowerCase() })
+    const normalizedEmail = email.toLowerCase()
+
+    // A07: Check account lockout
+    const attempts = loginAttempts.get(normalizedEmail) || { count: 0, lockedUntil: 0 }
+    if (attempts.lockedUntil > Date.now()) {
+      const minutesLeft = Math.ceil((attempts.lockedUntil - Date.now()) / 60000)
+      res.status(429).json({ error: `Compte temporairement verrouillé. Réessayez dans ${minutesLeft} minute(s).` })
+      return
+    }
+
+    const user = await UserModel.findOne({ email: normalizedEmail })
     if (!user || !user.passwordHash) {
+      // A09: Log failed attempt
+      console.warn(`[SECURITY] Failed login attempt for ${normalizedEmail} from ${req.ip}`)
+      attempts.count++
+      if (attempts.count >= 5) {
+        attempts.lockedUntil = Date.now() + 15 * 60 * 1000 // 15 minutes
+        attempts.count = 0
+        console.warn(`[SECURITY] Account locked for ${normalizedEmail} from ${req.ip}`)
+      }
+      loginAttempts.set(normalizedEmail, attempts)
       res.status(401).json({ error: 'Email ou mot de passe invalide' })
       return
     }
 
     const isValid = await bcrypt.compare(password, user.passwordHash)
     if (!isValid) {
+      // A09: Log failed attempt
+      console.warn(`[SECURITY] Failed login attempt for ${normalizedEmail} from ${req.ip}`)
+      attempts.count++
+      if (attempts.count >= 5) {
+        attempts.lockedUntil = Date.now() + 15 * 60 * 1000 // 15 minutes
+        attempts.count = 0
+        console.warn(`[SECURITY] Account locked for ${normalizedEmail} from ${req.ip}`)
+      }
+      loginAttempts.set(normalizedEmail, attempts)
       res.status(401).json({ error: 'Email ou mot de passe invalide' })
       return
     }
@@ -186,6 +229,12 @@ router.post('/auth/login', authLimiter, async (req: Request, res: Response) => {
       res.status(403).json({ error: 'Email non vérifié', needsVerification: true })
       return
     }
+
+    // A07: Clear lockout on successful login
+    loginAttempts.delete(normalizedEmail)
+
+    // A09: Log successful login
+    console.log(`[AUTH] Successful login for ${normalizedEmail}`)
 
     const token = generateToken(user._id.toString())
     res.cookie('token', token, cookieOptions)

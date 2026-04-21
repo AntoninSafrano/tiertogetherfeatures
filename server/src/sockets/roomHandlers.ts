@@ -19,6 +19,16 @@ import jwt from 'jsonwebtoken'
 import { TierListModel } from '../models/TierList'
 import { env } from '../config/env'
 
+// A03: Sanitize user inputs — prevent NoSQL injection and XSS
+function sanitize(str: string, maxLen: number = 500): string {
+  return str.replace(/[${}]/g, '').trim().slice(0, maxLen)
+}
+
+// Validate hex color format
+function isValidHexColor(color: string): boolean {
+  return /^#[0-9a-fA-F]{3,8}$/.test(color)
+}
+
 function getAuthUserId(socket: TypedSocket): string | null {
   try {
     const cookieHeader = socket.handshake.headers.cookie || ''
@@ -48,11 +58,15 @@ export function registerRoomHandlers(io: TypedServer, socket: TypedSocket): void
       const roomId = generateRoomId()
       const color = generateUserColor()
 
+      // A03: Sanitize user inputs
+      const safeTierListName = sanitize(parsed.data.tierListName, 100)
+      const safeUsername = sanitize(parsed.data.username, 50)
+
       // Persist in MongoDB
       const authUserId = getAuthUserId(socket)
       await TierListModel.create({
         roomId,
-        title: parsed.data.tierListName,
+        title: safeTierListName,
         rows: DEFAULT_TIERS.map((t) => ({ ...t, items: [] })),
         pool: [],
         ownerId: socket.id,
@@ -62,7 +76,7 @@ export function registerRoomHandlers(io: TypedServer, socket: TypedSocket): void
       // Join Socket.io room
       socket.join(roomId)
       socket.data.userId = socket.id
-      socket.data.username = parsed.data.username
+      socket.data.username = safeUsername
       socket.data.roomId = roomId
       socket.data.color = color
 
@@ -87,7 +101,8 @@ export function registerRoomHandlers(io: TypedServer, socket: TypedSocket): void
       return
     }
 
-    const { roomId, username } = parsed.data
+    const { roomId } = parsed.data
+    const username = sanitize(parsed.data.username, 50)
 
     try {
       // Find the tier list in MongoDB
@@ -280,7 +295,7 @@ export function registerRoomHandlers(io: TypedServer, socket: TypedSocket): void
       const newItem = {
         id: randomUUID(),
         imageUrl: parsed.data.imageUrl,
-        label: parsed.data.label,
+        label: sanitize(parsed.data.label, 100),
       }
 
       tierList.pool.push(newItem)
@@ -445,8 +460,11 @@ export function registerRoomHandlers(io: TypedServer, socket: TypedSocket): void
       const row = tierList.rows.find((r) => r.id === data.rowId)
       if (!row) { socket.emit('error', 'Ligne introuvable'); return }
 
-      if (data.label !== undefined) row.label = data.label
-      if (data.color !== undefined) row.color = data.color
+      if (data.label !== undefined) row.label = sanitize(data.label, 50)
+      if (data.color !== undefined) {
+        const colorStr = String(data.color)
+        row.color = isValidHexColor(colorStr) ? colorStr : row.color
+      }
 
       tierList.markModified('rows')
       await tierList.save()
@@ -525,10 +543,13 @@ export function registerRoomHandlers(io: TypedServer, socket: TypedSocket): void
       const tierList = await TierListModel.findOne({ roomId })
       if (!tierList) { socket.emit('error', 'Room introuvable'); return }
 
+      const safeLabel = data.label ? sanitize(data.label, 50) : 'New'
+      const safeColor = (data.color && isValidHexColor(String(data.color))) ? String(data.color) : '#9147ff'
+
       const newRow = {
         id: `tier-${randomUUID().substring(0, 8)}`,
-        label: data.label || 'New',
-        color: data.color || '#9147ff',
+        label: safeLabel,
+        color: safeColor,
         items: [] as { id: string; imageUrl: string; label: string }[],
       }
 
@@ -548,8 +569,8 @@ export function registerRoomHandlers(io: TypedServer, socket: TypedSocket): void
     const roomId = socket.data.roomId
     if (!roomId) return
 
-    const text = (data?.text ?? '').trim()
-    if (!text || text.length > 500) return
+    const text = sanitize(data?.text ?? '', 500)
+    if (!text) return
 
     if (containsBannedWord(text)) {
       socket.emit('error', 'Message bloqué : langage inapproprié')

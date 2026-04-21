@@ -6,6 +6,11 @@ import { env } from '../config/env'
 
 const router = Router()
 
+// A03: Input sanitization — strip NoSQL injection characters
+function sanitize(str: string, maxLen: number = 500): string {
+  return str.replace(/[${}]/g, '').trim().slice(0, maxLen)
+}
+
 // Auth middleware helper
 function getUserId(req: Request): string | null {
   const token = req.cookies?.token
@@ -28,7 +33,8 @@ router.get('/api/tierlists/public', async (req: Request, res: Response) => {
       filter.category = category
     }
     if (search) {
-      const escapedSearch = String(search).replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+      const sanitizedSearch = sanitize(String(search), 100)
+      const escapedSearch = sanitizedSearch.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
       filter.title = { $regex: escapedSearch, $options: 'i' }
     }
 
@@ -204,7 +210,7 @@ router.delete('/api/tierlists/:id', async (req: Request, res: Response) => {
       res.status(404).json({ error: 'Tier list introuvable' })
       return
     }
-    if (tierList.authorId !== userId) {
+    if (tierList.authorId !== userId && tierList.ownerId !== userId) {
       res.status(403).json({ error: 'Non autorisé' })
       return
     }
@@ -231,7 +237,7 @@ router.patch('/api/tierlists/:id', async (req: Request, res: Response) => {
       res.status(404).json({ error: 'Tier list introuvable' })
       return
     }
-    if (tierList.authorId !== userId) {
+    if (tierList.authorId !== userId && tierList.ownerId !== userId) {
       res.status(403).json({ error: 'Non autorisé' })
       return
     }
@@ -239,7 +245,7 @@ router.patch('/api/tierlists/:id', async (req: Request, res: Response) => {
     const { title, category, coverImage, isPublic } = req.body
     const validCategories = ['Gaming', 'Food', 'Anime', 'Music', 'Movies', 'Sports', 'Other']
 
-    if (title && typeof title === 'string') tierList.title = title.trim().slice(0, 100)
+    if (title && typeof title === 'string') tierList.title = sanitize(title, 100)
     if (category && validCategories.includes(category)) tierList.category = category
     if (coverImage && typeof coverImage === 'string') tierList.coverImage = coverImage
     if (typeof isPublic === 'boolean') tierList.isPublic = isPublic

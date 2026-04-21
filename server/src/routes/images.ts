@@ -33,6 +33,12 @@ router.get('/api/images/search', imageSearchLimiter, async (req, res) => {
     return res.status(400).json({ error: 'Search query too long (max 200 characters)' })
   }
 
+  // A10: SSRF — reject queries containing URLs or path traversal attempts
+  const ssrfPattern = /https?:\/\/|ftp:\/\/|file:\/\/|\/\.\.\//i
+  if (ssrfPattern.test(query)) {
+    return res.status(400).json({ error: 'Invalid search query' })
+  }
+
   try {
     const url = new URL('https://www.googleapis.com/customsearch/v1')
     url.searchParams.set('key', env.GOOGLE_API_KEY)

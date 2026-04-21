@@ -144,9 +144,9 @@ onMounted(() => {
       </div>
 
       <!-- Content -->
-      <template v-else-if="tierlist">
+      <article v-else-if="tierlist">
         <!-- Header -->
-        <div class="mb-6">
+        <header class="mb-6">
           <h1 class="text-xl sm:text-2xl font-bold tracking-tight text-foreground mb-3">{{ tierlist.title }}</h1>
           <div class="flex flex-wrap items-center gap-3 text-sm text-foreground-muted">
             <span :class="['rounded-full px-2.5 py-0.5 text-xs font-medium', getCategoryColor(tierlist.category)]">
@@ -165,7 +165,7 @@ onMounted(() => {
               {{ new Date(tierlist.createdAt).toLocaleDateString() }}
             </span>
           </div>
-        </div>
+        </header>
 
         <!-- Use Template button -->
         <div class="mb-6">
@@ -180,7 +180,7 @@ onMounted(() => {
         </div>
 
         <!-- Tier Rows -->
-        <div class="rounded-xl border border-border-hover bg-surface overflow-visible shadow-2xl">
+        <section aria-label="Classement" class="rounded-xl border border-border-hover bg-surface overflow-visible shadow-2xl">
           <div
             v-for="(row, index) in tierlist.rows"
             :key="row.id"
@@ -224,18 +224,18 @@ onMounted(() => {
               </div>
             </div>
           </div>
-        </div>
+        </section>
 
         <!-- Pool -->
-        <div v-if="tierlist.pool.length > 0" class="mt-6">
+        <section v-if="tierlist.pool.length > 0" aria-label="Pool d'éléments" class="mt-6">
           <h2 class="text-sm font-semibold text-foreground-muted mb-3">Pool ({{ tierlist.pool.length }} éléments)</h2>
           <div class="rounded-xl border border-border-hover bg-surface p-4">
             <div class="flex flex-wrap gap-2">
               <TierItem v-for="item in tierlist.pool" :key="item.id" :item="item" />
             </div>
           </div>
-        </div>
-      </template>
+        </section>
+      </article>
     </main>
   </div>
 </template>

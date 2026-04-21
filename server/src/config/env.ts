@@ -23,7 +23,13 @@ if (env.NODE_ENV === 'production') {
   if (env.JWT_SECRET === 'your-jwt-secret-change-in-production') {
     throw new Error('FATAL: JWT_SECRET must be changed in production')
   }
+  if (env.JWT_SECRET.length < 32) {
+    throw new Error('FATAL: JWT_SECRET must be at least 32 characters long')
+  }
   if (env.GOOGLE_CLIENT_ID === 'YOUR_GOOGLE_CLIENT_ID') {
     throw new Error('FATAL: GOOGLE_CLIENT_ID must be set in production')
+  }
+  if (env.GOOGLE_CLIENT_SECRET === 'YOUR_GOOGLE_CLIENT_SECRET') {
+    throw new Error('FATAL: GOOGLE_CLIENT_SECRET must be set in production')
   }
 }

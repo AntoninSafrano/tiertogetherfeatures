@@ -6,6 +6,7 @@ import cors from 'cors'
 import cookieParser from 'cookie-parser'
 import passport from 'passport'
 import helmet from 'helmet'
+import crypto from 'crypto'
 import type {
   ClientToServerEvents,
   ServerToClientEvents,
@@ -25,6 +26,7 @@ const app = express()
 const httpServer = createServer(app)
 
 // ─── Express Middleware ─────────────────────────────────────────────
+app.disable('x-powered-by')
 app.use(cors({ ...corsOptions, credentials: true }))
 app.use(express.json())
 app.use(cookieParser())
@@ -33,6 +35,25 @@ app.use(helmet({
   contentSecurityPolicy: false,
   crossOriginEmbedderPolicy: false,
 }))
+
+// ─── A04: Origin validation on state-changing requests ──────────────
+app.use((req, res, next) => {
+  if (['POST', 'PATCH', 'DELETE'].includes(req.method)) {
+    const origin = req.get('origin')
+    if (origin && origin !== env.CLIENT_URL) {
+      res.status(403).json({ error: 'Origine non autorisée' })
+      return
+    }
+  }
+  next()
+})
+
+// ─── X-Request-ID header for request tracing ────────────────────────
+app.use((req, res, next) => {
+  const requestId = req.get('x-request-id') || crypto.randomUUID()
+  res.setHeader('X-Request-ID', requestId)
+  next()
+})
 
 // ─── Routes ─────────────────────────────────────────────────────────
 app.use(authRoutes)

@@ -278,7 +278,7 @@ onMounted(async () => {
         </button>
       </div>
 
-      <template v-if="activeTab === 'explore'">
+      <section v-if="activeTab === 'explore'" aria-label="Explorer les tier lists">
         <!-- Categories + Search row -->
         <div class="flex items-start gap-4 mb-6">
           <div class="flex flex-wrap items-center gap-2.5 flex-1 min-w-0">
@@ -334,7 +334,7 @@ onMounted(async () => {
         </div>
 
         <div v-else class="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
-          <div
+          <article
             v-for="tl in tierlists"
             :key="tl._id"
             class="group relative rounded-xl bg-surface overflow-hidden transition-all duration-300 cursor-pointer border border-transparent hover:border-border-hover"
@@ -377,12 +377,12 @@ onMounted(async () => {
                 <span>{{ getRelativeTime(tl.createdAt) }}</span>
               </div>
             </div>
-          </div>
+          </article>
         </div>
-      </template>
+      </section>
 
       <!-- My Lists tab -->
-      <template v-if="activeTab === 'mine'">
+      <section v-if="activeTab === 'mine'" aria-label="Mes tier lists">
         <!-- Error popup -->
         <ErrorPopup
           v-if="managementError"
@@ -555,7 +555,7 @@ onMounted(async () => {
           <p class="text-foreground-muted text-lg">Aucune tier list</p>
           <p class="text-foreground-subtle text-sm mt-1">Créez ou clonez une tier list pour commencer !</p>
         </div>
-      </template>
+      </section>
 
       <!-- Footer -->
       <footer class="border-t border-border mt-12 py-6 text-center text-xs text-foreground-subtle">
