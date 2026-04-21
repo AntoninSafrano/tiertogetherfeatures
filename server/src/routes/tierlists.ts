@@ -251,45 +251,25 @@ router.post('/api/tierlists/:id/vote', async (req: Request, res: Response) => {
       return
     }
 
-    // Ensure fields exist (for old documents)
+    // Ensure voters array exists
     if (!tierlist.voters) tierlist.voters = []
-    if (typeof tierlist.upvotes !== 'number' || isNaN(tierlist.upvotes)) tierlist.upvotes = 0
-    if (typeof tierlist.downvotes !== 'number' || isNaN(tierlist.downvotes)) tierlist.downvotes = 0
 
-    // Recalculate from voters array to ensure consistency
+    // Remove any existing vote from this user
+    tierlist.voters = tierlist.voters.filter(v => v.userId !== userId)
+
+    // Add new vote if not removing (vote !== 0)
+    if (vote !== 0) {
+      tierlist.voters.push({ userId, vote })
+    }
+
+    // Always recalculate from voters array — single source of truth
     tierlist.upvotes = tierlist.voters.filter(v => v.vote === 1).length
     tierlist.downvotes = tierlist.voters.filter(v => v.vote === -1).length
 
-    // Find existing vote
-    const existingVoteIdx = tierlist.voters.findIndex(v => v.userId === userId)
-
-    if (vote === 0) {
-      // Remove vote
-      if (existingVoteIdx !== -1) {
-        const oldVote = tierlist.voters[existingVoteIdx].vote
-        if (oldVote === 1) tierlist.upvotes--
-        else tierlist.downvotes--
-        tierlist.voters.splice(existingVoteIdx, 1)
-      }
-    } else {
-      if (existingVoteIdx !== -1) {
-        // Change existing vote
-        const oldVote = tierlist.voters[existingVoteIdx].vote
-        if (oldVote !== vote) {
-          if (oldVote === 1) { tierlist.upvotes--; tierlist.downvotes++ }
-          else { tierlist.downvotes--; tierlist.upvotes++ }
-          tierlist.voters[existingVoteIdx].vote = vote
-        }
-      } else {
-        // New vote
-        tierlist.voters.push({ userId, vote })
-        if (vote === 1) tierlist.upvotes++
-        else tierlist.downvotes++
-      }
-    }
-
     await tierlist.save()
-    res.json({ upvotes: tierlist.upvotes, downvotes: tierlist.downvotes, userVote: vote === 0 ? null : vote })
+
+    const userVoter = tierlist.voters.find(v => v.userId === userId)
+    res.json({ upvotes: tierlist.upvotes, downvotes: tierlist.downvotes, userVote: userVoter ? userVoter.vote : null })
   } catch (err) {
     console.error('[Tierlists] Vote failed:', err)
     res.status(500).json({ error: 'Échec du vote' })
