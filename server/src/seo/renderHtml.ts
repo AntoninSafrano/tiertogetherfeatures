@@ -5,6 +5,7 @@ import { UserModel } from '../models/User'
 import { env } from '../config/env'
 
 const SITE = env.CLIENT_URL.replace(/\/$/, '')
+const DEFAULT_OG_IMAGE = `${SITE}/og-default.png`
 
 let baseHtml = ''
 
@@ -45,13 +46,12 @@ function buildHead(meta: Meta): string {
   parts.push(`<meta property="og:url" content="${htmlEsc(meta.canonical)}">`)
   parts.push(`<meta property="og:site_name" content="TierTogether">`)
   parts.push(`<meta property="og:locale" content="fr_FR">`)
-  if (meta.image) {
-    parts.push(`<meta property="og:image" content="${htmlEsc(meta.image)}">`)
-    parts.push(`<meta name="twitter:card" content="summary_large_image">`)
-    parts.push(`<meta name="twitter:image" content="${htmlEsc(meta.image)}">`)
-  } else {
-    parts.push(`<meta name="twitter:card" content="summary">`)
-  }
+  const image = meta.image || DEFAULT_OG_IMAGE
+  parts.push(`<meta property="og:image" content="${htmlEsc(image)}">`)
+  parts.push(`<meta property="og:image:width" content="1200">`)
+  parts.push(`<meta property="og:image:height" content="630">`)
+  parts.push(`<meta name="twitter:card" content="summary_large_image">`)
+  parts.push(`<meta name="twitter:image" content="${htmlEsc(image)}">`)
   parts.push(`<meta name="twitter:title" content="${htmlEsc(meta.title)}">`)
   parts.push(`<meta name="twitter:description" content="${htmlEsc(meta.description)}">`)
   if (meta.jsonLd) {
