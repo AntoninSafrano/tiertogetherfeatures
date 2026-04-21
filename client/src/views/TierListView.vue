@@ -5,12 +5,14 @@ import NavBar from '@/components/NavBar.vue'
 import TierRow from '@/components/tierlist/TierRow.vue'
 import TierItem from '@/components/tierlist/TierItem.vue'
 import { useRoomStore } from '@/stores/room'
-import { ArrowLeft, Download, Calendar, LayoutGrid, Copy, Settings2, Share2 } from 'lucide-vue-next'
+import { ArrowLeft, Download, Calendar, LayoutGrid, Copy, Settings2, Share2, Code } from 'lucide-vue-next'
 import { API_BASE } from '@/config'
 
 const route = useRoute()
 const router = useRouter()
 const roomStore = useRoomStore()
+
+const isEmbed = computed(() => route.query.embed === 'true')
 
 interface TierListData {
   _id: string
@@ -118,6 +120,19 @@ function getCategoryLabel(cat: string): string {
 }
 
 const shareCopied = ref(false)
+const showEmbedModal = ref(false)
+const embedCopied = ref(false)
+
+const embedCode = computed(() => {
+  if (!tierlist.value) return ''
+  return `<iframe src="https://tiertogether.fr/tierlist/${tierlist.value._id}?embed=true" width="100%" height="600" frameborder="0"></iframe>`
+})
+
+async function copyEmbedCode() {
+  await navigator.clipboard.writeText(embedCode.value)
+  embedCopied.value = true
+  setTimeout(() => { embedCopied.value = false }, 2000)
+}
 
 async function shareTierList() {
   const url = window.location.href
@@ -138,12 +153,13 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="min-h-screen bg-background">
-    <NavBar />
+  <div class="min-h-screen bg-background" :style="isEmbed ? 'overflow: auto' : ''">
+    <NavBar v-if="!isEmbed" />
 
     <main class="mx-auto max-w-4xl px-4 sm:px-10 py-8">
       <!-- Back button -->
       <button
+        v-if="!isEmbed"
         class="inline-flex items-center gap-1.5 text-sm text-foreground-muted hover:text-foreground transition-colors mb-6"
         @click="router.push({ name: 'explore' })"
       >
@@ -195,8 +211,8 @@ onMounted(() => {
           </div>
         </header>
 
-        <!-- Use Template + Share buttons -->
-        <div class="mb-6 flex items-center gap-3">
+        <!-- Use Template + Share + Embed buttons -->
+        <div v-if="!isEmbed" class="mb-6 flex flex-wrap items-center gap-3">
           <button
             class="inline-flex items-center gap-2 rounded-lg bg-primary px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-primary/25 hover:bg-primary-hover transition-all disabled:opacity-50 disabled:cursor-not-allowed"
             :disabled="isCloning"
@@ -211,6 +227,34 @@ onMounted(() => {
           >
             <Share2 class="h-4 w-4" />
             {{ shareCopied ? 'Lien copié !' : 'Partager' }}
+          </button>
+          <button
+            class="inline-flex items-center gap-2 rounded-lg bg-surface-hover border border-border-hover px-4 py-2.5 text-sm font-medium text-foreground hover:bg-surface-active transition-all"
+            @click="showEmbedModal = !showEmbedModal"
+          >
+            <Code class="h-4 w-4" />
+            Embed
+          </button>
+        </div>
+
+        <!-- Embed code modal -->
+        <div v-if="showEmbedModal && !isEmbed" class="mb-6 rounded-xl border border-border-hover bg-surface p-4">
+          <div class="flex items-center justify-between mb-2">
+            <h3 class="text-sm font-semibold text-foreground">Code d'intégration</h3>
+            <button
+              class="text-foreground-muted hover:text-foreground text-xs"
+              @click="showEmbedModal = false"
+            >Fermer</button>
+          </div>
+          <div class="rounded-lg bg-background border border-border p-3 font-mono text-xs text-foreground-muted break-all select-all">
+            {{ embedCode }}
+          </div>
+          <button
+            class="mt-3 inline-flex items-center gap-1.5 rounded-lg bg-primary px-4 py-2 text-xs font-medium text-white hover:bg-primary-hover transition-colors"
+            @click="copyEmbedCode"
+          >
+            <Copy class="h-3.5 w-3.5" />
+            {{ embedCopied ? 'Copié !' : 'Copier' }}
           </button>
         </div>
 
@@ -227,37 +271,39 @@ onMounted(() => {
               :row="row"
             />
 
-            <!-- Gear button -->
-            <button
-              class="absolute right-2 top-1/2 -translate-y-1/2 rounded-md bg-surface-hover/80 p-1.5 text-foreground-muted opacity-0 transition-all hover:bg-surface-active hover:text-foreground group-hover/preview:opacity-100"
-              @click.stop="toggleRowMenu(row.id)"
-            >
-              <Settings2 class="h-4 w-4" />
-            </button>
+            <!-- Gear button (hidden in embed) -->
+            <template v-if="!isEmbed">
+              <button
+                class="absolute right-2 top-1/2 -translate-y-1/2 rounded-md bg-surface-hover/80 p-1.5 text-foreground-muted opacity-0 transition-all hover:bg-surface-active hover:text-foreground group-hover/preview:opacity-100"
+                @click.stop="toggleRowMenu(row.id)"
+              >
+                <Settings2 class="h-4 w-4" />
+              </button>
 
-            <!-- Row menu popover -->
-            <div
-              v-if="activeRowMenu === row.id"
-              class="absolute right-10 top-1/2 -translate-y-1/2 z-50 rounded-lg border border-border-hover bg-surface-hover p-3 shadow-xl"
-            >
-              <div class="flex flex-col gap-2 min-w-[140px]">
-                <label class="flex items-center gap-2 text-sm text-foreground cursor-pointer">
-                  <input
-                    type="color"
-                    :value="row.color"
-                    class="h-6 w-6 cursor-pointer rounded border-0 bg-transparent"
-                    @input="changeRowColor(index, ($event.target as HTMLInputElement).value)"
-                  />
-                  Couleur
-                </label>
-                <button
-                  class="rounded-md bg-red-500/10 px-3 py-1.5 text-sm font-medium text-red-400 hover:bg-red-500/20 transition-colors text-left"
-                  @click="deleteRow(index)"
-                >
-                  Supprimer la ligne
-                </button>
+              <!-- Row menu popover -->
+              <div
+                v-if="activeRowMenu === row.id"
+                class="absolute right-10 top-1/2 -translate-y-1/2 z-50 rounded-lg border border-border-hover bg-surface-hover p-3 shadow-xl"
+              >
+                <div class="flex flex-col gap-2 min-w-[140px]">
+                  <label class="flex items-center gap-2 text-sm text-foreground cursor-pointer">
+                    <input
+                      type="color"
+                      :value="row.color"
+                      class="h-6 w-6 cursor-pointer rounded border-0 bg-transparent"
+                      @input="changeRowColor(index, ($event.target as HTMLInputElement).value)"
+                    />
+                    Couleur
+                  </label>
+                  <button
+                    class="rounded-md bg-red-500/10 px-3 py-1.5 text-sm font-medium text-red-400 hover:bg-red-500/20 transition-colors text-left"
+                    @click="deleteRow(index)"
+                  >
+                    Supprimer la ligne
+                  </button>
+                </div>
               </div>
-            </div>
+            </template>
           </div>
         </section>
 

@@ -51,6 +51,9 @@ const activeVotes = new Map<string, {
   voters: Set<string>         // userIds who can vote
 }>()
 
+// Store vote timers per room
+const voteTimers = new Map<string, NodeJS.Timeout>()
+
 async function startNextVote(roomId: string, io: TypedServer): Promise<void> {
   const tierList = await TierListModel.findOne({ roomId })
   if (!tierList || !tierList.isVoteMode) return
@@ -77,10 +80,33 @@ async function startNextVote(roomId: string, io: TypedServer): Promise<void> {
   io.in(roomId).emit('vote:started', {
     itemId: item.id,
     totalVoters: voterIds.size,
+    timeLimit: 30,
   })
+
+  // Clear any existing timer
+  if (voteTimers.has(roomId)) clearTimeout(voteTimers.get(roomId)!)
+
+  // Set 30s auto-resolve timer
+  const timer = setTimeout(() => {
+    const activeVote = activeVotes.get(roomId)
+    if (activeVote && activeVote.votes.size > 0) {
+      resolveVote(roomId, io)
+    } else {
+      // No votes at all, skip item
+      startNextVote(roomId, io)
+    }
+    voteTimers.delete(roomId)
+  }, 30000)
+  voteTimers.set(roomId, timer)
 }
 
 async function resolveVote(roomId: string, io: TypedServer): Promise<void> {
+  // Clear the vote timer when resolving
+  if (voteTimers.has(roomId)) {
+    clearTimeout(voteTimers.get(roomId)!)
+    voteTimers.delete(roomId)
+  }
+
   const vote = activeVotes.get(roomId)
   if (!vote) return
 

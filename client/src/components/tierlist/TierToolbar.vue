@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue'
 import { useRoomStore } from '@/stores/room'
-import { Lock, Unlock, RotateCcw, Download, Maximize, Upload, Vote } from 'lucide-vue-next'
+import { Lock, Unlock, RotateCcw, Download, Maximize, Upload, Vote, Palette } from 'lucide-vue-next'
 import { toPng } from 'html-to-image'
 import PublishModal from './PublishModal.vue'
 
@@ -9,6 +9,29 @@ const store = useRoomStore()
 const isExporting = ref(false)
 const showPublishModal = ref(false)
 const showResetConfirm = ref(false)
+const showThemeMenu = ref(false)
+
+const colorThemes: { name: string; colors: string[] }[] = [
+  { name: 'Classique', colors: ['#FF7F7F', '#FFBF7F', '#FFFF7F', '#7FFF7F', '#7FBFFF', '#BF7FFF'] },
+  { name: 'Pastel', colors: ['#F4A6A6', '#F4CDA6', '#F4F4A6', '#A6F4A6', '#A6CDF4', '#CDA6F4'] },
+  { name: 'Néon', colors: ['#FF003C', '#FF6F00', '#FFE600', '#00FF87', '#00D4FF', '#BF00FF'] },
+  { name: 'Monochrome', colors: ['#E0E0E0', '#BDBDBD', '#9E9E9E', '#787878', '#5C5C5C', '#424242'] },
+]
+
+function applyTheme(theme: { name: string; colors: string[] }) {
+  store.rows.forEach((row, index) => {
+    const color = theme.colors[index % theme.colors.length]
+    store.updateRow({ rowId: row.id, color })
+  })
+  showThemeMenu.value = false
+}
+
+function closeThemeMenu() {
+  showThemeMenu.value = false
+}
+
+onMounted(() => document.addEventListener('click', closeThemeMenu))
+onUnmounted(() => document.removeEventListener('click', closeThemeMenu))
 
 function resetRankings() {
   showResetConfirm.value = true
@@ -99,6 +122,38 @@ async function exportImage() {
         <Vote class="h-3.5 w-3.5" />
         <span class="hidden sm:inline">{{ store.isVoteMode ? 'Arrêter Vote' : 'Mode Vote' }}</span>
       </button>
+
+      <!-- Theme picker -->
+      <div class="relative">
+        <button
+          class="inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium text-foreground-muted transition-colors hover:bg-purple-500/10 hover:text-purple-400"
+          @click.stop="showThemeMenu = !showThemeMenu"
+        >
+          <Palette class="h-3.5 w-3.5" />
+          <span class="hidden sm:inline">Thème</span>
+        </button>
+        <div
+          v-if="showThemeMenu"
+          class="absolute left-0 top-full mt-1 z-50 w-48 rounded-lg border border-border-hover bg-surface shadow-xl p-2"
+        >
+          <button
+            v-for="theme in colorThemes"
+            :key="theme.name"
+            class="flex w-full items-center gap-2.5 rounded-md px-2.5 py-2 text-sm text-foreground hover:bg-surface-hover transition-colors"
+            @click="applyTheme(theme)"
+          >
+            <span class="flex gap-0.5">
+              <span
+                v-for="(color, i) in theme.colors.slice(0, 5)"
+                :key="i"
+                class="h-3.5 w-3.5 rounded-sm"
+                :style="{ backgroundColor: color }"
+              />
+            </span>
+            <span class="text-xs font-medium">{{ theme.name }}</span>
+          </button>
+        </div>
+      </div>
     </div>
 
     <div v-else />

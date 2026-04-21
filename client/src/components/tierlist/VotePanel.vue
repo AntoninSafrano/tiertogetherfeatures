@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useRoomStore } from '@/stores/room'
-import { Check, Trophy, Users } from 'lucide-vue-next'
+import { Check, Trophy, Users, Timer } from 'lucide-vue-next'
 
 const store = useRoomStore()
 
@@ -44,6 +44,17 @@ const maxVotes = computed(() => {
   const counts = Object.values(store.voteResults)
   return counts.length > 0 ? Math.max(...counts) : 0
 })
+
+// Timer progress (0 to 1)
+const timerProgress = computed(() => {
+  return Math.max(0, store.voteTimeLeft / 30)
+})
+
+const timerColor = computed(() => {
+  if (store.voteTimeLeft <= 5) return '#ef4444'   // red
+  if (store.voteTimeLeft <= 10) return '#f97316'  // orange
+  return '#10b981'                                  // emerald
+})
 </script>
 
 <template>
@@ -78,6 +89,39 @@ const maxVotes = computed(() => {
       <div class="flex items-center gap-2 text-sm font-medium text-emerald-400">
         <Users class="h-4 w-4" />
         <span>{{ store.votedCount }}/{{ store.totalVoters }} joueurs ont vote</span>
+      </div>
+
+      <!-- Countdown timer -->
+      <div v-if="store.voteTimeLeft > 0" class="flex items-center gap-3">
+        <div class="relative h-12 w-12">
+          <!-- Background circle -->
+          <svg class="h-12 w-12 -rotate-90" viewBox="0 0 48 48">
+            <circle
+              cx="24" cy="24" r="20"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="3"
+              class="text-surface-hover"
+            />
+            <circle
+              cx="24" cy="24" r="20"
+              fill="none"
+              :stroke="timerColor"
+              stroke-width="3"
+              stroke-linecap="round"
+              :stroke-dasharray="125.66"
+              :stroke-dashoffset="125.66 * (1 - timerProgress)"
+              class="transition-all duration-1000 ease-linear"
+            />
+          </svg>
+          <span
+            class="absolute inset-0 flex items-center justify-center text-sm font-bold"
+            :style="{ color: timerColor }"
+          >
+            {{ store.voteTimeLeft }}
+          </span>
+        </div>
+        <span class="text-xs text-foreground-muted">secondes restantes</span>
       </div>
 
       <!-- Item card -->

@@ -22,6 +22,7 @@ interface PublicTierList {
   userVote: number | null
   category: string
   authorId: string
+  authorDisplayName: string | null
   coverImage: string
   createdAt: string
   isPublic?: boolean
@@ -428,9 +429,18 @@ onMounted(async () => {
 
             <!-- Info -->
             <div class="p-3.5">
-              <h3 class="font-bold text-foreground text-sm line-clamp-1 mb-2 group-hover:text-primary transition-colors">
+              <h3 class="font-bold text-foreground text-sm line-clamp-1 mb-1 group-hover:text-primary transition-colors">
                 {{ tl.title }}
               </h3>
+
+              <router-link
+                v-if="tl.authorId && tl.authorDisplayName"
+                :to="{ name: 'profile', params: { id: tl.authorId } }"
+                class="text-[11px] text-foreground-subtle hover:text-primary transition-colors mb-1.5 block truncate"
+                @click.stop
+              >
+                par {{ tl.authorDisplayName }}
+              </router-link>
 
               <div class="flex items-center justify-between text-[11px] text-foreground-muted">
                 <div class="flex items-center gap-3">

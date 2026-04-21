@@ -38,6 +38,8 @@ export const useRoomStore = defineStore('room', () => {
   const totalVoters = ref(0)
   const hasVoted = ref(false)
   const voteWinner = ref<{ itemId: string; winnerRowId: string; votes: Record<string, number> } | null>(null)
+  const voteTimeLeft = ref(0)
+  let voteTimerInterval: number | null = null
 
   // ─── Focus Mode ───────────────────────────────────────────────
   const currentFocusItem = computed(() => pool.value[0] ?? null)
@@ -153,6 +155,12 @@ export const useRoomStore = defineStore('room', () => {
         totalVoters.value = 0
         hasVoted.value = false
         voteWinner.value = null
+        // Clear countdown timer
+        if (voteTimerInterval) {
+          clearInterval(voteTimerInterval)
+          voteTimerInterval = null
+        }
+        voteTimeLeft.value = 0
       }
     })
 
@@ -163,6 +171,17 @@ export const useRoomStore = defineStore('room', () => {
       voteResults.value = {}
       hasVoted.value = false
       voteWinner.value = null
+
+      // Start countdown timer
+      if (voteTimerInterval) clearInterval(voteTimerInterval)
+      voteTimeLeft.value = data.timeLimit || 30
+      voteTimerInterval = window.setInterval(() => {
+        voteTimeLeft.value--
+        if (voteTimeLeft.value <= 0 && voteTimerInterval) {
+          clearInterval(voteTimerInterval)
+          voteTimerInterval = null
+        }
+      }, 1000)
     })
 
     socket.value.on('vote:update', (data) => {
@@ -172,6 +191,13 @@ export const useRoomStore = defineStore('room', () => {
     })
 
     socket.value.on('vote:result', (data) => {
+      // Clear countdown timer
+      if (voteTimerInterval) {
+        clearInterval(voteTimerInterval)
+        voteTimerInterval = null
+      }
+      voteTimeLeft.value = 0
+
       voteWinner.value = data
       voteResults.value = data.votes
 
@@ -466,6 +492,12 @@ export const useRoomStore = defineStore('room', () => {
     totalVoters.value = 0
     hasVoted.value = false
     voteWinner.value = null
+    // Clear countdown timer
+    if (voteTimerInterval) {
+      clearInterval(voteTimerInterval)
+      voteTimerInterval = null
+    }
+    voteTimeLeft.value = 0
     boundSocket = null
   }
 
@@ -493,6 +525,7 @@ export const useRoomStore = defineStore('room', () => {
     totalVoters,
     hasVoted,
     voteWinner,
+    voteTimeLeft,
     currentFocusItem,
     moveItem,
     emitMove,

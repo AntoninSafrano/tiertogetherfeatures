@@ -109,7 +109,7 @@ export interface ServerToClientEvents {
   'room:locked': (isLocked: boolean) => void
   'room:focus-toggled': (isFocusMode: boolean) => void
   'room:vote-toggled': (isVoteMode: boolean) => void
-  'vote:started': (data: { itemId: string; totalVoters: number }) => void
+  'vote:started': (data: { itemId: string; totalVoters: number; timeLimit: number }) => void
   'vote:update': (data: { itemId: string; votes: Record<string, number>; votedCount: number; totalVoters: number }) => void
   'vote:result': (data: { itemId: string; winnerRowId: string; votes: Record<string, number> }) => void
   'item:skipped': () => void

@@ -51,7 +51,38 @@ services:
       - certbot-var:/var/lib/letsencrypt
     entrypoint: /bin/true
 
+  # --- Umami Analytics (self-hosted, privacy-friendly) ---
+  # After first deploy:
+  #   1. Go to https://tiertogether.fr/analytics/
+  #   2. Log in with default credentials: admin / umami
+  #   3. Create a website in Umami, copy the website ID
+  #   4. Update data-website-id in client/index.html with that ID
+  umami:
+    image: ghcr.io/umami-software/umami:postgresql-latest
+    container_name: tiertogether-umami
+    restart: always
+    ports:
+      - "127.0.0.1:3000:3000"
+    environment:
+      DATABASE_URL: postgresql://umami:umami@umami-db:5432/umami
+      DATABASE_TYPE: postgresql
+      APP_SECRET: ${JWT_SECRET}
+    depends_on:
+      - umami-db
+
+  umami-db:
+    image: postgres:15-alpine
+    container_name: tiertogether-umami-db
+    restart: always
+    environment:
+      POSTGRES_DB: umami
+      POSTGRES_USER: umami
+      POSTGRES_PASSWORD: umami
+    volumes:
+      - umami-db-data:/var/lib/postgresql/data
+
 volumes:
   mongo-data:
   certbot-etc:
   certbot-var:
+  umami-db-data:

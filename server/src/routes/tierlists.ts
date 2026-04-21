@@ -2,6 +2,7 @@ import { Router } from 'express'
 import type { Request, Response } from 'express'
 import jwt from 'jsonwebtoken'
 import { TierListModel } from '../models/TierList'
+import { UserModel } from '../models/User'
 import { env } from '../config/env'
 
 const router = Router()
@@ -56,6 +57,13 @@ router.get('/api/tierlists/public', async (req: Request, res: Response) => {
       })
     }
 
+    // Resolve author display names
+    const authorIds = [...new Set(tierlists.map((tl: any) => tl.authorId).filter(Boolean))]
+    const authors = authorIds.length > 0
+      ? await UserModel.find({ _id: { $in: authorIds } }).select('displayName').lean()
+      : []
+    const authorMap = new Map(authors.map((a: any) => [a._id.toString(), a.displayName]))
+
     // Include the user's vote if authenticated
     const userId = getUserId(req)
     const results = tierlists.map((tl: any) => {
@@ -66,6 +74,7 @@ router.get('/api/tierlists/public', async (req: Request, res: Response) => {
         upvotes: tl.upvotes || 0,
         downvotes: tl.downvotes || 0,
         userVote: userVoter ? userVoter.vote : null,
+        authorDisplayName: authorMap.get(tl.authorId) || null,
         voters: undefined, // Don't expose full voters array to client
       }
     })
@@ -107,6 +116,47 @@ router.get('/api/tierlists/mine', async (req: Request, res: Response) => {
   } catch (err) {
     console.error('[API] Failed to fetch user tierlists:', err)
     res.status(500).json({ error: 'Échec de la récupération des tier lists' })
+  }
+})
+
+// GET /api/tierlists/stats
+router.get('/api/tierlists/stats', async (_req: Request, res: Response) => {
+  try {
+    const totalTierlists = await TierListModel.countDocuments({ isPublic: true })
+    const totalUsers = await UserModel.countDocuments()
+
+    // Most popular this week
+    const oneWeekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
+    const trending = await TierListModel.find({ isPublic: true, createdAt: { $gte: oneWeekAgo } })
+      .sort({ downloads: -1 })
+      .limit(6)
+      .select('title category coverImage upvotes downvotes downloads roomId')
+      .lean()
+
+    // Top categories
+    const categories = await TierListModel.aggregate([
+      { $match: { isPublic: true } },
+      { $group: { _id: '$category', count: { $sum: 1 } } },
+      { $sort: { count: -1 } },
+    ])
+
+    // Most downloaded all time
+    const topDownloaded = await TierListModel.find({ isPublic: true })
+      .sort({ downloads: -1 })
+      .limit(6)
+      .select('title category coverImage upvotes downvotes downloads roomId')
+      .lean()
+
+    res.json({
+      totalTierlists,
+      totalUsers,
+      trending: trending.map(tl => ({ ...tl, upvotes: (tl as any).upvotes || 0, downvotes: (tl as any).downvotes || 0 })),
+      topDownloaded: topDownloaded.map(tl => ({ ...tl, upvotes: (tl as any).upvotes || 0, downvotes: (tl as any).downvotes || 0 })),
+      categories,
+    })
+  } catch (err) {
+    console.error('[API] Failed to fetch stats:', err)
+    res.status(500).json({ error: 'Échec du chargement des stats' })
   }
 })
 
@@ -335,6 +385,48 @@ router.patch('/api/tierlists/:id', async (req: Request, res: Response) => {
   } catch (err) {
     console.error('[API] Update failed:', err)
     res.status(500).json({ error: 'Échec de la mise à jour' })
+  }
+})
+
+// GET /api/users/:id/profile
+router.get('/api/users/:id/profile', async (req: Request, res: Response) => {
+  try {
+    const user = await UserModel.findById(req.params.id).select('displayName avatar createdAt')
+    if (!user) {
+      res.status(404).json({ error: 'Utilisateur introuvable' })
+      return
+    }
+
+    const tierlists = await TierListModel.find({ authorId: req.params.id, isPublic: true })
+      .sort({ createdAt: -1 })
+      .select('title category coverImage upvotes downvotes downloads createdAt roomId')
+      .lean()
+
+    const totalUpvotes = tierlists.reduce((sum, tl) => sum + ((tl as any).upvotes || 0), 0)
+    const totalDownvotes = tierlists.reduce((sum, tl) => sum + ((tl as any).downvotes || 0), 0)
+
+    res.json({
+      user: {
+        id: user._id,
+        displayName: user.displayName,
+        avatar: user.avatar,
+        joinedAt: user.createdAt,
+      },
+      stats: {
+        tierlistCount: tierlists.length,
+        totalScore: totalUpvotes - totalDownvotes,
+        totalDownloads: tierlists.reduce((sum, tl) => sum + (tl.downloads || 0), 0),
+      },
+      tierlists: tierlists.map(tl => ({
+        ...tl,
+        _id: (tl as any)._id.toString(),
+        upvotes: (tl as any).upvotes || 0,
+        downvotes: (tl as any).downvotes || 0,
+      })),
+    })
+  } catch (err) {
+    console.error('[Users] Profile fetch failed:', err)
+    res.status(500).json({ error: 'Échec du chargement du profil' })
   }
 })
 
