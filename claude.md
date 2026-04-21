@@ -48,22 +48,30 @@ TierTogetherFeatures/
     │   ├── main.ts           # Vue app entry
     │   ├── App.vue           # Root component
     │   ├── config.ts         # API_BASE from VITE_API_URL
-    │   ├── router/index.ts   # Routes: /, /create, /auth, /tierlist/:id, /room/:id
+    │   ├── router/index.ts   # Routes: /, /create, /auth, /tierlist/:id, /room/:id, /user/:id, /stats, /legal, 404
     │   ├── stores/
-    │   │   └── room.ts       # Pinia store — room state, socket bindings, drag tracking
+    │   │   └── room.ts       # Pinia store — room state, socket bindings, drag tracking, vote state
     │   ├── composables/
-    │   │   ├── useAuth.ts    # Auth state + API calls
-    │   │   ├── useSocket.ts  # Socket.io singleton (shallowRef)
-    │   │   └── useCloudinary.ts # Cloudinary unsigned upload
+    │   │   ├── useAuth.ts        # Auth state + API calls
+    │   │   ├── useSocket.ts      # Socket.io singleton (shallowRef)
+    │   │   ├── useAutoScroll.ts  # Auto-scroll helper (chat, etc.)
+    │   │   └── useCloudinary.ts  # Cloudinary unsigned upload
+    │   ├── lib/
+    │   │   └── utils.ts      # cn(), category/placeholder color helpers (shared across views)
     │   ├── views/
     │   │   ├── ExploreView.vue    # "/" — browse public tier lists
     │   │   ├── CreateView.vue     # "/create" — create/join room
     │   │   ├── AuthView.vue       # "/auth" — login/register/verify/reset
     │   │   ├── TierListView.vue   # "/tierlist/:id" — view published list
-    │   │   └── RoomView.vue       # "/room/:id" — live room
+    │   │   ├── RoomView.vue       # "/room/:id" — live room
+    │   │   ├── ProfileView.vue    # "/user/:id" — public user profile
+    │   │   ├── StatsView.vue      # "/stats" — admin stats dashboard
+    │   │   ├── LegalView.vue      # "/legal" — legal notices
+    │   │   └── NotFoundView.vue   # 404 catch-all
     │   ├── components/
     │   │   ├── NavBar.vue
-    │   │   ├── tierlist/     # TierBoard, TierRow, TierItem, TierPool, TierToolbar, FocusView, ImageUploader, PublishModal
+    │   │   ├── ErrorPopup.vue
+    │   │   ├── tierlist/     # TierBoard, TierRow, TierItem, TierPool, TierToolbar, FocusView, VotePanel, ImageUploader, PublishModal
     │   │   ├── chat/ChatPanel.vue
     │   │   └── room/         # RoomEntryGate, CollaboratorsPanel
     │   └── assets/main.css   # Tailwind v4 theme + custom styles
@@ -161,18 +169,23 @@ isPublic, downloads, category (enum), authorId, coverImage, timestamps
 | GET | `/api/tierlists/public` | No | Browse public tier lists (search, filter, sort) |
 | GET | `/api/tierlists/featured` | No | Top 6 by downloads |
 | GET | `/api/tierlists/mine` | Yes | User's published lists |
+| GET | `/api/tierlists/stats` | Yes | Admin stats (overview, per-category, top lists) |
 | GET | `/api/tierlists/:id` | No* | Get tier list (*private lists require ownership) |
 | POST | `/api/tierlists/:id/publish` | Yes | Publish with category (owner only) |
 | POST | `/api/tierlists/:id/clone` | No | Clone a public list into new room |
-| GET | `/api/images/search` | No | Google Custom Search proxy |
-| POST | `/auth/register` | No | Email/password registration |
-| POST | `/auth/login` | No | Email/password login |
-| POST | `/auth/verify-email` | No | 6-digit code verification |
-| POST | `/auth/resend-verification` | No | Resend verification code |
-| POST | `/auth/forgot-password` | No | Request password reset code |
-| POST | `/auth/reset-password` | No | Reset password with code |
+| POST | `/api/tierlists/:id/vote` | Yes | Upvote / downvote / clear a public list |
+| DELETE | `/api/tierlists/:id` | Yes | Delete a tier list (owner only) |
+| GET | `/api/users/:id/profile` | No | Public profile (user info + their public lists) |
+| GET | `/api/images/search` | No | Google Custom Search proxy (rate-limited) |
+| POST | `/auth/register` | No | Email/password registration (rate-limited) |
+| POST | `/auth/login` | No | Email/password login (rate-limited) |
+| POST | `/auth/verify-email` | No | 6-digit code verification (rate-limited) |
+| POST | `/auth/resend-verification` | No | Resend verification code (rate-limited) |
+| POST | `/auth/forgot-password` | No | Request password reset code (rate-limited) |
+| POST | `/auth/reset-password` | No | Reset password with code (rate-limited) |
 | GET | `/auth/me` | Cookie | Get current user |
 | POST | `/auth/logout` | Cookie | Clear auth cookie |
+| DELETE | `/auth/account` | Cookie | Delete the authenticated user's account |
 | GET | `/auth/google` | No | Initiate Google OAuth |
 | GET | `/auth/google/callback` | No | OAuth callback |
 
@@ -187,6 +200,8 @@ isPublic, downloads, category (enum), authorId, coverImage, timestamps
 | C→S | `item:skip` | No | Rotate pool first→last |
 | C→S | `room:lock` | Yes | Toggle lock |
 | C→S | `room:toggle-focus` | Yes | Toggle focus mode |
+| C→S | `room:toggle-vote` | Yes | Start/stop voting mode (30s vote per pool item) |
+| C→S | `vote:cast` | No | Cast a vote for a row while voting is active |
 | C→S | `room:reset` | Yes | Move all items back to pool |
 | C→S | `row:update` | No | Edit row label/color |
 | C→S | `row:delete` | No | Delete row (items → pool) |
@@ -194,20 +209,17 @@ isPublic, downloads, category (enum), authorId, coverImage, timestamps
 | C→S | `row:add` | No | Add new row |
 | C→S | `chat:send` | No | Send chat message |
 
+S→C broadcasts cover the mirror state: `room:state`, `item:moved`, `item:created`, `item:skipped`, `room:locked`, `room:focus-toggled`, `room:vote-toggled`, `vote:started`, `vote:update`, `vote:result`, `room:reset`, `row:*`, `chat:message`, `room:user-left`.
+
 ## Known Limitations & Remaining TODOs
 
 ### Security (to address before production)
-- **No HTTP rate limiting** on REST routes — add `express-rate-limit` on auth endpoints
-- **Image search endpoint is unauthenticated** — Google API key abuse risk; add auth or IP rate limiting
 - **Socket identity is `socket.id`** — host reconnect gets new ID, losing host privileges
 - **No CSRF tokens** — mitigated by SameSite cookies but worth adding for cross-origin defense
 - **Google OAuth `callbackURL` is relative** — set full URL from env for reverse proxy compatibility
+- Rate limiting is in place on `/auth/*` (`authLimiter`) and `/api/images/search` (`imageSearchLimiter`); extend to other sensitive REST routes if needed.
 
 ### Cleanup
-- `HomeView.vue` exists but is not referenced by the router — can be deleted if superseded by `CreateView.vue`
-- `ui/card/` components (Card, CardHeader, CardTitle, CardContent) are never imported — delete if unused
-- `getCategoryColor()` is duplicated in `ExploreView.vue` and `TierListView.vue` — extract to shared util
-- `getPlaceholderColor()` palette duplicated in `TierItem.vue` and `FocusView.vue` — extract to shared util
-- `seedTemplates.ts` duplicates `DEFAULT_TIERS` instead of importing from `@tiertogether/shared`
-- `radix-vue` and `@vueuse/core` are listed as client dependencies but appear unused
-- `.vue.js` / `.js` duplicates alongside `.ts` sources increase drift risk
+- `getCategoryLabel()` is still duplicated across `TierListView`, `ExploreView`, `ProfileView`, `StatsView` — safe candidate for extraction to `lib/utils.ts` (same pattern as `getCategoryBadgeColor`).
+- `.gitignore` covers `client/src/**/*.vue.js` / `*.vue.d.ts` / `*.d.ts` but misses sibling `*.js` for `.ts` sources (e.g. `client/src/router/index.js`, `client/src/stores/room.js`) and the `shared/types/*.{js,d.ts}` + `client/vite.config.{js,d.ts}` build artefacts — every local/CI build re-dirties these files. Broaden the ignore rules and remove the tracked artefacts once.
+- `seedTemplates.ts` at `server/src/scripts/seedTemplates.ts` — only run manually; confirm it's still needed before prod seeding.
