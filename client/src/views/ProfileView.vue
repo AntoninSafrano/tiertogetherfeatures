@@ -4,6 +4,7 @@ import { useRoute, useRouter } from 'vue-router'
 import NavBar from '@/components/NavBar.vue'
 import { ArrowLeft, Download, ThumbsUp, Calendar, LayoutGrid, User } from 'lucide-vue-next'
 import { API_BASE } from '@/config'
+import { getCategoryBadgeColor } from '@/lib/utils'
 
 const route = useRoute()
 const router = useRouter()
@@ -63,19 +64,6 @@ function getInitials(name: string): string {
     .join('')
     .toUpperCase()
     .slice(0, 2)
-}
-
-function getCategoryColor(cat: string): string {
-  const colors: Record<string, string> = {
-    Gaming: 'bg-blue-500/20 text-blue-400',
-    Food: 'bg-orange-500/20 text-orange-400',
-    Anime: 'bg-pink-500/20 text-pink-400',
-    Music: 'bg-green-500/20 text-green-400',
-    Movies: 'bg-yellow-500/20 text-yellow-400',
-    Sports: 'bg-red-500/20 text-red-400',
-    Other: 'bg-foreground-subtle/20 text-foreground-muted',
-  }
-  return colors[cat] || colors.Other!
 }
 
 function getCategoryLabel(cat: string): string {
@@ -229,7 +217,7 @@ onMounted(() => {
             >
               <!-- Category badge -->
               <div class="absolute top-2 right-2 z-10">
-                <span :class="['rounded-full px-2 py-0.5 text-[10px] font-medium backdrop-blur-sm', getCategoryColor(tl.category)]">
+                <span :class="['rounded-full px-2 py-0.5 text-[10px] font-medium backdrop-blur-sm', getCategoryBadgeColor(tl.category)]">
                   {{ getCategoryLabel(tl.category) }}
                 </span>
               </div>

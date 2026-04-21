@@ -7,6 +7,7 @@ import TierItem from '@/components/tierlist/TierItem.vue'
 import { useRoomStore } from '@/stores/room'
 import { ArrowLeft, Download, Calendar, LayoutGrid, Copy, Settings2, Share2, Code } from 'lucide-vue-next'
 import { API_BASE } from '@/config'
+import { getCategoryBadgeColor } from '@/lib/utils'
 
 const route = useRoute()
 const router = useRouter()
@@ -91,19 +92,6 @@ async function cloneAndUse() {
   } finally {
     isCloning.value = false
   }
-}
-
-function getCategoryColor(cat: string): string {
-  const colors: Record<string, string> = {
-    Gaming: 'bg-blue-500/20 text-blue-400',
-    Food: 'bg-orange-500/20 text-orange-400',
-    Anime: 'bg-pink-500/20 text-pink-400',
-    Music: 'bg-green-500/20 text-green-400',
-    Movies: 'bg-yellow-500/20 text-yellow-400',
-    Sports: 'bg-red-500/20 text-red-400',
-    Other: 'bg-foreground-subtle/20 text-foreground-muted',
-  }
-  return colors[cat] || colors.Other!
 }
 
 function getCategoryLabel(cat: string): string {
@@ -193,7 +181,7 @@ onMounted(() => {
         <header class="mb-6">
           <h1 class="text-xl sm:text-2xl font-bold tracking-tight text-foreground mb-3">{{ tierlist.title }}</h1>
           <div class="flex flex-wrap items-center gap-3 text-sm text-foreground-muted">
-            <span :class="['rounded-full px-2.5 py-0.5 text-xs font-medium', getCategoryColor(tierlist.category)]">
+            <span :class="['rounded-full px-2.5 py-0.5 text-xs font-medium', getCategoryBadgeColor(tierlist.category)]">
               {{ getCategoryLabel(tierlist.category) }}
             </span>
             <span class="inline-flex items-center gap-1">

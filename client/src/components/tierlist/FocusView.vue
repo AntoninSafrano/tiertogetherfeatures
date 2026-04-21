@@ -2,6 +2,7 @@
 import { computed } from 'vue'
 import draggable from 'vuedraggable'
 import { useRoomStore } from '@/stores/room'
+import { getPlaceholderColor } from '@/lib/utils'
 import TierItem from './TierItem.vue'
 import { SkipForward, PartyPopper } from 'lucide-vue-next'
 
@@ -21,20 +22,6 @@ const focusItems = computed({
 })
 
 const remainingCount = computed(() => Math.max(0, store.pool.length - 1))
-
-const placeholderColors = [
-  '#6366f1', '#8b5cf6', '#a855f7', '#d946ef',
-  '#ec4899', '#f43f5e', '#f97316', '#eab308',
-  '#22c55e', '#14b8a6', '#06b6d4', '#3b82f6',
-]
-
-function getPlaceholderColor(id: string): string {
-  let hash = 0
-  for (let i = 0; i < id.length; i++) {
-    hash = id.charCodeAt(i) + ((hash << 5) - hash)
-  }
-  return placeholderColors[Math.abs(hash) % placeholderColors.length]
-}
 
 function onDragChange(evt: any) {
   if (evt.removed) {

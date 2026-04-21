@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useRoomStore } from '@/stores/room'
+import { getPlaceholderColor } from '@/lib/utils'
 import { Check, Trophy, Users, Timer } from 'lucide-vue-next'
 
 const store = useRoomStore()
@@ -19,21 +20,6 @@ const winnerRow = computed(() => {
   if (!store.voteWinner) return null
   return store.rows.find((r) => r.id === store.voteWinner!.winnerRowId) ?? null
 })
-
-// Helper for placeholder colors
-const placeholderColors = [
-  '#6366f1', '#8b5cf6', '#a855f7', '#d946ef',
-  '#ec4899', '#f43f5e', '#f97316', '#eab308',
-  '#22c55e', '#14b8a6', '#06b6d4', '#3b82f6',
-]
-
-function getPlaceholderColor(id: string): string {
-  let hash = 0
-  for (let i = 0; i < id.length; i++) {
-    hash = id.charCodeAt(i) + ((hash << 5) - hash)
-  }
-  return placeholderColors[Math.abs(hash) % placeholderColors.length]
-}
 
 function getVoteCount(rowId: string): number {
   return store.voteResults[rowId] ?? 0

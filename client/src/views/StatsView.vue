@@ -7,6 +7,7 @@ import {
   BarChart3, UserPlus, Calendar, Mail, Chrome, CheckCircle
 } from 'lucide-vue-next'
 import { API_BASE } from '@/config'
+import { getCategoryBadgeColor, getCategorySolidColor } from '@/lib/utils'
 
 const router = useRouter()
 
@@ -137,32 +138,6 @@ function getCategoryLabel(cat: string): string {
     Other: 'Autre',
   }
   return labels[cat] || cat
-}
-
-function getCategoryColor(cat: string): string {
-  const colors: Record<string, string> = {
-    Gaming: 'bg-blue-500',
-    Food: 'bg-orange-500',
-    Anime: 'bg-pink-500',
-    Music: 'bg-green-500',
-    Movies: 'bg-yellow-500',
-    Sports: 'bg-red-500',
-    Other: 'bg-gray-500',
-  }
-  return colors[cat] || 'bg-gray-500'
-}
-
-function getCategoryBadgeColor(cat: string): string {
-  const colors: Record<string, string> = {
-    Gaming: 'bg-blue-500/20 text-blue-400',
-    Food: 'bg-orange-500/20 text-orange-400',
-    Anime: 'bg-pink-500/20 text-pink-400',
-    Music: 'bg-green-500/20 text-green-400',
-    Movies: 'bg-yellow-500/20 text-yellow-400',
-    Sports: 'bg-red-500/20 text-red-400',
-    Other: 'bg-foreground-subtle/20 text-foreground-muted',
-  }
-  return colors[cat] || colors.Other!
 }
 
 function formatDate(d: string): string {
@@ -635,7 +610,7 @@ onMounted(() => {
               <div class="flex gap-2">
                 <div class="flex-1 h-5 rounded bg-surface-hover overflow-hidden">
                   <div
-                    :class="['h-full rounded transition-all duration-500', getCategoryColor(cat._id)]"
+                    :class="['h-full rounded transition-all duration-500', getCategorySolidColor(cat._id)]"
                     :style="{ width: `${Math.max((cat.count / maxCategoryCount) * 100, 4)}%` }"
                   />
                 </div>

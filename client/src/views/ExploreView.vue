@@ -6,6 +6,7 @@ import NavBar from '@/components/NavBar.vue'
 import ErrorPopup from '@/components/ErrorPopup.vue'
 import { Search, Download, Clock, TrendingUp, Gamepad2, UtensilsCrossed, Tv, Music, Film, Dumbbell, MoreHorizontal, LayoutGrid, Star, History, Trash2, Pencil, EyeOff, Eye, X, Check, ThumbsUp, ThumbsDown, Share2 } from 'lucide-vue-next'
 import { API_BASE } from '@/config'
+import { getCategoryBadgeColor } from '@/lib/utils'
 
 const router = useRouter()
 const { user, fetchUser } = useAuth()
@@ -117,19 +118,6 @@ function getCoverImage(tierlist: PublicTierList): string {
     }
   }
   return ''
-}
-
-function getCategoryColor(cat: string): string {
-  const colors: Record<string, string> = {
-    Gaming: 'bg-blue-500/20 text-blue-400',
-    Food: 'bg-orange-500/20 text-orange-400',
-    Anime: 'bg-pink-500/20 text-pink-400',
-    Music: 'bg-green-500/20 text-green-400',
-    Movies: 'bg-yellow-500/20 text-yellow-400',
-    Sports: 'bg-red-500/20 text-red-400',
-    Other: 'bg-foreground-subtle/20 text-foreground-muted',
-  }
-  return colors[cat] || colors.Other!
 }
 
 function getCategoryLabel(cat: string): string {
@@ -410,7 +398,7 @@ onMounted(async () => {
 
             <!-- Category badge -->
             <div class="absolute top-2 right-2 z-10">
-              <span :class="['rounded-full px-2 py-0.5 text-[10px] font-medium backdrop-blur-sm', getCategoryColor(tl.category)]">
+              <span :class="['rounded-full px-2 py-0.5 text-[10px] font-medium backdrop-blur-sm', getCategoryBadgeColor(tl.category)]">
                 {{ getCategoryLabel(tl.category) }}
               </span>
             </div>
@@ -627,7 +615,7 @@ onMounted(async () => {
 
                     <div class="flex items-center justify-between text-xs text-foreground-muted">
                       <div class="flex items-center gap-2">
-                        <span :class="['rounded-full px-2 py-0.5 text-[10px] font-medium', getCategoryColor(tl.category)]">
+                        <span :class="['rounded-full px-2 py-0.5 text-[10px] font-medium', getCategoryBadgeColor(tl.category)]">
                           {{ getCategoryLabel(tl.category) }}
                         </span>
                         <span v-if="(tl as any).isPublic === false" class="rounded-full px-2 py-0.5 text-[10px] font-medium bg-foreground-subtle/20 text-foreground-subtle">
