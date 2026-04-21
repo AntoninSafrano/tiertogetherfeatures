@@ -300,13 +300,7 @@ export const useRoomStore = defineStore('room', () => {
   function reorderRow(data: RowReorderPayload) {
     const { socket } = useSocket()
     if (socket.value?.connected) socket.value.emit('row:reorder', data)
-    const idx = rows.value.findIndex((r) => r.id === data.rowId)
-    if (idx === -1) return
-    const newIdx = data.direction === 'up' ? idx - 1 : idx + 1
-    if (newIdx < 0 || newIdx >= rows.value.length) return
-    const temp = rows.value[idx]
-    rows.value[idx] = rows.value[newIdx]
-    rows.value[newIdx] = temp
+    // No optimistic update — wait for server broadcast to avoid double-swap
   }
 
   function addRow(data?: RowAddPayload) {

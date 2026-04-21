@@ -3,7 +3,7 @@ import { computed, ref, nextTick } from 'vue'
 import draggable from 'vuedraggable'
 import { useRoomStore } from '@/stores/room'
 import TierItem from './TierItem.vue'
-import { Trash2, ArrowUp, ArrowDown, Palette } from 'lucide-vue-next'
+import { Trash2, ArrowUp, ArrowDown, Palette, MoreVertical } from 'lucide-vue-next'
 import type { TierRow as TierRowData } from '@tiertogether/shared'
 
 const props = defineProps<{
@@ -50,18 +50,18 @@ function finishEditing() {
 }
 
 // Color picker
-const showColorPicker = ref(false)
-const colorInput = ref('')
+const colorPickerInput = ref<HTMLInputElement | null>(null)
+const showMobileActions = ref(false)
 
 function openColorPicker() {
-  colorInput.value = rowData.value.color
-  showColorPicker.value = true
+  nextTick(() => {
+    colorPickerInput.value?.click()
+  })
 }
 
 function applyColor(e: Event) {
   const target = e.target as HTMLInputElement
   store.updateRow({ rowId: rowData.value.id, color: target.value })
-  showColorPicker.value = false
 }
 
 // Delete confirmation
@@ -123,8 +123,19 @@ function onDragChange(evt: any) {
         <span class="block w-full break-words overflow-wrap-anywhere">{{ rowData.label }}</span>
       </template>
 
-      <!-- Row action buttons (show on hover) - hidden in readonly -->
-      <div v-if="!readonly" class="absolute -right-0 top-0 bottom-0 flex flex-col items-center justify-center gap-0.5 opacity-100 sm:opacity-0 sm:group-hover/row:opacity-100 transition-opacity duration-200 z-10 sm:translate-x-full sm:group-hover/row:translate-x-0 bg-surface/80 sm:bg-transparent px-1">
+      <!-- Row action buttons: toggle on mobile, hover on desktop -->
+      <button
+        v-if="!readonly"
+        class="absolute right-1 top-1 sm:hidden z-20 p-1 rounded bg-surface/80 text-foreground-muted"
+        @click.stop="showMobileActions = !showMobileActions"
+      >
+        <MoreVertical class="h-3 w-3" />
+      </button>
+      <div v-if="!readonly" :class="[
+        'absolute -right-0 top-0 bottom-0 flex flex-col items-center justify-center gap-0.5 transition-all duration-200 z-10 px-1',
+        showMobileActions ? 'opacity-100 bg-surface/90' : 'opacity-0 pointer-events-none sm:pointer-events-auto',
+        'sm:opacity-0 sm:group-hover/row:opacity-100 sm:translate-x-full sm:group-hover/row:translate-x-0 sm:bg-transparent'
+      ]">
         <button
           class="p-1 rounded hover:bg-surface-active text-foreground-muted hover:text-foreground transition-colors"
           title="Monter"
@@ -133,16 +144,15 @@ function onDragChange(evt: any) {
           <ArrowUp class="h-3.5 w-3.5" />
         </button>
         <button
-          class="p-1 rounded hover:bg-surface-active text-foreground-muted hover:text-foreground transition-colors"
+          class="p-1 rounded hover:bg-surface-active text-foreground-muted hover:text-foreground transition-colors relative"
           title="Changer la couleur"
           @click.stop="openColorPicker"
         >
           <Palette class="h-3.5 w-3.5" />
           <input
-            v-if="showColorPicker"
             type="color"
             :value="rowData.color"
-            class="absolute opacity-0 w-0 h-0"
+            class="absolute inset-0 opacity-0 w-full h-full cursor-pointer"
             @input="applyColor"
             @change="applyColor"
             ref="colorPickerInput"
