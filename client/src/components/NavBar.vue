@@ -31,13 +31,13 @@ async function handleLogout() {
           to="/"
           :class="['text-sm transition-colors', router.currentRoute.value.path === '/' ? 'font-semibold text-foreground' : 'font-medium text-foreground-muted hover:text-foreground']"
         >
-          Explore
+          Explorer
         </router-link>
         <router-link
           to="/create"
           :class="['text-sm transition-colors', router.currentRoute.value.path === '/create' ? 'font-semibold text-foreground' : 'font-medium text-foreground-muted hover:text-foreground']"
         >
-          Create
+          Créer
         </router-link>
 
         <!-- Auth -->
@@ -66,7 +66,7 @@ async function handleLogout() {
             to="/auth"
             class="rounded-full bg-primary px-5 py-2 text-sm font-semibold text-white hover:bg-primary-hover transition-colors"
           >
-            Sign In
+            Connexion
           </router-link>
         </template>
       </div>

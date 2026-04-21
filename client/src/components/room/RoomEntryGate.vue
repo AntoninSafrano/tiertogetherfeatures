@@ -92,13 +92,13 @@ function signInWithGoogle() {
             <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
             <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
           </svg>
-          Sign in with Google
+          Se connecter avec Google
         </button>
 
         <!-- Or separator -->
         <div class="mb-4 flex items-center gap-4">
           <div class="h-px flex-1 bg-border" />
-          <span class="text-xs text-foreground-subtle">or join as guest</span>
+          <span class="text-xs text-foreground-subtle">ou rejoindre en tant qu'invité</span>
           <div class="h-px flex-1 bg-border" />
         </div>
 
@@ -109,7 +109,7 @@ function signInWithGoogle() {
             <input
               v-model="guestName"
               type="text"
-              placeholder="Guest nickname"
+              placeholder="Pseudo d'invité"
               maxlength="20"
               class="w-full rounded-lg border border-border bg-background py-2.5 pl-10 pr-4 text-sm text-foreground placeholder:text-foreground-subtle transition-all focus:border-primary/50 focus:outline-none focus:ring-2 focus:ring-primary/20"
               @keyup.enter="continueAsGuest"
@@ -123,7 +123,7 @@ function signInWithGoogle() {
             :disabled="!guestName.trim()"
             @click="continueAsGuest"
           >
-            Continue as guest
+            Continuer en tant qu'invité
           </button>
         </div>
       </div>

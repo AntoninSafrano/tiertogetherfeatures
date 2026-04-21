@@ -97,17 +97,17 @@ router.post('/auth/register', async (req: Request, res: Response) => {
     const { email, password, displayName } = req.body
 
     if (!email || !password || !displayName) {
-      res.status(400).json({ error: 'Email, password, and display name are required' })
+      res.status(400).json({ error: 'Email, mot de passe et pseudo sont requis' })
       return
     }
     if (password.length < 8) {
-      res.status(400).json({ error: 'Password must be at least 8 characters' })
+      res.status(400).json({ error: 'Le mot de passe doit contenir au moins 8 caractères' })
       return
     }
 
     const existing = await UserModel.findOne({ email: email.toLowerCase() })
     if (existing) {
-      res.status(409).json({ error: 'An account with this email already exists' })
+      res.status(409).json({ error: 'Un compte avec cet email existe déjà' })
       return
     }
 
@@ -129,12 +129,12 @@ router.post('/auth/register', async (req: Request, res: Response) => {
       await resend.emails.send({
         from: env.RESEND_FROM_EMAIL,
         to: email.toLowerCase(),
-        subject: 'Verify your TierTogether account',
+        subject: 'Vérifiez votre compte TierTogether',
         html: `
-          <h2>Welcome to TierTogether!</h2>
-          <p>Your verification code is:</p>
+          <h2>Bienvenue sur TierTogether !</h2>
+          <p>Votre code de vérification est :</p>
           <h1 style="font-size: 32px; letter-spacing: 8px; font-family: monospace;">${verificationToken}</h1>
-          <p>This code expires in 24 hours.</p>
+          <p>Ce code expire dans 24 heures.</p>
         `,
       })
     } else {
@@ -143,11 +143,11 @@ router.post('/auth/register', async (req: Request, res: Response) => {
 
     res.status(201).json({
       success: true,
-      message: 'Account created. Check your email for the verification code.',
+      message: 'Compte créé. Vérifiez votre email pour le code de vérification.',
     })
   } catch (err) {
     console.error('[Auth] Register failed:', err)
-    res.status(500).json({ error: 'Registration failed' })
+    res.status(500).json({ error: 'Échec de l\'inscription' })
   }
 })
 
@@ -157,24 +157,24 @@ router.post('/auth/login', async (req: Request, res: Response) => {
     const { email, password } = req.body
 
     if (!email || !password) {
-      res.status(400).json({ error: 'Email and password are required' })
+      res.status(400).json({ error: 'Email et mot de passe requis' })
       return
     }
 
     const user = await UserModel.findOne({ email: email.toLowerCase() })
     if (!user || !user.passwordHash) {
-      res.status(401).json({ error: 'Invalid email or password' })
+      res.status(401).json({ error: 'Email ou mot de passe invalide' })
       return
     }
 
     const isValid = await bcrypt.compare(password, user.passwordHash)
     if (!isValid) {
-      res.status(401).json({ error: 'Invalid email or password' })
+      res.status(401).json({ error: 'Email ou mot de passe invalide' })
       return
     }
 
     if (!user.emailVerified) {
-      res.status(403).json({ error: 'Email not verified', needsVerification: true })
+      res.status(403).json({ error: 'Email non vérifié', needsVerification: true })
       return
     }
 
@@ -191,7 +191,7 @@ router.post('/auth/login', async (req: Request, res: Response) => {
     })
   } catch (err) {
     console.error('[Auth] Login failed:', err)
-    res.status(500).json({ error: 'Login failed' })
+    res.status(500).json({ error: 'Échec de la connexion' })
   }
 })
 
@@ -201,28 +201,28 @@ router.post('/auth/verify-email', async (req: Request, res: Response) => {
     const { email, code } = req.body
 
     if (!email || !code) {
-      res.status(400).json({ error: 'Email and verification code are required' })
+      res.status(400).json({ error: 'Email et code de vérification requis' })
       return
     }
 
     const user = await UserModel.findOne({ email: email.toLowerCase() })
     if (!user) {
-      res.status(404).json({ error: 'Account not found' })
+      res.status(404).json({ error: 'Compte introuvable' })
       return
     }
 
     if (user.emailVerified) {
-      res.status(400).json({ error: 'Email is already verified' })
+      res.status(400).json({ error: 'Email déjà vérifié' })
       return
     }
 
     if (user.verificationToken !== code) {
-      res.status(400).json({ error: 'Invalid verification code' })
+      res.status(400).json({ error: 'Code de vérification invalide' })
       return
     }
 
     if (user.verificationTokenExpiresAt && user.verificationTokenExpiresAt < new Date()) {
-      res.status(400).json({ error: 'Verification code has expired. Request a new one.' })
+      res.status(400).json({ error: 'Code de vérification expiré. Demandez-en un nouveau.' })
       return
     }
 
@@ -245,7 +245,7 @@ router.post('/auth/verify-email', async (req: Request, res: Response) => {
     })
   } catch (err) {
     console.error('[Auth] Verify failed:', err)
-    res.status(500).json({ error: 'Verification failed' })
+    res.status(500).json({ error: 'Échec de la vérification' })
   }
 })
 
@@ -254,13 +254,13 @@ router.post('/auth/resend-verification', async (req: Request, res: Response) => 
   try {
     const { email } = req.body
     if (!email) {
-      res.status(400).json({ error: 'Email is required' })
+      res.status(400).json({ error: 'Email requis' })
       return
     }
 
     const user = await UserModel.findOne({ email: email.toLowerCase() })
     if (!user || user.emailVerified) {
-      res.json({ success: true, message: 'If an account exists, a new code has been sent.' })
+      res.json({ success: true, message: 'Si un compte existe, un nouveau code a été envoyé.' })
       return
     }
 
@@ -273,21 +273,21 @@ router.post('/auth/resend-verification', async (req: Request, res: Response) => 
       await resend.emails.send({
         from: env.RESEND_FROM_EMAIL,
         to: email.toLowerCase(),
-        subject: 'Your new TierTogether verification code',
+        subject: 'Votre nouveau code de vérification TierTogether',
         html: `
-          <h2>New verification code</h2>
+          <h2>Nouveau code de vérification</h2>
           <h1 style="font-size: 32px; letter-spacing: 8px; font-family: monospace;">${verificationToken}</h1>
-          <p>This code expires in 24 hours.</p>
+          <p>Ce code expire dans 24 heures.</p>
         `,
       })
     } else {
       console.log(`[Auth] New verification code for ${email}: ${verificationToken}`)
     }
 
-    res.json({ success: true, message: 'If an account exists, a new code has been sent.' })
+    res.json({ success: true, message: 'Si un compte existe, un nouveau code a été envoyé.' })
   } catch (err) {
     console.error('[Auth] Resend verification failed:', err)
-    res.status(500).json({ error: 'Failed to resend verification' })
+    res.status(500).json({ error: 'Échec du renvoi de la vérification' })
   }
 })
 
@@ -296,14 +296,14 @@ router.post('/auth/forgot-password', async (req: Request, res: Response) => {
   try {
     const { email } = req.body
     if (!email) {
-      res.status(400).json({ error: 'Email is required' })
+      res.status(400).json({ error: 'Email requis' })
       return
     }
 
     const user = await UserModel.findOne({ email: email.toLowerCase() })
     if (!user || !user.passwordHash) {
       // Don't reveal whether account exists
-      res.json({ success: true, message: 'If an account exists, a reset code has been sent.' })
+      res.json({ success: true, message: 'Si un compte existe, un code de réinitialisation a été envoyé.' })
       return
     }
 
@@ -316,23 +316,23 @@ router.post('/auth/forgot-password', async (req: Request, res: Response) => {
       await resend.emails.send({
         from: env.RESEND_FROM_EMAIL,
         to: email.toLowerCase(),
-        subject: 'Reset your TierTogether password',
+        subject: 'Réinitialisez votre mot de passe TierTogether',
         html: `
-          <h2>Password reset</h2>
-          <p>Your reset code is:</p>
+          <h2>Réinitialisation du mot de passe</h2>
+          <p>Votre code de réinitialisation est :</p>
           <h1 style="font-size: 32px; letter-spacing: 8px; font-family: monospace;">${resetToken}</h1>
-          <p>This code expires in 1 hour.</p>
-          <p>If you didn't request this, ignore this email.</p>
+          <p>Ce code expire dans 1 heure.</p>
+          <p>Si vous n'avez pas demandé ceci, ignorez cet email.</p>
         `,
       })
     } else {
       console.log(`[Auth] Reset code for ${email}: ${resetToken}`)
     }
 
-    res.json({ success: true, message: 'If an account exists, a reset code has been sent.' })
+    res.json({ success: true, message: 'Si un compte existe, un code de réinitialisation a été envoyé.' })
   } catch (err) {
     console.error('[Auth] Forgot password failed:', err)
-    res.status(500).json({ error: 'Failed to send reset code' })
+    res.status(500).json({ error: 'Échec de l\'envoi du code de réinitialisation' })
   }
 })
 
@@ -342,27 +342,27 @@ router.post('/auth/reset-password', async (req: Request, res: Response) => {
     const { email, code, newPassword } = req.body
 
     if (!email || !code || !newPassword) {
-      res.status(400).json({ error: 'Email, code, and new password are required' })
+      res.status(400).json({ error: 'Email, code et nouveau mot de passe requis' })
       return
     }
     if (newPassword.length < 8) {
-      res.status(400).json({ error: 'Password must be at least 8 characters' })
+      res.status(400).json({ error: 'Le mot de passe doit contenir au moins 8 caractères' })
       return
     }
 
     const user = await UserModel.findOne({ email: email.toLowerCase() })
     if (!user) {
-      res.status(404).json({ error: 'Account not found' })
+      res.status(404).json({ error: 'Compte introuvable' })
       return
     }
 
     if (user.resetToken !== code) {
-      res.status(400).json({ error: 'Invalid reset code' })
+      res.status(400).json({ error: 'Code de réinitialisation invalide' })
       return
     }
 
     if (user.resetTokenExpiresAt && user.resetTokenExpiresAt < new Date()) {
-      res.status(400).json({ error: 'Reset code has expired. Request a new one.' })
+      res.status(400).json({ error: 'Code de réinitialisation expiré. Demandez-en un nouveau.' })
       return
     }
 
@@ -385,7 +385,7 @@ router.post('/auth/reset-password', async (req: Request, res: Response) => {
     })
   } catch (err) {
     console.error('[Auth] Reset password failed:', err)
-    res.status(500).json({ error: 'Failed to reset password' })
+    res.status(500).json({ error: 'Échec de la réinitialisation du mot de passe' })
   }
 })
 

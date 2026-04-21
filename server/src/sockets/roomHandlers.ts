@@ -40,7 +40,7 @@ export function registerRoomHandlers(io: TypedServer, socket: TypedSocket): void
   socket.on('room:create', async (data, callback) => {
     const parsed = createRoomSchema.safeParse(data)
     if (!parsed.success) {
-      callback({ success: false, error: parsed.error.issues[0]?.message ?? 'Invalid data' })
+      callback({ success: false, error: parsed.error.issues[0]?.message ?? 'Données invalides' })
       return
     }
 
@@ -75,7 +75,7 @@ export function registerRoomHandlers(io: TypedServer, socket: TypedSocket): void
       callback({ success: true, roomId })
     } catch (err) {
       console.error('[Room] Create failed:', err)
-      callback({ success: false, error: 'Failed to create room' })
+      callback({ success: false, error: 'Échec de la création de la room' })
     }
   })
 
@@ -83,7 +83,7 @@ export function registerRoomHandlers(io: TypedServer, socket: TypedSocket): void
   socket.on('room:join', async (data, callback) => {
     const parsed = joinRoomSchema.safeParse(data)
     if (!parsed.success) {
-      callback({ success: false, error: parsed.error.issues[0]?.message ?? 'Invalid data' })
+      callback({ success: false, error: parsed.error.issues[0]?.message ?? 'Données invalides' })
       return
     }
 
@@ -93,7 +93,7 @@ export function registerRoomHandlers(io: TypedServer, socket: TypedSocket): void
       // Find the tier list in MongoDB
       const tierList = await TierListModel.findOne({ roomId })
       if (!tierList) {
-        callback({ success: false, error: 'Room not found' })
+        callback({ success: false, error: 'Room introuvable' })
         return
       }
 
@@ -148,7 +148,7 @@ export function registerRoomHandlers(io: TypedServer, socket: TypedSocket): void
       callback({ success: true, roomId })
     } catch (err) {
       console.error('[Room] Join failed:', err)
-      callback({ success: false, error: 'Failed to join room' })
+      callback({ success: false, error: 'Échec de la connexion à la room' })
     }
   })
 
@@ -161,26 +161,26 @@ export function registerRoomHandlers(io: TypedServer, socket: TypedSocket): void
   socket.on('item:move', async (data) => {
     const parsed = moveItemSchema.safeParse(data)
     if (!parsed.success) {
-      socket.emit('error', 'Invalid move data')
+      socket.emit('error', 'Données de déplacement invalides')
       return
     }
 
     const roomId = socket.data.roomId
     if (!roomId) {
-      socket.emit('error', 'Not in a room')
+      socket.emit('error', 'Pas dans une room')
       return
     }
 
     try {
       const tierList = await TierListModel.findOne({ roomId })
       if (!tierList) {
-        socket.emit('error', 'Room not found in database')
+        socket.emit('error', 'Room introuvable en base de données')
         return
       }
 
       // Reject moves from non-hosts when room is locked
       if (tierList.isLocked && tierList.ownerId !== socket.id) {
-        socket.emit('error', 'Room is locked — only the host can move items')
+        socket.emit('error', 'Room verrouillée — seul l\'hôte peut déplacer les éléments')
         return
       }
 
@@ -221,7 +221,7 @@ export function registerRoomHandlers(io: TypedServer, socket: TypedSocket): void
       }
 
       if (!movedItem) {
-        socket.emit('error', 'Item not found in source')
+        socket.emit('error', 'Élément introuvable dans la source')
         return
       }
 
@@ -233,7 +233,7 @@ export function registerRoomHandlers(io: TypedServer, socket: TypedSocket): void
         // To a tier row
         const targetRow = tierList.rows.find((r) => r.id === toRowId)
         if (!targetRow) {
-          socket.emit('error', 'Target row not found')
+          socket.emit('error', 'Ligne cible introuvable')
           return
         }
         targetRow.items.splice(toIndex, 0, movedItem)
@@ -248,7 +248,7 @@ export function registerRoomHandlers(io: TypedServer, socket: TypedSocket): void
       socket.to(roomId).emit('item:moved', parsed.data)
     } catch (err) {
       console.error('[Room] Move failed:', err)
-      socket.emit('error', 'Failed to move item')
+      socket.emit('error', 'Échec du déplacement de l\'élément')
     }
   })
 
@@ -256,20 +256,20 @@ export function registerRoomHandlers(io: TypedServer, socket: TypedSocket): void
   socket.on('item:create', async (data) => {
     const parsed = createItemSchema.safeParse(data)
     if (!parsed.success) {
-      socket.emit('error', 'Invalid item data')
+      socket.emit('error', 'Données d\'élément invalides')
       return
     }
 
     const roomId = socket.data.roomId
     if (!roomId) {
-      socket.emit('error', 'Not in a room')
+      socket.emit('error', 'Pas dans une room')
       return
     }
 
     try {
       const tierList = await TierListModel.findOne({ roomId })
       if (!tierList) {
-        socket.emit('error', 'Room not found in database')
+        socket.emit('error', 'Room introuvable en base de données')
         return
       }
 
@@ -289,7 +289,7 @@ export function registerRoomHandlers(io: TypedServer, socket: TypedSocket): void
       console.log(`[Room] Item "${newItem.label}" created in room ${roomId}`)
     } catch (err) {
       console.error('[Room] Create item failed:', err)
-      socket.emit('error', 'Failed to create item')
+      socket.emit('error', 'Échec de la création de l\'élément')
     }
   })
 
@@ -297,19 +297,19 @@ export function registerRoomHandlers(io: TypedServer, socket: TypedSocket): void
   socket.on('room:lock', async () => {
     const roomId = socket.data.roomId
     if (!roomId) {
-      socket.emit('error', 'Not in a room')
+      socket.emit('error', 'Pas dans une room')
       return
     }
 
     try {
       const tierList = await TierListModel.findOne({ roomId })
       if (!tierList) {
-        socket.emit('error', 'Room not found')
+        socket.emit('error', 'Room introuvable')
         return
       }
 
       if (tierList.ownerId !== socket.id) {
-        socket.emit('error', 'Only the host can lock/unlock the room')
+        socket.emit('error', 'Seul l\'hôte peut verrouiller/déverrouiller la room')
         return
       }
 
@@ -320,7 +320,7 @@ export function registerRoomHandlers(io: TypedServer, socket: TypedSocket): void
       console.log(`[Room] Room ${roomId} ${tierList.isLocked ? 'locked' : 'unlocked'} by host`)
     } catch (err) {
       console.error('[Room] Lock toggle failed:', err)
-      socket.emit('error', 'Failed to toggle lock')
+      socket.emit('error', 'Échec du verrouillage/déverrouillage')
     }
   })
 
@@ -328,19 +328,19 @@ export function registerRoomHandlers(io: TypedServer, socket: TypedSocket): void
   socket.on('room:toggle-focus', async () => {
     const roomId = socket.data.roomId
     if (!roomId) {
-      socket.emit('error', 'Not in a room')
+      socket.emit('error', 'Pas dans une room')
       return
     }
 
     try {
       const tierList = await TierListModel.findOne({ roomId })
       if (!tierList) {
-        socket.emit('error', 'Room not found')
+        socket.emit('error', 'Room introuvable')
         return
       }
 
       if (tierList.ownerId !== socket.id) {
-        socket.emit('error', 'Only the host can toggle focus mode')
+        socket.emit('error', 'Seul l\'hôte peut activer/désactiver le mode focus')
         return
       }
 
@@ -351,7 +351,7 @@ export function registerRoomHandlers(io: TypedServer, socket: TypedSocket): void
       console.log(`[Room] Room ${roomId} focus mode ${tierList.isFocusMode ? 'enabled' : 'disabled'} by host`)
     } catch (err) {
       console.error('[Room] Focus toggle failed:', err)
-      socket.emit('error', 'Failed to toggle focus mode')
+      socket.emit('error', 'Échec de l\'activation/désactivation du mode focus')
     }
   })
 
@@ -359,19 +359,19 @@ export function registerRoomHandlers(io: TypedServer, socket: TypedSocket): void
   socket.on('item:skip', async () => {
     const roomId = socket.data.roomId
     if (!roomId) {
-      socket.emit('error', 'Not in a room')
+      socket.emit('error', 'Pas dans une room')
       return
     }
 
     try {
       const tierList = await TierListModel.findOne({ roomId })
       if (!tierList) {
-        socket.emit('error', 'Room not found')
+        socket.emit('error', 'Room introuvable')
         return
       }
 
       if (tierList.pool.length === 0) {
-        socket.emit('error', 'No items in pool to skip')
+        socket.emit('error', 'Aucun élément dans le pool à passer')
         return
       }
 
@@ -385,7 +385,7 @@ export function registerRoomHandlers(io: TypedServer, socket: TypedSocket): void
       console.log(`[Room] Item "${skipped.label}" skipped in room ${roomId}`)
     } catch (err) {
       console.error('[Room] Skip item failed:', err)
-      socket.emit('error', 'Failed to skip item')
+      socket.emit('error', 'Échec du passage de l\'élément')
     }
   })
 
@@ -393,19 +393,19 @@ export function registerRoomHandlers(io: TypedServer, socket: TypedSocket): void
   socket.on('room:reset', async () => {
     const roomId = socket.data.roomId
     if (!roomId) {
-      socket.emit('error', 'Not in a room')
+      socket.emit('error', 'Pas dans une room')
       return
     }
 
     try {
       const tierList = await TierListModel.findOne({ roomId })
       if (!tierList) {
-        socket.emit('error', 'Room not found')
+        socket.emit('error', 'Room introuvable')
         return
       }
 
       if (tierList.ownerId !== socket.id) {
-        socket.emit('error', 'Only the host can reset the room')
+        socket.emit('error', 'Seul l\'hôte peut réinitialiser la room')
         return
       }
 
@@ -425,21 +425,21 @@ export function registerRoomHandlers(io: TypedServer, socket: TypedSocket): void
       console.log(`[Room] Room ${roomId} reset by host`)
     } catch (err) {
       console.error('[Room] Reset failed:', err)
-      socket.emit('error', 'Failed to reset room')
+      socket.emit('error', 'Échec de la réinitialisation de la room')
     }
   })
 
   // ─── row:update ──────────────────────────────────────────────────
   socket.on('row:update', async (data) => {
     const roomId = socket.data.roomId
-    if (!roomId) { socket.emit('error', 'Not in a room'); return }
+    if (!roomId) { socket.emit('error', 'Pas dans une room'); return }
 
     try {
       const tierList = await TierListModel.findOne({ roomId })
-      if (!tierList) { socket.emit('error', 'Room not found'); return }
+      if (!tierList) { socket.emit('error', 'Room introuvable'); return }
 
       const row = tierList.rows.find((r) => r.id === data.rowId)
-      if (!row) { socket.emit('error', 'Row not found'); return }
+      if (!row) { socket.emit('error', 'Ligne introuvable'); return }
 
       if (data.label !== undefined) row.label = data.label
       if (data.color !== undefined) row.color = data.color
@@ -450,21 +450,21 @@ export function registerRoomHandlers(io: TypedServer, socket: TypedSocket): void
       io.in(roomId).emit('row:updated', { rowId: data.rowId, label: row.label, color: row.color })
     } catch (err) {
       console.error('[Room] Row update failed:', err)
-      socket.emit('error', 'Failed to update row')
+      socket.emit('error', 'Échec de la mise à jour de la ligne')
     }
   })
 
   // ─── row:delete ──────────────────────────────────────────────────
   socket.on('row:delete', async (data) => {
     const roomId = socket.data.roomId
-    if (!roomId) { socket.emit('error', 'Not in a room'); return }
+    if (!roomId) { socket.emit('error', 'Pas dans une room'); return }
 
     try {
       const tierList = await TierListModel.findOne({ roomId })
-      if (!tierList) { socket.emit('error', 'Room not found'); return }
+      if (!tierList) { socket.emit('error', 'Room introuvable'); return }
 
       const rowIndex = tierList.rows.findIndex((r) => r.id === data.rowId)
-      if (rowIndex === -1) { socket.emit('error', 'Row not found'); return }
+      if (rowIndex === -1) { socket.emit('error', 'Ligne introuvable'); return }
 
       // Move items back to pool
       const removedRow = tierList.rows[rowIndex]
@@ -478,21 +478,21 @@ export function registerRoomHandlers(io: TypedServer, socket: TypedSocket): void
       io.in(roomId).emit('row:deleted', { rowId: data.rowId })
     } catch (err) {
       console.error('[Room] Row delete failed:', err)
-      socket.emit('error', 'Failed to delete row')
+      socket.emit('error', 'Échec de la suppression de la ligne')
     }
   })
 
   // ─── row:reorder ────────────────────────────────────────────────
   socket.on('row:reorder', async (data) => {
     const roomId = socket.data.roomId
-    if (!roomId) { socket.emit('error', 'Not in a room'); return }
+    if (!roomId) { socket.emit('error', 'Pas dans une room'); return }
 
     try {
       const tierList = await TierListModel.findOne({ roomId })
-      if (!tierList) { socket.emit('error', 'Room not found'); return }
+      if (!tierList) { socket.emit('error', 'Room introuvable'); return }
 
       const idx = tierList.rows.findIndex((r) => r.id === data.rowId)
-      if (idx === -1) { socket.emit('error', 'Row not found'); return }
+      if (idx === -1) { socket.emit('error', 'Ligne introuvable'); return }
 
       const newIdx = data.direction === 'up' ? idx - 1 : idx + 1
       if (newIdx < 0 || newIdx >= tierList.rows.length) return
@@ -508,18 +508,18 @@ export function registerRoomHandlers(io: TypedServer, socket: TypedSocket): void
       io.in(roomId).emit('row:reordered', data)
     } catch (err) {
       console.error('[Room] Row reorder failed:', err)
-      socket.emit('error', 'Failed to reorder row')
+      socket.emit('error', 'Échec du réordonnancement de la ligne')
     }
   })
 
   // ─── row:add ────────────────────────────────────────────────────
   socket.on('row:add', async (data) => {
     const roomId = socket.data.roomId
-    if (!roomId) { socket.emit('error', 'Not in a room'); return }
+    if (!roomId) { socket.emit('error', 'Pas dans une room'); return }
 
     try {
       const tierList = await TierListModel.findOne({ roomId })
-      if (!tierList) { socket.emit('error', 'Room not found'); return }
+      if (!tierList) { socket.emit('error', 'Room introuvable'); return }
 
       const newRow = {
         id: `tier-${randomUUID().substring(0, 8)}`,
@@ -535,7 +535,7 @@ export function registerRoomHandlers(io: TypedServer, socket: TypedSocket): void
       io.in(roomId).emit('row:added', { ...newRow, items: [] })
     } catch (err) {
       console.error('[Room] Row add failed:', err)
-      socket.emit('error', 'Failed to add row')
+      socket.emit('error', 'Échec de l\'ajout de la ligne')
     }
   })
 
@@ -548,7 +548,7 @@ export function registerRoomHandlers(io: TypedServer, socket: TypedSocket): void
     if (!text || text.length > 500) return
 
     if (containsBannedWord(text)) {
-      socket.emit('error', 'Message blocked: inappropriate language')
+      socket.emit('error', 'Message bloqué : langage inapproprié')
       return
     }
 

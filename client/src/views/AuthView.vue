@@ -152,8 +152,8 @@ const displayError = computed(() => localError.value || authError.value)
           <!-- LOGIN -->
           <template v-if="step === 'login'">
             <div class="mb-6 text-center">
-              <h1 class="text-[28px] font-bold text-foreground">Welcome back!</h1>
-              <p class="mt-1.5 text-sm text-foreground-muted">Sign in to keep ranking with friends</p>
+              <h1 class="text-[28px] font-bold text-foreground">Bon retour !</h1>
+              <p class="mt-1.5 text-sm text-foreground-muted">Connectez-vous pour continuer à classer avec vos amis</p>
             </div>
 
             <div v-if="displayError" class="mb-4 rounded-lg bg-destructive/10 p-3 text-sm text-destructive">
@@ -171,13 +171,13 @@ const displayError = computed(() => localError.value || authError.value)
                 <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
                 <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
               </svg>
-              Continue with Google
+              Continuer avec Google
             </button>
 
             <!-- Divider -->
             <div class="my-5 flex items-center gap-4">
               <div class="h-px flex-1 bg-border" />
-              <span class="text-xs text-foreground-subtle">or continue with email</span>
+              <span class="text-xs text-foreground-subtle">ou continuer avec un email</span>
               <div class="h-px flex-1 bg-border" />
             </div>
 
@@ -199,13 +199,13 @@ const displayError = computed(() => localError.value || authError.value)
 
               <div>
                 <div class="mb-1.5 flex items-center justify-between">
-                  <label class="text-[13px] font-medium text-foreground">Password</label>
+                  <label class="text-[13px] font-medium text-foreground">Mot de passe</label>
                   <button
                     type="button"
                     class="text-xs text-primary hover:underline"
                     @click="step = 'forgot'; clearErrors()"
                   >
-                    Forgot?
+                    Oublié ?
                   </button>
                 </div>
                 <div class="relative">
@@ -213,7 +213,7 @@ const displayError = computed(() => localError.value || authError.value)
                   <input
                     v-model="password"
                     :type="showPassword ? 'text' : 'password'"
-                    placeholder="Your password"
+                    placeholder="Votre mot de passe"
                     required
                     class="w-full rounded-lg border border-border bg-background py-2.5 pl-10 pr-10 text-sm text-foreground placeholder:text-foreground-subtle transition-all focus:border-primary/50 focus:outline-none focus:ring-2 focus:ring-primary/20"
                     @input="clearErrors"
@@ -234,22 +234,22 @@ const displayError = computed(() => localError.value || authError.value)
                 :disabled="loginDisabled"
                 class="flex w-full items-center justify-center gap-2 rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-primary/25 transition-all hover:bg-primary-hover disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {{ isLoading ? 'Signing in...' : 'Sign In' }}
+                {{ isLoading ? 'Connexion...' : 'Se connecter' }}
                 <ArrowRight v-if="!isLoading" class="h-4 w-4" />
               </button>
             </form>
 
             <p class="mt-5 text-center text-sm text-foreground-muted">
-              New here?
-              <button class="font-medium text-primary hover:underline" @click="step = 'register'; clearErrors()">Create an account</button>
+              Nouveau ici ?
+              <button class="font-medium text-primary hover:underline" @click="step = 'register'; clearErrors()">Créer un compte</button>
             </p>
           </template>
 
           <!-- REGISTER -->
           <template v-if="step === 'register'">
             <div class="mb-6 text-center">
-              <h1 class="text-[28px] font-bold text-foreground">Create account</h1>
-              <p class="mt-1.5 text-sm text-foreground-muted">Join TierTogether and start ranking</p>
+              <h1 class="text-[28px] font-bold text-foreground">Créer un compte</h1>
+              <p class="mt-1.5 text-sm text-foreground-muted">Rejoignez TierTogether et commencez à classer</p>
             </div>
 
             <div v-if="displayError" class="mb-4 rounded-lg bg-destructive/10 p-3 text-sm text-destructive">
@@ -267,25 +267,25 @@ const displayError = computed(() => localError.value || authError.value)
                 <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
                 <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
               </svg>
-              Continue with Google
+              Continuer avec Google
             </button>
 
             <!-- Divider -->
             <div class="my-5 flex items-center gap-4">
               <div class="h-px flex-1 bg-border" />
-              <span class="text-xs text-foreground-subtle">or continue with email</span>
+              <span class="text-xs text-foreground-subtle">ou continuer avec un email</span>
               <div class="h-px flex-1 bg-border" />
             </div>
 
             <form class="space-y-4" @submit.prevent="handleRegister">
               <div>
-                <label class="mb-1.5 block text-[13px] font-medium text-foreground">Display Name</label>
+                <label class="mb-1.5 block text-[13px] font-medium text-foreground">Pseudo</label>
                 <div class="relative">
                   <User class="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-foreground-subtle" />
                   <input
                     v-model="displayName"
                     type="text"
-                    placeholder="2-20 characters"
+                    placeholder="2-20 caractères"
                     maxlength="20"
                     required
                     class="w-full rounded-lg border py-2.5 pl-10 pr-4 text-sm text-foreground placeholder:text-foreground-subtle transition-all focus:outline-none focus:ring-2 focus:ring-primary/20"
@@ -294,7 +294,7 @@ const displayError = computed(() => localError.value || authError.value)
                   />
                 </div>
                 <p v-if="displayName && !displayNameValid" class="mt-1 text-xs text-destructive">
-                  Must be between 2 and 20 characters
+                  Doit contenir entre 2 et 20 caractères
                 </p>
               </div>
 
@@ -313,18 +313,18 @@ const displayError = computed(() => localError.value || authError.value)
                   />
                 </div>
                 <p v-if="email && !emailValid" class="mt-1 text-xs text-destructive">
-                  Please enter a valid email
+                  Veuillez entrer un email valide
                 </p>
               </div>
 
               <div>
-                <label class="mb-1.5 block text-[13px] font-medium text-foreground">Password</label>
+                <label class="mb-1.5 block text-[13px] font-medium text-foreground">Mot de passe</label>
                 <div class="relative">
                   <Lock class="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-foreground-subtle" />
                   <input
                     v-model="password"
                     :type="showPassword ? 'text' : 'password'"
-                    placeholder="Min 8 characters"
+                    placeholder="Min 8 caractères"
                     required
                     class="w-full rounded-lg border py-2.5 pl-10 pr-10 text-sm text-foreground placeholder:text-foreground-subtle transition-all focus:outline-none focus:ring-2 focus:ring-primary/20"
                     :class="password && !passwordValid ? 'border-destructive/50 bg-destructive/5' : 'border-border bg-background focus:border-primary/50'"
@@ -340,7 +340,7 @@ const displayError = computed(() => localError.value || authError.value)
                   </button>
                 </div>
                 <p v-if="password && !passwordValid" class="mt-1 text-xs text-destructive">
-                  Must be at least 8 characters
+                  Doit contenir au moins 8 caractères
                 </p>
               </div>
 
@@ -349,14 +349,14 @@ const displayError = computed(() => localError.value || authError.value)
                 :disabled="registerDisabled"
                 class="flex w-full items-center justify-center gap-2 rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-primary/25 transition-all hover:bg-primary-hover disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {{ isLoading ? 'Creating...' : 'Create Account' }}
+                {{ isLoading ? 'Création...' : 'Créer un compte' }}
                 <ArrowRight v-if="!isLoading" class="h-4 w-4" />
               </button>
             </form>
 
             <p class="mt-5 text-center text-sm text-foreground-muted">
-              Already have an account?
-              <button class="font-medium text-primary hover:underline" @click="step = 'login'; clearErrors()">Sign in</button>
+              Déjà un compte ?
+              <button class="font-medium text-primary hover:underline" @click="step = 'login'; clearErrors()">Se connecter</button>
             </p>
           </template>
 
@@ -367,14 +367,14 @@ const displayError = computed(() => localError.value || authError.value)
               @click="step = 'login'; clearErrors()"
             >
               <ArrowLeft class="h-3.5 w-3.5" />
-              Back
+              Retour
             </button>
 
             <div class="mb-6 text-center">
               <Mail class="mx-auto mb-3 h-8 w-8 text-primary" />
-              <h1 class="text-xl font-bold text-foreground">Verify your email</h1>
+              <h1 class="text-xl font-bold text-foreground">Vérifiez votre email</h1>
               <p class="mt-1 text-sm text-foreground-muted">
-                We sent a 6-digit code to<br />
+                Nous avons envoyé un code à 6 chiffres à<br />
                 <span class="font-medium text-foreground">{{ email }}</span>
               </p>
             </div>
@@ -385,7 +385,7 @@ const displayError = computed(() => localError.value || authError.value)
 
             <form class="space-y-4" @submit.prevent="handleVerify">
               <div>
-                <label class="mb-1.5 block text-[13px] font-medium text-foreground">Verification code</label>
+                <label class="mb-1.5 block text-[13px] font-medium text-foreground">Code de vérification</label>
                 <input
                   v-model="verificationCode"
                   type="text"
@@ -403,19 +403,19 @@ const displayError = computed(() => localError.value || authError.value)
                 :disabled="isLoading || verificationCode.length < 6"
                 class="flex w-full items-center justify-center gap-2 rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-primary/25 transition-all hover:bg-primary-hover disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {{ isLoading ? 'Verifying...' : 'Verify' }}
+                {{ isLoading ? 'Vérification...' : 'Vérifier' }}
                 <ArrowRight v-if="!isLoading" class="h-4 w-4" />
               </button>
             </form>
 
             <p class="mt-5 text-center text-sm text-foreground-muted">
-              Didn't receive the code?
+              Code non reçu ?
               <button
                 class="font-medium text-primary hover:underline disabled:text-foreground-subtle disabled:no-underline"
                 :disabled="resendCooldown"
                 @click="handleResend"
               >
-                {{ resendCooldown ? 'Sent! Wait 30s' : 'Resend' }}
+                {{ resendCooldown ? 'Envoyé ! Attendez 30s' : 'Renvoyer' }}
               </button>
             </p>
           </template>
@@ -427,13 +427,13 @@ const displayError = computed(() => localError.value || authError.value)
               @click="step = 'login'; clearErrors()"
             >
               <ArrowLeft class="h-3.5 w-3.5" />
-              Back to sign in
+              Retour à la connexion
             </button>
 
             <div class="mb-6 text-center">
               <Lock class="mx-auto mb-3 h-8 w-8 text-primary" />
-              <h1 class="text-xl font-bold text-foreground">Forgot password</h1>
-              <p class="mt-1 text-sm text-foreground-muted">Enter your email to receive a reset code</p>
+              <h1 class="text-xl font-bold text-foreground">Mot de passe oublié</h1>
+              <p class="mt-1 text-sm text-foreground-muted">Entrez votre email pour recevoir un code de réinitialisation</p>
             </div>
 
             <div v-if="displayError" class="mb-4 rounded-lg bg-destructive/10 p-3 text-sm text-destructive">
@@ -461,7 +461,7 @@ const displayError = computed(() => localError.value || authError.value)
                 :disabled="isLoading || !emailValid"
                 class="flex w-full items-center justify-center gap-2 rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-primary/25 transition-all hover:bg-primary-hover disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {{ isLoading ? 'Sending...' : 'Send reset code' }}
+                {{ isLoading ? 'Envoi...' : 'Envoyer le code' }}
                 <ArrowRight v-if="!isLoading" class="h-4 w-4" />
               </button>
             </form>
@@ -474,14 +474,14 @@ const displayError = computed(() => localError.value || authError.value)
               @click="step = 'forgot'; clearErrors()"
             >
               <ArrowLeft class="h-3.5 w-3.5" />
-              Back
+              Retour
             </button>
 
             <div class="mb-6 text-center">
               <Mail class="mx-auto mb-3 h-8 w-8 text-primary" />
-              <h1 class="text-xl font-bold text-foreground">Reset password</h1>
+              <h1 class="text-xl font-bold text-foreground">Réinitialiser le mot de passe</h1>
               <p class="mt-1 text-sm text-foreground-muted">
-                We sent a 6-digit code to<br />
+                Nous avons envoyé un code à 6 chiffres à<br />
                 <span class="font-medium text-foreground">{{ email }}</span>
               </p>
             </div>
@@ -492,7 +492,7 @@ const displayError = computed(() => localError.value || authError.value)
 
             <form class="space-y-4" @submit.prevent="handleResetPassword">
               <div>
-                <label class="mb-1.5 block text-[13px] font-medium text-foreground">Reset code</label>
+                <label class="mb-1.5 block text-[13px] font-medium text-foreground">Code de réinitialisation</label>
                 <input
                   v-model="resetCode"
                   type="text"
@@ -506,13 +506,13 @@ const displayError = computed(() => localError.value || authError.value)
               </div>
 
               <div>
-                <label class="mb-1.5 block text-[13px] font-medium text-foreground">New password</label>
+                <label class="mb-1.5 block text-[13px] font-medium text-foreground">Nouveau mot de passe</label>
                 <div class="relative">
                   <Lock class="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-foreground-subtle" />
                   <input
                     v-model="newPassword"
                     :type="showNewPassword ? 'text' : 'password'"
-                    placeholder="Min 8 characters"
+                    placeholder="Min 8 caractères"
                     required
                     class="w-full rounded-lg border py-2.5 pl-10 pr-10 text-sm text-foreground placeholder:text-foreground-subtle transition-all focus:outline-none focus:ring-2 focus:ring-primary/20"
                     :class="newPassword && !newPasswordValid ? 'border-destructive/50 bg-destructive/5' : 'border-border bg-background focus:border-primary/50'"
@@ -528,7 +528,7 @@ const displayError = computed(() => localError.value || authError.value)
                   </button>
                 </div>
                 <p v-if="newPassword && !newPasswordValid" class="mt-1 text-xs text-destructive">
-                  Must be at least 8 characters
+                  Doit contenir au moins 8 caractères
                 </p>
               </div>
 
@@ -537,19 +537,19 @@ const displayError = computed(() => localError.value || authError.value)
                 :disabled="isLoading || resetCode.length < 6 || !newPasswordValid"
                 class="flex w-full items-center justify-center gap-2 rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-primary/25 transition-all hover:bg-primary-hover disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {{ isLoading ? 'Resetting...' : 'Reset password' }}
+                {{ isLoading ? 'Réinitialisation...' : 'Réinitialiser' }}
                 <ArrowRight v-if="!isLoading" class="h-4 w-4" />
               </button>
             </form>
 
             <p class="mt-5 text-center text-sm text-foreground-muted">
-              Didn't receive the code?
+              Code non reçu ?
               <button
                 class="font-medium text-primary hover:underline disabled:text-foreground-subtle disabled:no-underline"
                 :disabled="resetCooldown"
                 @click="handleResendReset"
               >
-                {{ resetCooldown ? 'Sent! Wait 30s' : 'Resend' }}
+                {{ resetCooldown ? 'Envoyé ! Attendez 30s' : 'Renvoyer' }}
               </button>
             </p>
           </template>

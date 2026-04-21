@@ -44,7 +44,7 @@ router.get('/api/tierlists/public', async (req: Request, res: Response) => {
     res.json({ tierlists })
   } catch (err) {
     console.error('[API] Failed to fetch public tierlists:', err)
-    res.status(500).json({ error: 'Failed to fetch tierlists' })
+    res.status(500).json({ error: 'Échec de la récupération des tier lists' })
   }
 })
 
@@ -58,7 +58,7 @@ router.get('/api/tierlists/featured', async (_req: Request, res: Response) => {
     res.json({ tierlists })
   } catch (err) {
     console.error('[API] Failed to fetch featured tierlists:', err)
-    res.status(500).json({ error: 'Failed to fetch featured tierlists' })
+    res.status(500).json({ error: 'Échec de la récupération des tier lists en vedette' })
   }
 })
 
@@ -66,7 +66,7 @@ router.get('/api/tierlists/featured', async (_req: Request, res: Response) => {
 router.get('/api/tierlists/mine', async (req: Request, res: Response) => {
   const userId = getUserId(req)
   if (!userId) {
-    res.status(401).json({ error: 'Authentication required' })
+    res.status(401).json({ error: 'Authentification requise' })
     return
   }
 
@@ -77,7 +77,7 @@ router.get('/api/tierlists/mine', async (req: Request, res: Response) => {
     res.json({ tierlists })
   } catch (err) {
     console.error('[API] Failed to fetch user tierlists:', err)
-    res.status(500).json({ error: 'Failed to fetch tierlists' })
+    res.status(500).json({ error: 'Échec de la récupération des tier lists' })
   }
 })
 
@@ -86,21 +86,21 @@ router.get('/api/tierlists/:id', async (req: Request, res: Response) => {
   try {
     const tierlist = await TierListModel.findById(req.params.id).lean()
     if (!tierlist) {
-      res.status(404).json({ error: 'Tier list not found' })
+      res.status(404).json({ error: 'Tier list introuvable' })
       return
     }
 
     const userId = getUserId(req)
     const isOwner = userId && (tierlist.authorId === userId || tierlist.ownerId === userId)
     if (!tierlist.isPublic && !isOwner) {
-      res.status(404).json({ error: 'Tier list not found' })
+      res.status(404).json({ error: 'Tier list introuvable' })
       return
     }
 
     res.json({ tierlist })
   } catch (err) {
     console.error('[API] Failed to fetch tierlist:', err)
-    res.status(500).json({ error: 'Failed to fetch tierlist' })
+    res.status(500).json({ error: 'Échec de la récupération de la tier list' })
   }
 })
 
@@ -108,20 +108,20 @@ router.get('/api/tierlists/:id', async (req: Request, res: Response) => {
 router.post('/api/tierlists/:id/publish', async (req: Request, res: Response) => {
   const userId = getUserId(req)
   if (!userId) {
-    res.status(401).json({ error: 'Authentication required' })
+    res.status(401).json({ error: 'Authentification requise' })
     return
   }
 
   try {
     const tierList = await TierListModel.findById(req.params.id)
     if (!tierList) {
-      res.status(404).json({ error: 'Tier list not found' })
+      res.status(404).json({ error: 'Tier list introuvable' })
       return
     }
 
     // Allow publish if user is the author, or if no author is set yet (claim ownership)
     if (tierList.authorId && tierList.authorId !== userId) {
-      res.status(403).json({ error: 'Not authorized to publish this tier list' })
+      res.status(403).json({ error: 'Non autorisé à publier cette tier list' })
       return
     }
 
@@ -154,7 +154,7 @@ router.post('/api/tierlists/:id/publish', async (req: Request, res: Response) =>
     res.json({ success: true, tierList })
   } catch (err) {
     console.error('[API] Publish failed:', err)
-    res.status(500).json({ error: 'Failed to publish' })
+    res.status(500).json({ error: 'Échec de la publication' })
   }
 })
 
@@ -163,7 +163,7 @@ router.post('/api/tierlists/:id/clone', async (req: Request, res: Response) => {
   try {
     const source = await TierListModel.findById(req.params.id)
     if (!source) {
-      res.status(404).json({ error: 'Tier list not found' })
+      res.status(404).json({ error: 'Tier list introuvable' })
       return
     }
 
@@ -186,7 +186,7 @@ router.post('/api/tierlists/:id/clone', async (req: Request, res: Response) => {
     res.json({ success: true, roomId: newRoomId, tierListId: cloned._id })
   } catch (err) {
     console.error('[API] Clone failed:', err)
-    res.status(500).json({ error: 'Failed to clone' })
+    res.status(500).json({ error: 'Échec du clonage' })
   }
 })
 
@@ -194,18 +194,18 @@ router.post('/api/tierlists/:id/clone', async (req: Request, res: Response) => {
 router.delete('/api/tierlists/:id', async (req: Request, res: Response) => {
   const userId = getUserId(req)
   if (!userId) {
-    res.status(401).json({ error: 'Authentication required' })
+    res.status(401).json({ error: 'Authentification requise' })
     return
   }
 
   try {
     const tierList = await TierListModel.findById(req.params.id)
     if (!tierList) {
-      res.status(404).json({ error: 'Tier list not found' })
+      res.status(404).json({ error: 'Tier list introuvable' })
       return
     }
     if (tierList.authorId !== userId) {
-      res.status(403).json({ error: 'Not authorized' })
+      res.status(403).json({ error: 'Non autorisé' })
       return
     }
 
@@ -213,7 +213,7 @@ router.delete('/api/tierlists/:id', async (req: Request, res: Response) => {
     res.json({ success: true })
   } catch (err) {
     console.error('[API] Delete failed:', err)
-    res.status(500).json({ error: 'Failed to delete' })
+    res.status(500).json({ error: 'Échec de la suppression' })
   }
 })
 
@@ -221,18 +221,18 @@ router.delete('/api/tierlists/:id', async (req: Request, res: Response) => {
 router.patch('/api/tierlists/:id', async (req: Request, res: Response) => {
   const userId = getUserId(req)
   if (!userId) {
-    res.status(401).json({ error: 'Authentication required' })
+    res.status(401).json({ error: 'Authentification requise' })
     return
   }
 
   try {
     const tierList = await TierListModel.findById(req.params.id)
     if (!tierList) {
-      res.status(404).json({ error: 'Tier list not found' })
+      res.status(404).json({ error: 'Tier list introuvable' })
       return
     }
     if (tierList.authorId !== userId) {
-      res.status(403).json({ error: 'Not authorized' })
+      res.status(403).json({ error: 'Non autorisé' })
       return
     }
 
@@ -248,7 +248,7 @@ router.patch('/api/tierlists/:id', async (req: Request, res: Response) => {
     res.json({ success: true, tierList })
   } catch (err) {
     console.error('[API] Update failed:', err)
-    res.status(500).json({ error: 'Failed to update' })
+    res.status(500).json({ error: 'Échec de la mise à jour' })
   }
 })
 

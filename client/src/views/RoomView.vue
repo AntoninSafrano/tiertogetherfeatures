@@ -105,7 +105,7 @@ async function onGateReady(payload: { username: string; avatar: string; isGuest:
   if (res.success) {
     gateResolved.value = true
   } else {
-    const isNotFound = res.error === 'Room not found'
+    const isNotFound = res.error === 'Room introuvable'
     error.value = isNotFound
       ? 'Room introuvable — ce code ne correspond à aucune room active.'
       : 'Impossible de rejoindre la room. Vérifiez votre connexion.'
@@ -145,7 +145,7 @@ function goHome() {
           <span class="text-xs font-mono text-foreground-subtle">{{ roomId }}</span>
         </div>
         <div v-if="isDemo" class="rounded-full bg-primary/10 px-2.5 py-0.5">
-          <span class="text-[11px] font-medium text-primary">Demo</span>
+          <span class="text-[11px] font-medium text-primary">Démo</span>
         </div>
       </div>
 

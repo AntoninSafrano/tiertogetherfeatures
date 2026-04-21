@@ -73,7 +73,7 @@ async function joinRoom() {
   if (res.success && res.roomId) {
     router.push({ name: 'room', params: { id: res.roomId } })
   } else {
-    const isNotFound = res.error === 'Room not found'
+    const isNotFound = res.error === 'Room introuvable'
     errorPopup.value = {
       title: isNotFound ? 'Room introuvable' : 'Connexion impossible',
       description: isNotFound
@@ -114,12 +114,12 @@ function tryDemo() {
         <div class="flex flex-col items-center gap-3">
           <!-- Hero title -->
           <h1 class="text-3xl sm:text-5xl font-bold text-center text-foreground leading-[1.1] tracking-tight">
-            RANK IT. DEBATE IT. SHARE IT.
+            CLASSEZ. DÉBATTEZ. PARTAGEZ.
           </h1>
 
           <!-- Subtitle -->
           <p class="text-foreground-muted text-sm sm:text-base text-center max-w-lg leading-relaxed">
-            Create collaborative tier lists in real-time with your friends.
+            Créez des tier lists collaboratives en temps réel avec vos amis.
           </p>
         </div>
 
@@ -138,7 +138,7 @@ function tryDemo() {
           <input
             v-model="usernameInput"
             type="text"
-            placeholder="Your display name..."
+            placeholder="Votre pseudo..."
             maxlength="20"
             class="w-full rounded-lg border border-border bg-background h-11 px-4 text-sm text-foreground placeholder:text-foreground-subtle focus:border-primary/50 focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
           />
@@ -152,12 +152,12 @@ function tryDemo() {
               <div class="w-10 h-10 rounded-xl bg-primary-soft flex items-center justify-center">
                 <Plus class="h-5 w-5 text-primary" />
               </div>
-              <h2 class="text-lg font-bold text-foreground">Create a Room</h2>
+              <h2 class="text-lg font-bold text-foreground">Créer une Room</h2>
             </div>
             <input
               v-model="tierListName"
               type="text"
-              placeholder="Room name..."
+              placeholder="Nom de la room..."
               maxlength="100"
               class="w-full rounded-lg border border-border bg-background h-11 px-3.5 text-sm text-foreground placeholder:text-foreground-subtle focus:border-primary/50 focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
             />
@@ -167,7 +167,7 @@ function tryDemo() {
               @click="createRoom"
             >
               <Plus class="h-4 w-4" />
-              {{ isLoading ? 'Création...' : 'Create Room' }}
+              {{ isLoading ? 'Création...' : 'Créer la Room' }}
             </button>
             <p v-if="createError" class="text-xs text-destructive">{{ createError }}</p>
           </div>
@@ -178,12 +178,12 @@ function tryDemo() {
               <div class="w-10 h-10 rounded-xl bg-success/10 flex items-center justify-center">
                 <Users class="h-5 w-5 text-success" />
               </div>
-              <h2 class="text-lg font-bold text-foreground">Join a Room</h2>
+              <h2 class="text-lg font-bold text-foreground">Rejoindre une Room</h2>
             </div>
             <input
               v-model="roomIdInput"
               type="text"
-              placeholder="Enter room code..."
+              placeholder="Code de la room..."
               maxlength="50"
               class="w-full rounded-lg border border-border bg-background h-11 px-3.5 text-sm text-foreground placeholder:text-foreground-subtle focus:border-primary/50 focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
             />
@@ -193,7 +193,7 @@ function tryDemo() {
               @click="joinRoom"
             >
               <LogIn class="h-4 w-4" />
-              {{ isLoading ? 'Connexion...' : 'Join Room' }}
+              {{ isLoading ? 'Connexion...' : 'Rejoindre' }}
             </button>
             <p v-if="joinError" class="text-xs text-destructive">{{ joinError }}</p>
           </div>
@@ -203,7 +203,7 @@ function tryDemo() {
         <div class="flex items-center gap-8 text-sm">
           <button class="flex items-center gap-2 text-foreground-muted hover:text-foreground transition-colors" @click="tryDemo">
             <Gamepad2 class="h-4 w-4" />
-            Try Demo Mode
+            Essayer le mode Démo
           </button>
         </div>
       </div>

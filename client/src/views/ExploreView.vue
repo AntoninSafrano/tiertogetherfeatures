@@ -132,13 +132,13 @@ function getRelativeTime(dateStr: string): string {
   const now = Date.now()
   const diff = now - new Date(dateStr).getTime()
   const minutes = Math.floor(diff / 60000)
-  if (minutes < 60) return `${minutes}m ago`
+  if (minutes < 60) return `il y a ${minutes}min`
   const hours = Math.floor(minutes / 60)
-  if (hours < 24) return `${hours}h ago`
+  if (hours < 24) return `il y a ${hours}h`
   const days = Math.floor(hours / 24)
-  if (days < 7) return `${days}d ago`
+  if (days < 7) return `il y a ${days}j`
   const weeks = Math.floor(days / 7)
-  if (weeks < 5) return `${weeks}w ago`
+  if (weeks < 5) return `il y a ${weeks}sem`
   return new Date(dateStr).toLocaleDateString()
 }
 
@@ -246,8 +246,8 @@ onMounted(async () => {
     <main class="mx-auto max-w-6xl px-4 sm:px-10 py-8">
       <!-- Header -->
       <div class="mb-8">
-        <h1 class="text-[40px] font-bold tracking-tight text-foreground mb-2">EXPLORE TIER LISTS</h1>
-        <p class="text-base text-foreground-muted mb-5">Discover and clone tier lists created by the community</p>
+        <h1 class="text-[40px] font-bold tracking-tight text-foreground mb-2">EXPLORER LES TIER LISTS</h1>
+        <p class="text-base text-foreground-muted mb-5">Découvrez et clonez des tier lists créées par la communauté</p>
 
         <!-- Search -->
         <div class="relative max-w-md">
@@ -255,7 +255,7 @@ onMounted(async () => {
           <input
             v-model="searchQuery"
             type="text"
-            placeholder="Search tier lists..."
+            placeholder="Rechercher des tier lists..."
             class="w-full rounded-xl border border-border bg-surface py-3 pl-12 pr-5 text-sm text-foreground placeholder:text-foreground-subtle focus:border-primary/50 focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
             @input="onSearchInput"
           />
@@ -268,13 +268,13 @@ onMounted(async () => {
           :class="['px-4 py-2 text-sm font-medium transition-colors border-b-2 -mb-px', activeTab === 'explore' ? 'border-primary text-primary' : 'border-transparent text-foreground-muted hover:text-foreground']"
           @click="activeTab = 'explore'"
         >
-          Explore
+          Explorer
         </button>
         <button
           :class="['px-4 py-2 text-sm font-medium transition-colors border-b-2 -mb-px', activeTab === 'mine' ? 'border-primary text-primary' : 'border-transparent text-foreground-muted hover:text-foreground']"
           @click="activeTab = 'mine'; loadLocalRooms(); if (user) fetchMyLists()"
         >
-          My Lists
+          Mes Listes
         </button>
       </div>
 
@@ -329,8 +329,8 @@ onMounted(async () => {
         </div>
 
         <div v-else-if="tierlists.length === 0" class="text-center py-16">
-          <p class="text-foreground-muted text-lg">No tier lists found</p>
-          <p class="text-foreground-subtle text-sm mt-1">Be the first to publish one!</p>
+          <p class="text-foreground-muted text-lg">Aucune tier list trouvée</p>
+          <p class="text-foreground-subtle text-sm mt-1">Soyez le premier à en publier une !</p>
         </div>
 
         <div v-else class="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
@@ -343,7 +343,7 @@ onMounted(async () => {
             <!-- Featured badge -->
             <div v-if="featuredIds.has(tl._id)" class="absolute top-2 left-2 z-10 flex items-center gap-1 rounded-full bg-yellow-500/90 px-2 py-0.5">
               <Star class="h-2.5 w-2.5 text-black" />
-              <span class="text-[9px] font-bold text-black">Featured</span>
+              <span class="text-[9px] font-bold text-black">Populaire</span>
             </div>
 
             <!-- Category badge -->
