@@ -214,15 +214,15 @@ function goHome() {
       <!-- Side Panel (Joueurs / Chat) -->
       <Transition
         enter-active-class="transition-all duration-200 ease-out"
-        enter-from-class="translate-x-full sm:translate-x-0 sm:w-0 opacity-0"
-        enter-to-class="translate-x-0 sm:w-[320px] opacity-100"
+        enter-from-class="opacity-0 max-sm:translate-x-full sm:w-0"
+        enter-to-class="opacity-100 max-sm:translate-x-0 sm:w-80"
         leave-active-class="transition-all duration-150 ease-in"
-        leave-from-class="translate-x-0 sm:w-[320px] opacity-100"
-        leave-to-class="translate-x-full sm:translate-x-0 sm:w-0 opacity-0"
+        leave-from-class="opacity-100 max-sm:translate-x-0 sm:w-80"
+        leave-to-class="opacity-0 max-sm:translate-x-full sm:w-0"
       >
         <aside
           v-if="panelOpen && !isDemo"
-          class="w-full sm:w-[320px] shrink-0 border-l border-border bg-[#0D0D0D] flex flex-col overflow-hidden sm:relative absolute inset-y-0 right-0 z-30 sm:z-auto"
+          class="w-80 shrink-0 border-l border-border bg-[#0D0D0D] flex flex-col overflow-hidden relative max-sm:w-full max-sm:absolute max-sm:inset-y-0 max-sm:right-0 max-sm:z-30"
         >
           <!-- Tabs -->
           <div class="flex border-b border-border shrink-0">
