@@ -259,6 +259,17 @@ export function registerRoomHandlers(io: TypedServer, socket: TypedSocket): void
         tierList.authorId = authUserId
       }
 
+      // If ownerId matches this user's auth ID (e.g. from clone), transfer host to this socket
+      if (authUserId && tierList.ownerId === authUserId) {
+        tierList.ownerId = socket.id
+      }
+
+      // If room has no valid host (ownerId doesn't match any connected socket), first joiner becomes host
+      const connectedIds = new Set((await io.in(roomId).fetchSockets()).map(s => s.id))
+      if (!connectedIds.has(tierList.ownerId) && !connectedIds.has(socket.id)) {
+        tierList.ownerId = socket.id
+      }
+
       // If rejoining, clean up old socket
       if (oldSocket) {
         oldSocket.leave(roomId)
