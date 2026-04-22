@@ -49,19 +49,27 @@ function finishEditing() {
   }
 }
 
-// Color picker
-const colorPickerInput = ref<HTMLInputElement | null>(null)
+// Color palette — swap the native <input type="color"> (flaky on
+// Chromium/Windows, and it spammed row:update on every drag inside the
+// native popup, tripping the Socket.io rate limiter → crash on the
+// second open). Now a fixed 12-swatch popup emits exactly one update.
+const TIER_COLOR_SWATCHES = [
+  '#FF7F7F', '#FFBF7F', '#FFDF7F', '#BFFF7F',
+  '#7FFFBF', '#7FFFFF', '#7FBFFF', '#7F7FFF',
+  '#BF7FFF', '#FF7FFF', '#FF7FBF', '#9CA3AF',
+]
+
+const showPalette = ref(false)
 const showMobileActions = ref(false)
 
 function openColorPicker() {
-  nextTick(() => {
-    colorPickerInput.value?.click()
-  })
+  showPalette.value = !showPalette.value
 }
 
-function applyColor(e: Event) {
-  const target = e.target as HTMLInputElement
-  store.updateRow({ rowId: rowData.value.id, color: target.value })
+function pickColor(hex: string) {
+  showPalette.value = false
+  if (hex === rowData.value.color) return
+  store.updateRow({ rowId: rowData.value.id, color: hex })
 }
 
 // Delete confirmation
@@ -143,21 +151,29 @@ function onDragChange(evt: any) {
         >
           <ArrowUp class="h-3.5 w-3.5" />
         </button>
-        <button
-          class="p-1 rounded hover:bg-surface-active text-foreground-muted hover:text-foreground transition-colors relative"
-          title="Changer la couleur"
-          @click.stop="openColorPicker"
-        >
-          <Palette class="h-3.5 w-3.5" />
-          <input
-            type="color"
-            :value="rowData.color"
-            class="absolute inset-0 opacity-0 w-full h-full cursor-pointer"
-            @input="applyColor"
-            @change="applyColor"
-            ref="colorPickerInput"
-          />
-        </button>
+        <div class="relative">
+          <button
+            class="p-1 rounded hover:bg-surface-active text-foreground-muted hover:text-foreground transition-colors"
+            title="Changer la couleur"
+            @click.stop="openColorPicker"
+          >
+            <Palette class="h-3.5 w-3.5" />
+          </button>
+
+          <div
+            v-if="showPalette"
+            class="absolute left-full top-1/2 ml-2 -translate-y-1/2 z-30 rounded-lg border border-border bg-surface p-2 shadow-2xl grid grid-cols-4 gap-1.5"
+            @click.stop
+          >
+            <button
+              v-for="hex in TIER_COLOR_SWATCHES"
+              :key="hex"
+              class="h-6 w-6 rounded-md border border-black/40 transition-transform hover:scale-110 focus:outline-none focus:ring-2 focus:ring-white/60"
+              :style="{ backgroundColor: hex }"
+              @click.stop="pickColor(hex)"
+            />
+          </div>
+        </div>
         <button
           class="p-1 rounded hover:bg-surface-active text-foreground-muted hover:text-foreground transition-colors"
           title="Descendre"
