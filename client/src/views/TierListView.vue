@@ -5,7 +5,8 @@ import NavBar from '@/components/NavBar.vue'
 import TierRow from '@/components/tierlist/TierRow.vue'
 import TierItem from '@/components/tierlist/TierItem.vue'
 import { useRoomStore } from '@/stores/room'
-import { ArrowLeft, Download, Calendar, LayoutGrid, Copy, Settings2, Share2, Code } from 'lucide-vue-next'
+import { ArrowLeft, Download, Calendar, LayoutGrid, Copy, Settings2, Share2, Code, Flag } from 'lucide-vue-next'
+import ReportModal from '@/components/ReportModal.vue'
 import { API_BASE } from '@/config'
 import { getCategoryBadgeColor } from '@/lib/utils'
 
@@ -109,6 +110,7 @@ function getCategoryLabel(cat: string): string {
 
 const shareCopied = ref(false)
 const showEmbedModal = ref(false)
+const showReportModal = ref(false)
 const embedCopied = ref(false)
 
 const embedCode = computed(() => {
@@ -223,7 +225,22 @@ onMounted(() => {
             <Code class="h-4 w-4" />
             Embed
           </button>
+          <button
+            class="inline-flex items-center gap-2 rounded-lg border border-border-hover bg-surface-hover px-4 py-2.5 text-sm font-medium text-foreground-muted hover:text-amber-400 hover:border-amber-500/40 transition-all"
+            aria-label="Signaler cette tier list"
+            @click="showReportModal = true"
+          >
+            <Flag class="h-4 w-4" />
+            Signaler
+          </button>
         </div>
+
+        <ReportModal
+          v-if="showReportModal && tierlist"
+          :tierlist-id="tierlist._id"
+          :tierlist-title="tierlist.title"
+          @close="showReportModal = false"
+        />
 
         <!-- Embed code modal -->
         <div v-if="showEmbedModal && !isEmbed" class="mb-6 rounded-xl border border-border-hover bg-surface p-4">

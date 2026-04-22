@@ -58,6 +58,12 @@ const router = createRouter({
       meta: { title: 'Outils import - TierTogether' },
     },
     {
+      path: '/admin/moderation',
+      name: 'admin-moderation',
+      component: () => import('@/views/AdminModerationView.vue'),
+      meta: { title: 'Modération - TierTogether' },
+    },
+    {
       path: '/stats',
       name: 'stats',
       component: () => import('@/views/StatsView.vue'),

@@ -3,6 +3,8 @@ import type { Request, Response } from 'express'
 import jwt from 'jsonwebtoken'
 import { TierListModel } from '../models/TierList'
 import { UserModel } from '../models/User'
+import { ReportModel } from '../models/Report'
+import { containsBannedWord } from '../middleware/moderation'
 import { env } from '../config/env'
 
 const router = Router()
@@ -33,6 +35,15 @@ function getUserId(req: Request): string | null {
     return null
   }
 }
+
+async function isAdmin(userId: string | null): Promise<boolean> {
+  if (!userId) return false
+  const user = await UserModel.findById(userId).select('email').lean().catch(() => null)
+  return !!user && ADMIN_EMAILS.has((user as any).email.toLowerCase())
+}
+
+const REPORT_REASONS = new Set(['inappropriate', 'spam', 'copyright', 'duplicate', 'other'])
+const PUBLISH_LIMIT_PER_DAY = 5
 
 // GET /api/tierlists/public
 router.get('/api/tierlists/public', async (req: Request, res: Response) => {
@@ -339,11 +350,56 @@ router.post('/api/tierlists/:id/publish', async (req: Request, res: Response) =>
     }
 
     const { isPublic, category, coverImage } = req.body
+    const wantsPublic = isPublic !== false
+
+    // Publishing validations — skip when the user is just unpublishing.
+    if (wantsPublic) {
+      // 1) Title length (trim + 3-80 chars). We don't change the title
+      //    here — just reject if it looks unusable.
+      const title = (tierList.title || '').trim()
+      if (title.length < 3 || title.length > 80) {
+        res.status(400).json({ error: 'Le titre doit faire entre 3 et 80 caractères.' })
+        return
+      }
+
+      // 2) Banned words filter on title.
+      if (containsBannedWord(title)) {
+        res.status(400).json({ error: 'Le titre contient des mots interdits.' })
+        return
+      }
+
+      // 3) Minimum 5 items in the pool/rows combined.
+      const totalItems =
+        (tierList.pool?.length || 0) +
+        (tierList.rows || []).reduce((sum: number, r: any) => sum + (r.items?.length || 0), 0)
+      if (totalItems < 5) {
+        res.status(400).json({ error: 'Au moins 5 éléments sont requis pour publier.' })
+        return
+      }
+
+      // 4) Rate limit: max N publishes per 24h per user (skip for admins).
+      const admin = await isAdmin(userId)
+      if (!admin) {
+        const dayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000)
+        const recent = await TierListModel.countDocuments({
+          authorId: userId,
+          isPublic: true,
+          updatedAt: { $gte: dayAgo },
+          _id: { $ne: tierList._id }, // don't count the current one
+        })
+        if (recent >= PUBLISH_LIMIT_PER_DAY) {
+          res.status(429).json({
+            error: `Limite atteinte : ${PUBLISH_LIMIT_PER_DAY} publications max par 24h. Réessaie plus tard.`,
+          })
+          return
+        }
+      }
+    }
 
     const validCategories = ['Gaming', 'Food', 'Anime', 'Music', 'Movies', 'Sports', 'Other']
     const safeCategory = validCategories.includes(category) ? category : 'Other'
 
-    tierList.isPublic = isPublic ?? true
+    tierList.isPublic = wantsPublic
     tierList.category = safeCategory
     tierList.authorId = userId
 
@@ -368,6 +424,191 @@ router.post('/api/tierlists/:id/publish', async (req: Request, res: Response) =>
   } catch (err) {
     console.error('[API] Publish failed:', err)
     res.status(500).json({ error: 'Échec de la publication' })
+  }
+})
+
+// POST /api/tierlists/:id/report — user flags a public tierlist for moderation
+router.post('/api/tierlists/:id/report', async (req: Request, res: Response) => {
+  const userId = getUserId(req)
+  if (!userId) {
+    res.status(401).json({ error: 'Authentification requise pour signaler.' })
+    return
+  }
+
+  try {
+    const tl = await TierListModel.findById(req.params.id).select('_id isPublic')
+    if (!tl) {
+      res.status(404).json({ error: 'Tier list introuvable' })
+      return
+    }
+    if (!tl.isPublic) {
+      res.status(400).json({ error: 'Seules les tierlists publiques peuvent être signalées.' })
+      return
+    }
+
+    const { reason, details } = req.body as { reason?: unknown; details?: unknown }
+    if (typeof reason !== 'string' || !REPORT_REASONS.has(reason)) {
+      res.status(400).json({ error: 'Raison invalide.' })
+      return
+    }
+
+    // Anti-spam: one pending report per (user, tierlist) — if they already
+    // reported and it's still pending, don't double-count.
+    const dup = await ReportModel.findOne({
+      tierListId: tl._id.toString(),
+      reporterId: userId,
+      status: 'pending',
+    })
+    if (dup) {
+      res.json({ success: true, already: true })
+      return
+    }
+
+    await ReportModel.create({
+      tierListId: tl._id.toString(),
+      reporterId: userId,
+      reason,
+      details: typeof details === 'string' ? details.trim().slice(0, 500) : '',
+      status: 'pending',
+    })
+
+    res.json({ success: true })
+  } catch (err) {
+    console.error('[API] Report failed:', err)
+    res.status(500).json({ error: 'Échec du signalement' })
+  }
+})
+
+// ─── Admin moderation ──────────────────────────────────────────────
+
+// GET /api/admin/reports — pending + resolved reports, with joined tierlist data
+router.get('/api/admin/reports', async (req: Request, res: Response) => {
+  const userId = getUserId(req)
+  if (!await isAdmin(userId)) {
+    res.status(403).json({ error: 'Accès réservé aux administrateurs' })
+    return
+  }
+
+  try {
+    const statusFilter = String(req.query.status || 'pending')
+    const filter: any = statusFilter === 'all' ? {} : { status: statusFilter }
+
+    const reports = await ReportModel.find(filter)
+      .sort({ createdAt: -1 })
+      .limit(200)
+      .lean()
+
+    const tlIds = [...new Set(reports.map(r => r.tierListId))]
+    const tierlists = await TierListModel.find({ _id: { $in: tlIds } })
+      .select('_id title category coverImage isPublic authorId ownerId roomId')
+      .lean()
+    const tlMap = new Map(tierlists.map(t => [t._id.toString(), t]))
+
+    const reporterIds = [...new Set(reports.map(r => r.reporterId).filter(Boolean))] as string[]
+    const reporters = reporterIds.length
+      ? await UserModel.find({ _id: { $in: reporterIds } }).select('displayName email').lean()
+      : []
+    const reporterMap = new Map(reporters.map((u: any) => [u._id.toString(), u]))
+
+    res.json({
+      reports: reports.map(r => ({
+        ...r,
+        tierList: tlMap.get(r.tierListId) || null,
+        reporter: r.reporterId ? reporterMap.get(r.reporterId) || null : null,
+      })),
+    })
+  } catch (err) {
+    console.error('[API] Failed to fetch reports:', err)
+    res.status(500).json({ error: 'Échec de la récupération des signalements' })
+  }
+})
+
+// POST /api/admin/reports/:id/resolve — action: 'dismiss' | 'unpublish' | 'delete'
+router.post('/api/admin/reports/:id/resolve', async (req: Request, res: Response) => {
+  const userId = getUserId(req)
+  if (!await isAdmin(userId)) {
+    res.status(403).json({ error: 'Accès réservé aux administrateurs' })
+    return
+  }
+
+  try {
+    const action = String(req.body?.action || '')
+    if (!['dismiss', 'unpublish', 'delete'].includes(action)) {
+      res.status(400).json({ error: 'Action invalide' })
+      return
+    }
+
+    const report = await ReportModel.findById(req.params.id)
+    if (!report) {
+      res.status(404).json({ error: 'Signalement introuvable' })
+      return
+    }
+
+    if (action === 'delete') {
+      await TierListModel.findByIdAndDelete(report.tierListId).catch(() => null)
+      // Resolve every pending report for this tierlist in one shot.
+      await ReportModel.updateMany(
+        { tierListId: report.tierListId, status: 'pending' },
+        { status: 'resolved', resolvedBy: userId!, resolvedAt: new Date() },
+      )
+    } else if (action === 'unpublish') {
+      await TierListModel.findByIdAndUpdate(report.tierListId, { isPublic: false }).catch(() => null)
+      await ReportModel.updateMany(
+        { tierListId: report.tierListId, status: 'pending' },
+        { status: 'resolved', resolvedBy: userId!, resolvedAt: new Date() },
+      )
+    } else {
+      report.status = 'dismissed'
+      report.resolvedBy = userId!
+      report.resolvedAt = new Date()
+      await report.save()
+    }
+
+    res.json({ success: true })
+  } catch (err) {
+    console.error('[API] Resolve report failed:', err)
+    res.status(500).json({ error: 'Échec du traitement du signalement' })
+  }
+})
+
+// GET /api/admin/tierlists — browse all public tierlists for moderation
+router.get('/api/admin/tierlists', async (req: Request, res: Response) => {
+  const userId = getUserId(req)
+  if (!await isAdmin(userId)) {
+    res.status(403).json({ error: 'Accès réservé aux administrateurs' })
+    return
+  }
+  try {
+    const { scope = 'public', search } = req.query
+    const filter: any = {}
+    if (scope === 'public') filter.isPublic = true
+    else if (scope === 'private') filter.isPublic = false
+    if (typeof search === 'string' && search.trim()) {
+      const s = sanitize(search, 80).replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+      filter.title = { $regex: s, $options: 'i' }
+    }
+    const tierlists = await TierListModel.find(filter)
+      .sort({ updatedAt: -1 })
+      .limit(200)
+      .select('_id title category coverImage isPublic authorId ownerId downloads upvotes downvotes createdAt updatedAt roomId')
+      .lean()
+
+    const authorIds = [...new Set(tierlists.map(t => t.authorId).filter(Boolean))] as string[]
+    const authors = authorIds.length
+      ? await UserModel.find({ _id: { $in: authorIds } }).select('displayName email').lean()
+      : []
+    const authorMap = new Map(authors.map((u: any) => [u._id.toString(), u]))
+
+    res.json({
+      tierlists: tierlists.map(t => ({
+        ...t,
+        authorDisplayName: t.authorId ? (authorMap.get(t.authorId) as any)?.displayName || null : null,
+        authorEmail: t.authorId ? (authorMap.get(t.authorId) as any)?.email || null : null,
+      })),
+    })
+  } catch (err) {
+    console.error('[API] Admin tierlists list failed:', err)
+    res.status(500).json({ error: 'Échec de la récupération' })
   }
 })
 
@@ -449,7 +690,7 @@ router.post('/api/tierlists/:id/vote', async (req: Request, res: Response) => {
   }
 })
 
-// DELETE /api/tierlists/:id
+// DELETE /api/tierlists/:id — owner or admin
 router.delete('/api/tierlists/:id', async (req: Request, res: Response) => {
   const userId = getUserId(req)
   if (!userId) {
@@ -463,12 +704,18 @@ router.delete('/api/tierlists/:id', async (req: Request, res: Response) => {
       res.status(404).json({ error: 'Tier list introuvable' })
       return
     }
-    if (tierList.authorId !== userId && tierList.ownerId !== userId) {
+    const admin = await isAdmin(userId)
+    if (!admin && tierList.authorId !== userId && tierList.ownerId !== userId) {
       res.status(403).json({ error: 'Non autorisé' })
       return
     }
 
     await TierListModel.findByIdAndDelete(req.params.id)
+    // Clean up any reports that referenced this tierlist.
+    await ReportModel.updateMany(
+      { tierListId: tierList._id.toString(), status: 'pending' },
+      { status: 'resolved', resolvedBy: userId, resolvedAt: new Date() },
+    )
     res.json({ success: true })
   } catch (err) {
     console.error('[API] Delete failed:', err)
@@ -490,7 +737,8 @@ router.patch('/api/tierlists/:id', async (req: Request, res: Response) => {
       res.status(404).json({ error: 'Tier list introuvable' })
       return
     }
-    if (tierList.authorId !== userId && tierList.ownerId !== userId) {
+    const admin = await isAdmin(userId)
+    if (!admin && tierList.authorId !== userId && tierList.ownerId !== userId) {
       res.status(403).json({ error: 'Non autorisé' })
       return
     }

@@ -211,6 +211,7 @@ async function metaForPath(rawPath: string): Promise<Meta> {
       '/me': 'Mon profil — TierTogether',
       '/admin/import': 'Import TierMaker — TierTogether',
       '/admin/bookmarklet': 'Outils import — TierTogether',
+      '/admin/moderation': 'Modération — TierTogether',
     }
     return {
       title: titles[p] ?? 'TierTogether',
