@@ -26,6 +26,8 @@ function scrollToBottom() {
   })
 }
 
+const blockedError = ref<string | null>(null)
+
 watch(
   () => socket.value,
   (sock) => {
@@ -36,6 +38,13 @@ watch(
         unreadCount.value++
       }
       scrollToBottom()
+    })
+    sock.on('error', (serverMsg: string) => {
+      if (typeof serverMsg === 'string' && serverMsg.startsWith('Message bloqué')) {
+        blockedError.value = 'Ton message ne respecte pas les règles de la communauté et n\'a pas été envoyé.'
+        if (!isExpanded.value) isExpanded.value = true
+        setTimeout(() => { blockedError.value = null }, 4500)
+      }
     })
   },
   { immediate: true },
@@ -168,6 +177,7 @@ async function reportMessage(msg: ChatMessage) {
 
         <div ref="messagesEnd" />
         <div v-if="reportError" class="rounded-md border border-red-500/40 bg-red-500/10 px-3 py-2 text-xs text-red-300">{{ reportError }}</div>
+        <div v-if="blockedError" class="rounded-md border border-amber-500/40 bg-amber-500/10 px-3 py-2 text-xs text-amber-300">{{ blockedError }}</div>
       </div>
     </Transition>
 
