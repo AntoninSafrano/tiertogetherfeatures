@@ -114,10 +114,13 @@ function onDragChange(evt: any) {
   <div class="group/row flex border-b border-border last:border-b-0 relative">
     <!-- Tier Label -->
     <div
-      class="flex w-16 sm:w-24 shrink-0 items-center justify-center font-extrabold select-none relative overflow-hidden text-center leading-tight px-1"
+      :role="readonly ? 'heading' : 'button'"
+      :aria-label="readonly ? undefined : `Renommer le tier ${rowData.label}`"
+      :tabindex="readonly ? undefined : 0"
+      class="flex w-16 sm:w-24 shrink-0 items-center justify-center font-extrabold select-none relative overflow-hidden text-center leading-tight px-1 focus:outline-none"
       :class="[
         rowData.label.length > 4 ? (rowData.label.length > 8 ? 'text-xs' : 'text-sm') : 'text-3xl',
-        readonly ? '' : 'cursor-pointer',
+        readonly ? '' : 'cursor-pointer focus-visible:ring-2 focus-visible:ring-white/50 focus-visible:ring-inset',
       ]"
       style="overflow-wrap: anywhere; word-break: break-word;"
       :style="{
@@ -126,6 +129,8 @@ function onDragChange(evt: any) {
         boxShadow: `inset 0 0 32px ${rowData.color}80, inset 0 0 12px ${rowData.color}40`,
       }"
       @click="startEditing"
+      @keydown.enter.prevent="startEditing"
+      @keydown.space.prevent="startEditing"
     >
       <template v-if="isEditing && !readonly">
         <textarea
@@ -176,22 +181,26 @@ function onDragChange(evt: any) {
     >
       <button
         ref="gearButton"
-        class="flex flex-1 items-center justify-center text-foreground-muted hover:text-foreground hover:bg-surface-active transition-colors"
-        title="Paramètres"
+        type="button"
+        class="flex flex-1 items-center justify-center text-foreground-muted hover:text-foreground hover:bg-surface-active transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 focus-visible:ring-inset"
+        :aria-label="`Paramètres du tier ${rowData.label}`"
+        :aria-expanded="showSettings"
         @click.stop="toggleSettings"
       >
         <Settings class="h-4 w-4" />
       </button>
       <button
-        class="flex flex-1 items-center justify-center border-t border-border/60 text-foreground-muted hover:text-foreground hover:bg-surface-active transition-colors"
-        title="Monter"
+        type="button"
+        class="flex flex-1 items-center justify-center border-t border-border/60 text-foreground-muted hover:text-foreground hover:bg-surface-active transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 focus-visible:ring-inset"
+        :aria-label="`Monter le tier ${rowData.label}`"
         @click.stop="store.reorderRow({ rowId: rowData.id, direction: 'up' })"
       >
         <ChevronUp class="h-4 w-4" />
       </button>
       <button
-        class="flex flex-1 items-center justify-center border-t border-border/60 text-foreground-muted hover:text-foreground hover:bg-surface-active transition-colors"
-        title="Descendre"
+        type="button"
+        class="flex flex-1 items-center justify-center border-t border-border/60 text-foreground-muted hover:text-foreground hover:bg-surface-active transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 focus-visible:ring-inset"
+        :aria-label="`Descendre le tier ${rowData.label}`"
         @click.stop="store.reorderRow({ rowId: rowData.id, direction: 'down' })"
       >
         <ChevronDown class="h-4 w-4" />
@@ -202,8 +211,11 @@ function onDragChange(evt: any) {
     <div
       v-if="!readonly && showSettings"
       ref="settingsPanel"
+      role="dialog"
+      :aria-label="`Paramètres du tier ${rowData.label}`"
       class="absolute right-11 top-1/2 z-40 w-64 -translate-y-1/2 rounded-xl border border-border-hover bg-surface p-4 shadow-2xl"
       @click.stop
+      @keydown.escape.stop="showSettings = false"
     >
       <div class="flex items-start justify-between mb-3">
         <div>
@@ -211,7 +223,9 @@ function onDragChange(evt: any) {
           <p class="text-[11px] text-foreground-muted mt-0.5">Clique sur le label pour renommer.</p>
         </div>
         <button
-          class="text-foreground-muted hover:text-foreground transition-colors"
+          type="button"
+          class="text-foreground-muted hover:text-foreground transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 rounded"
+          aria-label="Fermer le panneau"
           @click.stop="showSettings = false"
         >
           <X class="h-4 w-4" />

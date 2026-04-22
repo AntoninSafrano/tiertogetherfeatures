@@ -23,8 +23,10 @@ const backgroundStyle = computed(() => {
 
 <template>
   <div
-    class="tier-item group relative aspect-square w-[68px] sm:w-[80px] cursor-grab rounded-md border border-border-hover bg-black shadow-md transition-[box-shadow,border-color] duration-150 hover:border-primary/50 hover:shadow-lg active:cursor-grabbing overflow-hidden"
+    class="tier-item group relative aspect-square w-[68px] sm:w-[80px] cursor-grab rounded-md border border-border-hover bg-transparent shadow-md transition-[box-shadow,border-color] duration-150 hover:border-primary/50 hover:shadow-lg active:cursor-grabbing overflow-hidden"
     :style="backgroundStyle"
+    role="img"
+    :aria-label="item.label"
   >
     <!-- Placeholder mode — sign-like panel with label (only when no image) -->
     <div

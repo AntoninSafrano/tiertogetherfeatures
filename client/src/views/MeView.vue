@@ -445,17 +445,19 @@ function formatDate(d: string): string {
                 v-if="getCoverImage(tl)"
                 :src="getCoverImage(tl)"
                 :alt="tl.title"
+                loading="lazy"
                 class="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
               />
             </div>
 
             <!-- Delete button (bottom-right, hover-reveal) -->
             <button
-              class="absolute bottom-2 right-2 z-10 inline-flex h-7 w-7 items-center justify-center rounded-full bg-black/60 text-red-400 opacity-0 backdrop-blur-sm transition-opacity hover:bg-red-500/90 hover:text-white group-hover:opacity-100 focus:opacity-100"
-              title="Supprimer"
+              type="button"
+              class="absolute bottom-2 right-2 z-10 inline-flex h-9 w-9 items-center justify-center rounded-full bg-black/60 text-red-400 opacity-0 backdrop-blur-sm transition-opacity hover:bg-red-500/90 hover:text-white group-hover:opacity-100 focus:opacity-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-400/70"
+              :aria-label="`Supprimer la tier list ${tl.title}`"
               @click.stop="askDelete(tl, $event)"
             >
-              <Trash2 class="h-3.5 w-3.5" />
+              <Trash2 class="h-4 w-4" />
             </button>
 
             <!-- Info -->

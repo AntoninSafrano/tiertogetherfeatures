@@ -407,6 +407,7 @@ onMounted(async () => {
                 v-if="getCoverImage(tl)"
                 :src="getCoverImage(tl)"
                 :alt="tl.title"
+                loading="lazy"
                 class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
               />
             </div>
@@ -528,6 +529,7 @@ onMounted(async () => {
                     v-if="getCoverImage(tl)"
                     :src="getCoverImage(tl)"
                     :alt="tl.title"
+                    loading="lazy"
                     class="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
                   />
                 </div>

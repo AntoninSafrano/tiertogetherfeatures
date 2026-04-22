@@ -69,7 +69,13 @@ onMounted(() => {
       </div>
 
       <!-- Mobile hamburger button -->
-      <button @click="mobileMenuOpen = !mobileMenuOpen" class="sm:hidden p-2 text-foreground-muted hover:text-foreground">
+      <button
+        type="button"
+        :aria-label="mobileMenuOpen ? 'Fermer le menu' : 'Ouvrir le menu'"
+        :aria-expanded="mobileMenuOpen"
+        class="sm:hidden p-2 text-foreground-muted hover:text-foreground transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 rounded"
+        @click="mobileMenuOpen = !mobileMenuOpen"
+      >
         <component :is="mobileMenuOpen ? X : Menu" class="h-5 w-5" />
       </button>
     </div>

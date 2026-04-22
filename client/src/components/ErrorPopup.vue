@@ -14,7 +14,14 @@ const emit = defineEmits<{
 <template>
   <Teleport to="body">
     <Transition name="fade">
-      <div class="fixed inset-0 z-50 flex items-center justify-center px-4" @click.self="emit('close')">
+      <div
+        role="alertdialog"
+        aria-modal="true"
+        tabindex="-1"
+        class="fixed inset-0 z-50 flex items-center justify-center px-4"
+        @click.self="emit('close')"
+        @keydown.escape="emit('close')"
+      >
         <!-- Overlay -->
         <div class="absolute inset-0 bg-black/70" />
 
