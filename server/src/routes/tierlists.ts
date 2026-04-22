@@ -1,6 +1,7 @@
 import { Router } from 'express'
 import type { Request, Response } from 'express'
 import jwt from 'jsonwebtoken'
+import rateLimit from 'express-rate-limit'
 import { TierListModel } from '../models/TierList'
 import { UserModel } from '../models/User'
 import { ReportModel } from '../models/Report'
@@ -8,6 +9,16 @@ import { containsBannedWord } from '../middleware/moderation'
 import { env } from '../config/env'
 
 const router = Router()
+
+// Per-IP rate limits for write-ish public endpoints (anonymous clone, vote,
+// report). Tight enough to block abuse but won't bother real usage.
+const writeLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 30,
+  message: { error: 'Trop de requêtes, réessayez dans une minute.' },
+  standardHeaders: true,
+  legacyHeaders: false,
+})
 
 // Admin allowlist — shared by /api/tierlists/stats and /api/admin/import-tiermaker.
 const ADMIN_EMAILS = new Set([
@@ -443,7 +454,7 @@ router.post('/api/tierlists/:id/publish', async (req: Request, res: Response) =>
 })
 
 // POST /api/tierlists/:id/report — user flags a public tierlist for moderation
-router.post('/api/tierlists/:id/report', async (req: Request, res: Response) => {
+router.post('/api/tierlists/:id/report', writeLimiter, async (req: Request, res: Response) => {
   const userId = getUserId(req)
   if (!userId) {
     res.status(401).json({ error: 'Authentification requise pour signaler.' })
@@ -632,7 +643,7 @@ router.get('/api/admin/tierlists', async (req: Request, res: Response) => {
 })
 
 // POST /api/tierlists/:id/clone
-router.post('/api/tierlists/:id/clone', async (req: Request, res: Response) => {
+router.post('/api/tierlists/:id/clone', writeLimiter, async (req: Request, res: Response) => {
   try {
     const source = await TierListModel.findById(req.params.id)
     if (!source) {
@@ -664,7 +675,7 @@ router.post('/api/tierlists/:id/clone', async (req: Request, res: Response) => {
 })
 
 // POST /api/tierlists/:id/vote
-router.post('/api/tierlists/:id/vote', async (req: Request, res: Response) => {
+router.post('/api/tierlists/:id/vote', writeLimiter, async (req: Request, res: Response) => {
   try {
     const userId = getUserId(req)
     if (!userId) {
