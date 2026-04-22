@@ -4,7 +4,7 @@ import { useRouter } from 'vue-router'
 import { useAuth } from '@/composables/useAuth'
 import NavBar from '@/components/NavBar.vue'
 import { API_BASE } from '@/config'
-import { Flag, Trash2, EyeOff, Check, RefreshCw, Search, Loader2 } from 'lucide-vue-next'
+import { Flag, Trash2, EyeOff, Check, RefreshCw, Search, Loader2, BarChart3 } from 'lucide-vue-next'
 
 interface TierListMini {
   _id: string
@@ -165,10 +165,19 @@ onMounted(async () => {
     <NavBar />
 
     <main class="mx-auto max-w-6xl px-4 py-8 sm:px-10">
-      <h1 class="flex items-center gap-2 text-2xl font-bold text-foreground">
-        <Flag class="h-6 w-6 text-amber-400" />
-        Modération
-      </h1>
+      <div class="flex flex-wrap items-center justify-between gap-4">
+        <h1 class="flex items-center gap-2 text-2xl font-bold text-foreground">
+          <Flag class="h-6 w-6 text-amber-400" />
+          Modération
+        </h1>
+        <router-link
+          :to="{ name: 'stats' }"
+          class="inline-flex items-center gap-2 rounded-lg bg-red-500/10 border border-red-500/40 px-4 py-2 text-sm font-semibold text-red-300 hover:bg-red-500/20 transition-all"
+        >
+          <BarChart3 class="h-4 w-4" />
+          Statistiques
+        </router-link>
+      </div>
 
       <div v-if="!user" class="mt-8 text-sm text-foreground-muted">Chargement…</div>
       <div v-else-if="!isAdmin" class="mt-8 rounded-xl border border-red-500/40 bg-red-500/10 p-6">

@@ -4,7 +4,7 @@ import { useRouter } from 'vue-router'
 import NavBar from '@/components/NavBar.vue'
 import {
   Shield, Users, LayoutGrid, Download, ThumbsUp, TrendingUp,
-  BarChart3, UserPlus, Calendar, Mail, Chrome, CheckCircle
+  BarChart3, UserPlus, Calendar, Mail, Chrome, CheckCircle, Flag
 } from 'lucide-vue-next'
 import { API_BASE } from '@/config'
 import { getCategoryBadgeColor, getCategorySolidColor } from '@/lib/utils'
@@ -200,14 +200,23 @@ onMounted(() => {
       <!-- Dashboard content -->
       <template v-else-if="stats">
         <!-- Header -->
-        <div class="mb-8 flex items-center gap-3">
-          <div class="rounded-lg bg-red-500/10 p-2.5">
-            <Shield class="h-7 w-7 text-red-400" />
+        <div class="mb-8 flex flex-wrap items-center justify-between gap-4">
+          <div class="flex items-center gap-3">
+            <div class="rounded-lg bg-red-500/10 p-2.5">
+              <Shield class="h-7 w-7 text-red-400" />
+            </div>
+            <div>
+              <h1 class="text-[32px] sm:text-[40px] font-bold tracking-tight text-foreground leading-tight">PANNEAU D'ADMINISTRATION</h1>
+              <p class="text-sm text-foreground-muted">Tableau de bord et analytiques detaillees</p>
+            </div>
           </div>
-          <div>
-            <h1 class="text-[32px] sm:text-[40px] font-bold tracking-tight text-foreground leading-tight">PANNEAU D'ADMINISTRATION</h1>
-            <p class="text-sm text-foreground-muted">Tableau de bord et analytiques detaillees</p>
-          </div>
+          <router-link
+            :to="{ name: 'admin-moderation' }"
+            class="inline-flex items-center gap-2 rounded-lg bg-amber-500/10 border border-amber-500/40 px-4 py-2.5 text-sm font-semibold text-amber-300 hover:bg-amber-500/20 transition-all"
+          >
+            <Flag class="h-4 w-4" />
+            Moderation
+          </router-link>
         </div>
 
         <!-- Overview cards -->

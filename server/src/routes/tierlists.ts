@@ -403,7 +403,8 @@ router.post('/api/tierlists/:id/publish', async (req: Request, res: Response) =>
     tierList.category = safeCategory
     tierList.authorId = userId
 
-    // Use provided cover or auto-generate from first item
+    // Pick the cover BEFORE we move items around (so a placed item can still
+    // act as the cover). Falls back to the first pool item.
     if (coverImage && typeof coverImage === 'string') {
       tierList.coverImage = coverImage
     } else {
@@ -417,6 +418,20 @@ router.post('/api/tierlists/:id/publish', async (req: Request, res: Response) =>
         if (poolItem) coverUrl = poolItem.imageUrl
       }
       if (coverUrl) tierList.coverImage = coverUrl
+    }
+
+    // Publishing = turning the list into a TEMPLATE: keep row structure
+    // (labels, colors, any added/removed rows) but move every placed item
+    // back to the pool so viewers and cloners start from a blank ranking.
+    if (wantsPublic) {
+      const placed = tierList.rows.flatMap((r) => r.items)
+      tierList.pool = [...placed, ...tierList.pool]
+      tierList.rows = tierList.rows.map((r) => ({
+        id: r.id,
+        label: r.label,
+        color: r.color,
+        items: [],
+      })) as typeof tierList.rows
     }
 
     await tierList.save()
@@ -436,13 +451,17 @@ router.post('/api/tierlists/:id/report', async (req: Request, res: Response) => 
   }
 
   try {
-    const tl = await TierListModel.findById(req.params.id).select('_id isPublic')
+    const tl = await TierListModel.findById(req.params.id).select('_id isPublic authorId ownerId')
     if (!tl) {
       res.status(404).json({ error: 'Tier list introuvable' })
       return
     }
     if (!tl.isPublic) {
       res.status(400).json({ error: 'Seules les tierlists publiques peuvent être signalées.' })
+      return
+    }
+    if (tl.authorId === userId || tl.ownerId === userId) {
+      res.status(400).json({ error: 'Tu ne peux pas signaler ta propre tier list.' })
       return
     }
 
@@ -452,15 +471,15 @@ router.post('/api/tierlists/:id/report', async (req: Request, res: Response) => 
       return
     }
 
-    // Anti-spam: one pending report per (user, tierlist) — if they already
-    // reported and it's still pending, don't double-count.
+    // Anti-abuse: one report per (user, tierlist) — ever. Whether it's
+    // still pending or already resolved/dismissed, the user cannot file
+    // another one on the same list.
     const dup = await ReportModel.findOne({
       tierListId: tl._id.toString(),
       reporterId: userId,
-      status: 'pending',
     })
     if (dup) {
-      res.json({ success: true, already: true })
+      res.status(409).json({ error: 'Tu as déjà signalé cette tier list.' })
       return
     }
 
