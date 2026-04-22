@@ -5,7 +5,7 @@ import { UserModel } from '../models/User'
 import { env } from '../config/env'
 
 const SITE = env.CLIENT_URL.replace(/\/$/, '')
-const DEFAULT_OG_IMAGE = `${SITE}/og-default.png`
+const DEFAULT_OG_IMAGE = `${SITE}/og-default.png?v=2`
 
 let baseHtml = ''
 
