@@ -9,7 +9,7 @@ const props = defineProps<{
 
 <template>
   <div
-    class="tier-item group relative aspect-square w-[60px] sm:w-[76px] cursor-grab rounded-lg border border-border-hover bg-surface shadow-lg ring-0 ring-white/25 transition-all duration-200 hover:scale-105 hover:ring-1 hover:shadow-xl active:cursor-grabbing"
+    class="tier-item group relative aspect-square w-[72px] sm:w-[92px] cursor-grab rounded-lg border border-border-hover bg-black shadow-lg ring-0 ring-white/25 transition-[box-shadow,border-color] duration-200 hover:ring-1 hover:shadow-xl hover:border-primary/40 active:cursor-grabbing overflow-hidden"
   >
     <!-- Image mode -->
     <img
@@ -20,15 +20,16 @@ const props = defineProps<{
       draggable="false"
     />
 
-    <!-- Placeholder mode -->
+    <!-- Placeholder mode — sign-like panel with label -->
     <div
       v-else
       class="flex h-full w-full items-center justify-center rounded-lg p-1.5"
       :style="{
-        background: `linear-gradient(135deg, ${getPlaceholderColor(item.id)}30, ${getPlaceholderColor(item.id)}10)`,
+        boxShadow: `inset 0 0 0 1.5px ${getPlaceholderColor(item.id)}80`,
+        background: `linear-gradient(135deg, ${getPlaceholderColor(item.id)}15, #000000)`,
       }"
     >
-      <span class="text-center text-[10px] font-semibold leading-tight text-foreground/90">
+      <span class="text-center text-[11px] sm:text-xs font-bold leading-tight text-white">
         {{ item.label }}
       </span>
     </div>
