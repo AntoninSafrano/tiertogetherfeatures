@@ -177,6 +177,25 @@ export function useAuth() {
     user.value = null
   }
 
+  async function updateProfile(displayName: string): Promise<{ success: boolean; error?: string }> {
+    try {
+      const res = await fetch(`${API_BASE}/auth/me`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ displayName }),
+      })
+      const data = await res.json()
+      if (!res.ok) {
+        return { success: false, error: data.error || 'Échec de la mise à jour' }
+      }
+      user.value = data.user
+      return { success: true }
+    } catch {
+      return { success: false, error: 'Erreur réseau' }
+    }
+  }
+
   return {
     user: readonly(user),
     isLoading: readonly(isLoading),
@@ -191,5 +210,6 @@ export function useAuth() {
     forgotPassword,
     resetPassword,
     logout,
+    updateProfile,
   }
 }

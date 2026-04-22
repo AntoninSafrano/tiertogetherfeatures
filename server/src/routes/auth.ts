@@ -476,6 +476,60 @@ router.get('/auth/me', async (req: Request, res: Response) => {
   }
 })
 
+// PATCH /auth/me — update current user's profile
+router.patch('/auth/me', async (req: Request, res: Response) => {
+  try {
+    const token = req.cookies?.token
+    if (!token) {
+      res.status(401).json({ error: 'Authentification requise' })
+      return
+    }
+
+    let decoded: { userId: string }
+    try {
+      decoded = jwt.verify(token, env.JWT_SECRET) as { userId: string }
+    } catch {
+      res.status(401).json({ error: 'Session invalide' })
+      return
+    }
+
+    const { displayName } = req.body as { displayName?: unknown }
+
+    if (typeof displayName !== 'string') {
+      res.status(400).json({ error: 'Le pseudo est requis.' })
+      return
+    }
+
+    const cleaned = sanitizeInput(displayName, 30)
+    if (cleaned.length < 2) {
+      res.status(400).json({ error: 'Le pseudo doit faire au moins 2 caractères.' })
+      return
+    }
+
+    const user = await UserModel.findByIdAndUpdate(
+      decoded.userId,
+      { displayName: cleaned },
+      { new: true },
+    )
+    if (!user) {
+      res.status(404).json({ error: 'Utilisateur introuvable' })
+      return
+    }
+
+    res.json({
+      user: {
+        id: user._id.toString(),
+        displayName: user.displayName,
+        avatar: user.avatar,
+        email: user.email,
+      },
+    })
+  } catch (err) {
+    console.error('[Auth] Profile update failed:', err)
+    res.status(500).json({ error: 'Échec de la mise à jour du profil' })
+  }
+})
+
 // POST /auth/logout
 router.post('/auth/logout', (_req: Request, res: Response) => {
   res.clearCookie('token')

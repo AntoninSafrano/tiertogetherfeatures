@@ -2,20 +2,15 @@
 import { onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuth } from '@/composables/useAuth'
-import { LogOut, Menu, X } from 'lucide-vue-next'
+import { Menu, X } from 'lucide-vue-next'
 
 const router = useRouter()
-const { user, fetchUser, logout } = useAuth()
+const { user, fetchUser } = useAuth()
 const mobileMenuOpen = ref(false)
 
 onMounted(() => {
   fetchUser()
 })
-
-async function handleLogout() {
-  await logout()
-  router.push('/')
-}
 </script>
 
 <template>
@@ -42,24 +37,23 @@ async function handleLogout() {
         </router-link>
         <!-- Auth -->
         <template v-if="user">
-          <div class="relative group/user flex items-center gap-3 ml-2">
-            <div class="h-8 w-8 rounded-full bg-primary flex items-center justify-center overflow-hidden cursor-pointer">
+          <router-link
+            :to="{ name: 'me' }"
+            class="flex items-center gap-2 ml-2 rounded-full pl-1 pr-3 py-1 hover:bg-surface-hover transition-colors"
+            title="Mon profil"
+          >
+            <div class="h-8 w-8 rounded-full bg-primary flex items-center justify-center overflow-hidden ring-2 ring-transparent group-hover:ring-primary/30">
               <img
                 v-if="user.avatar"
                 :src="user.avatar"
                 :alt="user.displayName"
                 class="h-8 w-8 rounded-full object-cover"
+                referrerpolicy="no-referrer"
               />
               <span v-else class="text-xs font-bold text-white">{{ user.displayName?.[0]?.toUpperCase() }}</span>
             </div>
-            <button
-              class="p-1.5 rounded-lg text-foreground-muted hover:text-foreground hover:bg-surface-hover transition-colors"
-              @click="handleLogout"
-              title="Logout"
-            >
-              <LogOut class="h-4 w-4" />
-            </button>
-          </div>
+            <span class="text-sm font-medium text-foreground max-w-[140px] truncate">{{ user.displayName }}</span>
+          </router-link>
         </template>
         <template v-else>
           <router-link
@@ -96,25 +90,26 @@ async function handleLogout() {
         </router-link>
         <!-- Auth (mobile) -->
         <template v-if="user">
-          <div class="flex items-center gap-3 px-3 py-2 mt-1 border-t border-border pt-3">
+          <router-link
+            :to="{ name: 'me' }"
+            @click="mobileMenuOpen = false"
+            class="flex items-center gap-3 rounded-lg px-3 py-2 mt-1 border-t border-border pt-3 transition-colors hover:bg-surface-hover"
+          >
             <div class="h-8 w-8 rounded-full bg-primary flex items-center justify-center overflow-hidden">
               <img
                 v-if="user.avatar"
                 :src="user.avatar"
                 :alt="user.displayName"
                 class="h-8 w-8 rounded-full object-cover"
+                referrerpolicy="no-referrer"
               />
               <span v-else class="text-xs font-bold text-white">{{ user.displayName?.[0]?.toUpperCase() }}</span>
             </div>
-            <span class="text-sm font-medium text-foreground">{{ user.displayName }}</span>
-            <button
-              class="ml-auto p-1.5 rounded-lg text-foreground-muted hover:text-foreground hover:bg-surface-hover transition-colors"
-              @click="handleLogout(); mobileMenuOpen = false"
-              title="Logout"
-            >
-              <LogOut class="h-4 w-4" />
-            </button>
-          </div>
+            <div class="min-w-0">
+              <p class="truncate text-sm font-medium text-foreground">{{ user.displayName }}</p>
+              <p class="text-[11px] text-foreground-muted">Voir mon profil</p>
+            </div>
+          </router-link>
         </template>
         <template v-else>
           <router-link

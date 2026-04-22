@@ -40,6 +40,12 @@ const router = createRouter({
       meta: { title: 'Profil - TierTogether' },
     },
     {
+      path: '/me',
+      name: 'me',
+      component: () => import('@/views/MeView.vue'),
+      meta: { title: 'Mon profil - TierTogether' },
+    },
+    {
       path: '/stats',
       name: 'stats',
       component: () => import('@/views/StatsView.vue'),
