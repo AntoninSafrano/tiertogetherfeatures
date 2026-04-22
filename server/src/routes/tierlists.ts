@@ -226,17 +226,22 @@ router.get('/api/tierlists/stats', async (req: Request, res: Response) => {
       { $sort: { _id: 1 } }
     ])
 
-    // Most active authors
+    // Most active authors (excludes system-seeded lists with empty authorId)
     const topAuthors = await TierListModel.aggregate([
-      { $match: { isPublic: true, authorId: { $exists: true, $ne: null } } },
+      { $match: { isPublic: true, authorId: { $exists: true, $nin: [null, ''] } } },
       { $group: { _id: '$authorId', count: { $sum: 1 }, totalDownloads: { $sum: '$downloads' } } },
       { $sort: { count: -1 } },
       { $limit: 10 }
     ])
 
-    // Resolve author names
-    const authorIds = topAuthors.map(a => a._id)
-    const authorUsers = await UserModel.find({ _id: { $in: authorIds } }).select('displayName').lean()
+    // Resolve author names — keep only valid 24-hex ObjectId strings
+    const OBJECT_ID_RE = /^[a-f0-9]{24}$/i
+    const authorIds = topAuthors
+      .map(a => a._id)
+      .filter((id): id is string => typeof id === 'string' && OBJECT_ID_RE.test(id))
+    const authorUsers = authorIds.length
+      ? await UserModel.find({ _id: { $in: authorIds } }).select('displayName').lean()
+      : []
     const authorNameMap = new Map(authorUsers.map((u: any) => [u._id.toString(), u.displayName]))
 
     res.json({
