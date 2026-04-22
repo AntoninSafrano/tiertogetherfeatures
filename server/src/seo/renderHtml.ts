@@ -206,9 +206,9 @@ async function metaForPath(rawPath: string): Promise<Meta> {
       noindex: true,
     }
   }
-  if (p === '/stats' || p.startsWith('/room/')) {
+  if (p === '/stats' || p === '/me' || p.startsWith('/room/')) {
     return {
-      title: 'TierTogether',
+      title: p === '/me' ? 'Mon profil — TierTogether' : 'TierTogether',
       description: 'TierTogether — tier lists collaboratives.',
       canonical: `${SITE}${p}`,
       noindex: true,
