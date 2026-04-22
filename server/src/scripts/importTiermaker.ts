@@ -15,6 +15,10 @@ const CLOUDINARY_CLOUD = 'dnbnhjbyy'
 const CLOUDINARY_PRESET = 'tiertogether_preset'
 
 async function uploadRemoteToCloudinary(sourceUrl: string): Promise<string> {
+  // If the URL is already served from our Cloudinary (browser-side
+  // upload already done), keep it as-is.
+  if (sourceUrl.includes('res.cloudinary.com')) return sourceUrl
+
   const form = new FormData()
   form.append('file', sourceUrl)
   form.append('upload_preset', CLOUDINARY_PRESET)
