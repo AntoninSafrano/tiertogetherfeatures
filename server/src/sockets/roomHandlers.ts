@@ -259,8 +259,14 @@ export function registerRoomHandlers(io: TypedServer, socket: TypedSocket): void
         tierList.authorId = authUserId
       }
 
-      // If ownerId matches this user's auth ID (e.g. from clone), transfer host to this socket
-      if (authUserId && tierList.ownerId === authUserId) {
+      // Host identity survives reconnects for authenticated authors:
+      // whenever the list has an authorId and THIS socket is that author,
+      // they get (or keep) host rights — even after a tab close / network blip.
+      if (authUserId && tierList.authorId === authUserId) {
+        tierList.ownerId = socket.id
+      }
+      // Legacy case: ownerId was stored as a user ID (clone flow). Promote.
+      else if (authUserId && tierList.ownerId === authUserId) {
         tierList.ownerId = socket.id
       }
 

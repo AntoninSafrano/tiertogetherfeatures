@@ -5,6 +5,7 @@ import rateLimit from 'express-rate-limit'
 import { TierListModel } from '../models/TierList'
 import { UserModel } from '../models/User'
 import { ReportModel } from '../models/Report'
+import { ChatReportModel } from '../models/ChatReport'
 import { containsBannedWord } from '../middleware/moderation'
 import { env } from '../config/env'
 
@@ -598,6 +599,127 @@ router.post('/api/admin/reports/:id/resolve', async (req: Request, res: Response
   } catch (err) {
     console.error('[API] Resolve report failed:', err)
     res.status(500).json({ error: 'Échec du traitement du signalement' })
+  }
+})
+
+// ─── Chat reports ──────────────────────────────────────────────────
+
+const CHAT_REPORT_REASONS = new Set(['harassment', 'inappropriate', 'spam', 'other'])
+
+// POST /api/chat/report — flag a chat message (snapshot-based: text is
+// frozen at report time since messages aren't persisted server-side).
+router.post('/api/chat/report', writeLimiter, async (req: Request, res: Response) => {
+  const userId = getUserId(req)
+  if (!userId) {
+    res.status(401).json({ error: 'Authentification requise pour signaler.' })
+    return
+  }
+
+  try {
+    const { roomId, messageId, text, username, senderUserId, reason, details } = req.body as Record<string, unknown>
+
+    if (typeof roomId !== 'string' || typeof messageId !== 'string' ||
+        typeof text !== 'string' || typeof username !== 'string' ||
+        typeof senderUserId !== 'string' || typeof reason !== 'string') {
+      res.status(400).json({ error: 'Payload invalide.' })
+      return
+    }
+    if (!CHAT_REPORT_REASONS.has(reason)) {
+      res.status(400).json({ error: 'Raison invalide.' })
+      return
+    }
+    if (senderUserId === userId) {
+      res.status(400).json({ error: 'Tu ne peux pas signaler ton propre message.' })
+      return
+    }
+
+    try {
+      await ChatReportModel.create({
+        roomId: sanitize(roomId, 64),
+        messageId: sanitize(messageId, 64),
+        snapshotText: sanitize(text, 1000),
+        snapshotUsername: sanitize(username, 80),
+        snapshotUserId: sanitize(senderUserId, 64),
+        reporterId: userId,
+        reason,
+        details: typeof details === 'string' ? details.trim().slice(0, 500) : '',
+        status: 'pending',
+      })
+    } catch (err: any) {
+      // Duplicate key = user already reported this message
+      if (err?.code === 11000) {
+        res.status(409).json({ error: 'Tu as déjà signalé ce message.' })
+        return
+      }
+      throw err
+    }
+
+    res.json({ success: true })
+  } catch (err) {
+    console.error('[API] Chat report failed:', err)
+    res.status(500).json({ error: 'Échec du signalement' })
+  }
+})
+
+// GET /api/admin/chat-reports
+router.get('/api/admin/chat-reports', async (req: Request, res: Response) => {
+  const userId = getUserId(req)
+  if (!await isAdmin(userId)) {
+    res.status(403).json({ error: 'Accès réservé aux administrateurs' })
+    return
+  }
+  try {
+    const statusFilter = String(req.query.status || 'pending')
+    const filter: any = statusFilter === 'all' ? {} : { status: statusFilter }
+    const reports = await ChatReportModel.find(filter)
+      .sort({ createdAt: -1 })
+      .limit(200)
+      .lean()
+
+    const reporterIds = [...new Set(reports.map(r => r.reporterId).filter(Boolean))] as string[]
+    const reporters = reporterIds.length
+      ? await UserModel.find({ _id: { $in: reporterIds } }).select('displayName email').lean()
+      : []
+    const reporterMap = new Map(reporters.map((u: any) => [u._id.toString(), u]))
+
+    res.json({
+      reports: reports.map(r => ({
+        ...r,
+        reporter: reporterMap.get(r.reporterId) || null,
+      })),
+    })
+  } catch (err) {
+    console.error('[API] Failed to fetch chat reports:', err)
+    res.status(500).json({ error: 'Échec de la récupération' })
+  }
+})
+
+// POST /api/admin/chat-reports/:id/resolve — action: 'dismiss' | 'resolve'
+router.post('/api/admin/chat-reports/:id/resolve', async (req: Request, res: Response) => {
+  const userId = getUserId(req)
+  if (!await isAdmin(userId)) {
+    res.status(403).json({ error: 'Accès réservé aux administrateurs' })
+    return
+  }
+  try {
+    const { action } = req.body as { action?: string }
+    if (!['dismiss', 'resolve'].includes(action || '')) {
+      res.status(400).json({ error: 'Action invalide.' })
+      return
+    }
+    const report = await ChatReportModel.findById(req.params.id)
+    if (!report) {
+      res.status(404).json({ error: 'Signalement introuvable' })
+      return
+    }
+    report.status = action === 'resolve' ? 'resolved' : 'dismissed'
+    report.resolvedBy = userId!
+    report.resolvedAt = new Date()
+    await report.save()
+    res.json({ success: true })
+  } catch (err) {
+    console.error('[API] Resolve chat report failed:', err)
+    res.status(500).json({ error: 'Échec du traitement' })
   }
 })
 

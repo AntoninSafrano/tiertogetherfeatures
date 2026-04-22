@@ -1,16 +1,24 @@
 <script setup lang="ts">
 import { ref, nextTick, watch } from 'vue'
+import { useRoute } from 'vue-router'
 import { useSocket } from '@/composables/useSocket'
+import { useAuth } from '@/composables/useAuth'
+import { API_BASE } from '@/config'
 import type { ChatMessage } from '@tiertogether/shared'
-import { Send, ChevronDown } from 'lucide-vue-next'
+import { Send, ChevronDown, Flag } from 'lucide-vue-next'
 
 const { socket } = useSocket()
+const route = useRoute()
+const { user } = useAuth()
 
 const isExpanded = ref(false)
 const messages = ref<ChatMessage[]>([])
 const input = ref('')
 const unreadCount = ref(0)
 const messagesEnd = ref<HTMLElement | null>(null)
+const reportingId = ref<string | null>(null)
+const reportedIds = ref<Set<string>>(new Set())
+const reportError = ref<string | null>(null)
 
 function scrollToBottom() {
   nextTick(() => {
@@ -56,6 +64,48 @@ function sendMessage() {
 function formatTime(ts: number): string {
   return new Date(ts).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
 }
+
+async function reportMessage(msg: ChatMessage) {
+  if (!user.value) {
+    reportError.value = 'Connexion requise pour signaler.'
+    setTimeout(() => { reportError.value = null }, 2500)
+    return
+  }
+  const reason = window.prompt(
+    'Raison du signalement ? (harassment / inappropriate / spam / other)',
+    'inappropriate',
+  )
+  if (!reason || !['harassment', 'inappropriate', 'spam', 'other'].includes(reason)) return
+
+  reportingId.value = msg.id
+  try {
+    const res = await fetch(`${API_BASE}/api/chat/report`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({
+        roomId: String(route.params.id || ''),
+        messageId: msg.id,
+        text: msg.text,
+        username: msg.username,
+        senderUserId: msg.userId,
+        reason,
+      }),
+    })
+    const data = await res.json()
+    if (!res.ok) {
+      reportError.value = data.error || `Erreur ${res.status}`
+      setTimeout(() => { reportError.value = null }, 3000)
+      return
+    }
+    reportedIds.value.add(msg.id)
+  } catch {
+    reportError.value = 'Erreur réseau'
+    setTimeout(() => { reportError.value = null }, 3000)
+  } finally {
+    reportingId.value = null
+  }
+}
 </script>
 
 <template>
@@ -80,7 +130,7 @@ function formatTime(ts: number): string {
         <div
           v-for="msg in messages"
           :key="msg.id"
-          class="flex items-start gap-2.5"
+          class="group/msg flex items-start gap-2.5"
         >
           <div
             class="w-6 h-6 rounded-full shrink-0 flex items-center justify-center text-[9px] font-bold text-white mt-0.5"
@@ -88,16 +138,28 @@ function formatTime(ts: number): string {
           >
             {{ msg.username.slice(0, 2).toUpperCase() }}
           </div>
-          <div class="min-w-0">
+          <div class="min-w-0 flex-1">
             <div class="flex items-baseline gap-2">
               <span class="text-xs font-semibold" :style="{ color: msg.color }">{{ msg.username }}</span>
               <span class="text-[10px] text-foreground-subtle">{{ formatTime(msg.timestamp) }}</span>
             </div>
             <p class="text-[13px] leading-relaxed text-foreground-muted break-words">{{ msg.text }}</p>
           </div>
+          <button
+            v-if="user && msg.userId !== socket?.id && !reportedIds.has(msg.id)"
+            type="button"
+            aria-label="Signaler ce message"
+            class="shrink-0 opacity-0 group-hover/msg:opacity-100 transition-opacity p-1 rounded hover:bg-surface-hover text-foreground-subtle hover:text-amber-400 disabled:opacity-30"
+            :disabled="reportingId === msg.id"
+            @click="reportMessage(msg)"
+          >
+            <Flag class="h-3 w-3" />
+          </button>
+          <span v-else-if="reportedIds.has(msg.id)" class="shrink-0 text-[10px] text-amber-400">✓ signalé</span>
         </div>
 
         <div ref="messagesEnd" />
+        <div v-if="reportError" class="rounded-md border border-red-500/40 bg-red-500/10 px-3 py-2 text-xs text-red-300">{{ reportError }}</div>
       </div>
     </Transition>
 
