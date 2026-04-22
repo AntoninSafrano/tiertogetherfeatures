@@ -129,8 +129,12 @@ router.get('/api/tierlists/stats', async (req: Request, res: Response) => {
     }
 
     // Check if user is admin
+    const ADMIN_EMAILS = new Set([
+      'antonin.safrano@gmail.com',
+      'wingsoffeed95@gmail.com',
+    ])
     const user = await UserModel.findById(userId)
-    if (!user || user.email !== 'antonin.safrano@gmail.com') {
+    if (!user || !ADMIN_EMAILS.has(user.email.toLowerCase())) {
       res.status(403).json({ error: 'Accès réservé aux administrateurs' })
       return
     }

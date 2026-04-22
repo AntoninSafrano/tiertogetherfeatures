@@ -16,6 +16,7 @@ import {
   Pencil,
   ShieldCheck,
   ThumbsUp,
+  Trash2,
   X,
 } from 'lucide-vue-next'
 import { API_BASE } from '@/config'
@@ -46,6 +47,10 @@ const showEditModal = ref(false)
 const editDisplayName = ref('')
 const editError = ref<string | null>(null)
 const isSaving = ref(false)
+
+const confirmDelete = ref<MyTierList | null>(null)
+const deleteError = ref<string | null>(null)
+const isDeleting = ref(false)
 
 const CATEGORY_LABELS: Record<string, string> = {
   Gaming: 'Jeux vidéo',
@@ -150,6 +155,36 @@ function viewTierlist(id: string) {
 
 function goToRoom(roomId: string) {
   router.push({ name: 'room', params: { id: roomId } })
+}
+
+function askDelete(tl: MyTierList, evt: Event) {
+  evt.stopPropagation()
+  deleteError.value = null
+  confirmDelete.value = tl
+}
+
+async function deleteTierlist() {
+  if (!confirmDelete.value || isDeleting.value) return
+  const id = confirmDelete.value._id
+  isDeleting.value = true
+  deleteError.value = null
+  try {
+    const res = await fetch(`${API_BASE}/api/tierlists/${id}`, {
+      method: 'DELETE',
+      credentials: 'include',
+    })
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}))
+      deleteError.value = data.error || 'Échec de la suppression'
+      return
+    }
+    tierlists.value = tierlists.value.filter(t => t._id !== id)
+    confirmDelete.value = null
+  } catch {
+    deleteError.value = 'Erreur réseau'
+  } finally {
+    isDeleting.value = false
+  }
 }
 
 function formatRelative(d: string): string {
@@ -362,6 +397,15 @@ function formatDate(d: string): string {
               />
             </div>
 
+            <!-- Delete button (bottom-right, hover-reveal) -->
+            <button
+              class="absolute bottom-2 right-2 z-10 inline-flex h-7 w-7 items-center justify-center rounded-full bg-black/60 text-red-400 opacity-0 backdrop-blur-sm transition-opacity hover:bg-red-500/90 hover:text-white group-hover:opacity-100 focus:opacity-100"
+              title="Supprimer"
+              @click.stop="askDelete(tl, $event)"
+            >
+              <Trash2 class="h-3.5 w-3.5" />
+            </button>
+
             <!-- Info -->
             <div class="p-3.5">
               <h3 class="mb-1 line-clamp-1 text-sm font-bold text-foreground group-hover:text-primary transition-colors">
@@ -385,6 +429,40 @@ function formatDate(d: string): string {
         </div>
       </section>
     </main>
+
+    <!-- Delete confirmation modal -->
+    <Teleport to="body">
+      <div
+        v-if="confirmDelete"
+        class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
+        @click.self="confirmDelete = null"
+      >
+        <div class="w-full max-w-sm rounded-xl border border-border bg-surface p-6 shadow-2xl">
+          <h3 class="text-base font-semibold text-foreground">Supprimer cette tier list ?</h3>
+          <p class="mt-2 text-sm text-foreground-muted">
+            <span class="font-medium text-foreground">{{ confirmDelete.title }}</span> sera définitivement supprimée. Cette action est irréversible.
+          </p>
+          <p v-if="deleteError" class="mt-3 text-xs text-destructive">{{ deleteError }}</p>
+          <div class="mt-5 flex justify-end gap-2">
+            <button
+              class="rounded-lg px-4 py-2 text-xs font-medium text-foreground-muted hover:bg-surface-hover transition-colors"
+              :disabled="isDeleting"
+              @click="confirmDelete = null"
+            >
+              Annuler
+            </button>
+            <button
+              class="inline-flex items-center gap-2 rounded-lg bg-red-500 px-4 py-2 text-xs font-semibold text-white hover:bg-red-600 transition-colors disabled:opacity-50"
+              :disabled="isDeleting"
+              @click="deleteTierlist"
+            >
+              <Trash2 class="h-3.5 w-3.5" />
+              {{ isDeleting ? 'Suppression…' : 'Supprimer' }}
+            </button>
+          </div>
+        </div>
+      </div>
+    </Teleport>
 
     <!-- Edit profile modal -->
     <Teleport to="body">
