@@ -15,7 +15,8 @@ type SourceSpec =
   | { kind: 'jikan-top-anime'; limit?: number }
   | { kind: 'jikan-top-chars'; limit?: number }
   | { kind: 'pokeapi'; ids: number[] }
-  | { kind: 'lol-champs'; names: string[] }
+  | { kind: 'lol-champs'; names?: string[]; all?: boolean }
+  | { kind: 'royale-cards'; slugs: string[] }
   | { kind: 'steam'; games: Array<{ label: string; appId: number }> }
   | { kind: 'wiki-fr-pages'; pages: Array<{ label: string; page: string; imageUrl?: string }>; thumbSize?: number }
   | { kind: 'curated'; items: Array<{ label: string; imageUrl: string }> }
@@ -111,15 +112,26 @@ async function fetchPokemon(ids: number[]): Promise<Array<{ label: string; image
   return items
 }
 
-async function fetchLolChamps(names: string[]): Promise<Array<{ label: string; imageUrl: string }>> {
+async function fetchLolChamps(
+  opts: { names?: string[]; all?: boolean },
+): Promise<Array<{ label: string; imageUrl: string }>> {
   const versions = await fetchJson<string[]>('https://ddragon.leagueoflegends.com/api/versions.json')
   const version = versions[0] || '14.1.1'
   const d = await fetchJson<{ data: Record<string, { id: string; name: string }> }>(
     `https://ddragon.leagueoflegends.com/cdn/${version}/data/en_US/champion.json`,
   )
   const all = Object.values(d.data)
+  if (opts.all) {
+    return all
+      .sort((a, b) => a.name.localeCompare(b.name))
+      .map(c => ({
+        label: c.name,
+        // Square 120×120 icon scales well at 80px display (vs wide splash arts).
+        imageUrl: `https://ddragon.leagueoflegends.com/cdn/${version}/img/champion/${c.id}.png`,
+      }))
+  }
   const picked: Array<{ label: string; imageUrl: string }> = []
-  for (const n of names) {
+  for (const n of opts.names ?? []) {
     const c = all.find(ch => ch.name === n || ch.id === n)
     if (c) {
       picked.push({
@@ -131,6 +143,16 @@ async function fetchLolChamps(names: string[]): Promise<Array<{ label: string; i
     }
   }
   return picked
+}
+
+function fetchRoyaleCards(slugs: string[]): Array<{ label: string; imageUrl: string }> {
+  return slugs.map(slug => ({
+    label: slug
+      .split('-')
+      .map(w => w.charAt(0).toUpperCase() + w.slice(1))
+      .join(' '),
+    imageUrl: `https://cdn.royaleapi.com/static/img/cards-150/${slug}.png`,
+  }))
 }
 
 async function checkUrl(url: string): Promise<boolean> {
@@ -208,7 +230,9 @@ async function fetchSource(src: SourceSpec): Promise<Array<{ label: string; imag
     case 'pokeapi':
       return fetchPokemon(src.ids)
     case 'lol-champs':
-      return fetchLolChamps(src.names)
+      return fetchLolChamps({ names: src.names, all: src.all })
+    case 'royale-cards':
+      return fetchRoyaleCards(src.slugs)
     case 'steam':
       return fetchSteamCovers(src.games)
     case 'wiki-fr-pages':
@@ -269,15 +293,47 @@ const TEMPLATES: Template[] = [
     },
   },
   {
-    title: 'Champions League of Legends',
+    title: 'Champions League of Legends (tous)',
+    category: 'Gaming',
+    source: { kind: 'lol-champs', all: true },
+  },
+
+  {
+    title: 'Cartes Clash Royale',
     category: 'Gaming',
     source: {
-      kind: 'lol-champs',
-      names: [
-        'Ahri', 'Akali', 'Ashe', 'Caitlyn', 'Darius', 'Draven', 'Ezreal', 'Fiora',
-        'Garen', 'Jhin', 'Jinx', 'Kayn', 'Lee Sin', 'Lux', 'Malphite', 'Master Yi',
-        'Mordekaiser', 'Riven', 'Senna', 'Sett', 'Teemo', 'Thresh', 'Vayne',
-        'Viktor', 'Yasuo', 'Zed',
+      kind: 'royale-cards',
+      slugs: [
+        // Troupes — communes & rares
+        'knight', 'archers', 'bomber', 'goblins', 'spear-goblins', 'skeletons',
+        'minions', 'minion-horde', 'barbarians', 'elite-barbarians', 'fire-spirit',
+        'ice-spirits', 'electro-spirits', 'heal-spirit', 'bats', 'royal-recruits',
+        'guards', 'three-musketeers', 'valkyrie', 'musketeer', 'wizard',
+        'mini-pekka', 'giant', 'witch', 'baby-dragon', 'prince', 'dark-prince',
+        'hog-rider', 'goblin-gang', 'dart-goblin', 'mega-minion', 'ice-golem',
+        'royal-giant', 'royal-hogs', 'zappies', 'rascals', 'flying-machine',
+        'skeleton-barrel', 'firecracker', 'elixir-golem', 'battle-ram',
+        'hunter', 'executioner', 'electro-dragon', 'cannon-cart', 'bowler',
+        // Épiques
+        'pekka', 'golem', 'balloon', 'giant-skeleton', 'lava-hound',
+        'mega-knight', 'electro-giant', 'wall-breakers',
+        // Légendaires
+        'princess', 'ice-wizard', 'lumberjack', 'sparky', 'miner', 'the-log',
+        'bandit', 'night-witch', 'magic-archer', 'ram-rider', 'fisherman',
+        'electro-wizard', 'battle-healer', 'royal-ghost', 'inferno-dragon',
+        'goblin-drill', 'mother-witch', 'phoenix', 'goblin-machine',
+        // Champions
+        'skeleton-king', 'mighty-miner', 'archer-queen', 'monk',
+        'golden-knight', 'little-prince', 'goblinstein', 'boss-bandit',
+        // Sorts
+        'fireball', 'arrows', 'rocket', 'zap', 'tornado', 'poison',
+        'earthquake', 'lightning', 'freeze', 'mirror', 'rage', 'clone',
+        'graveyard', 'giant-snowball', 'royal-delivery', 'goblin-barrel',
+        'barbarian-barrel', 'void',
+        // Bâtiments
+        'cannon', 'tesla', 'bomb-tower', 'inferno-tower', 'x-bow', 'mortar',
+        'elixir-collector', 'furnace', 'goblin-hut', 'barbarian-hut', 'tombstone',
+        'goblin-cage', 'goblin-curse',
       ],
     },
   },
@@ -601,14 +657,60 @@ const TEMPLATES: Template[] = [
     },
   },
   {
-    title: 'Boissons énergisantes & sodas',
+    title: 'Sodas et boissons',
     category: 'Food',
     source: {
-      kind: 'curated',
-      items: [
-        { label: 'Coca-Cola', imageUrl: 'https://cdn.simpleicons.org/cocacola' },
-        { label: 'Red Bull',  imageUrl: 'https://cdn.simpleicons.org/redbull' },
-        { label: 'Monster',   imageUrl: 'https://cdn.simpleicons.org/monster/FFFFFF' },
+      kind: 'wiki-fr-pages',
+      thumbSize: 300,
+      pages: [
+        { label: 'Coca-Cola', page: 'Coca-Cola', imageUrl: 'https://cdn.simpleicons.org/cocacola' },
+        { label: 'Pepsi',     page: 'Pepsi' },
+        { label: 'Fanta',     page: 'Fanta' },
+        { label: 'Orangina',  page: 'Orangina' },
+        { label: 'Red Bull',  page: 'Red Bull (boisson)', imageUrl: 'https://cdn.simpleicons.org/redbull' },
+        { label: 'Monster',   page: 'Monster (boisson)',  imageUrl: 'https://cdn.simpleicons.org/monster/FFFFFF' },
+        { label: 'Sprite',    page: 'Sprite (soda)' },
+        { label: 'Dr Pepper', page: 'Dr Pepper' },
+        { label: 'Schweppes', page: 'Schweppes' },
+        { label: '7 Up',      page: '7 Up' },
+        { label: 'Oasis',     page: 'Oasis (boisson)' },
+        { label: 'Ice Tea',   page: 'Lipton Ice Tea' },
+        { label: 'Capri-Sun', page: 'Capri-Sun' },
+        { label: 'Perrier',   page: 'Perrier (eau)' },
+        { label: 'Gatorade',  page: 'Gatorade' },
+        { label: 'Powerade',  page: 'Powerade' },
+      ],
+    },
+  },
+
+  {
+    title: 'Confiseries & chocolats',
+    category: 'Food',
+    source: {
+      kind: 'wiki-fr-pages',
+      thumbSize: 300,
+      pages: [
+        { label: 'Haribo',         page: 'Haribo' },
+        { label: 'Kinder Surprise', page: 'Kinder Surprise' },
+        { label: 'KitKat',         page: 'Kit Kat' },
+        { label: 'Snickers',       page: 'Snickers' },
+        { label: 'Mars',           page: 'Mars (barre chocolatée)' },
+        { label: 'Twix',           page: 'Twix' },
+        { label: 'Bounty',         page: 'Bounty (confiserie)' },
+        { label: "M&M's",          page: "M&M's" },
+        { label: 'Skittles',       page: 'Skittles' },
+        { label: 'Milka',          page: 'Milka' },
+        { label: 'Toblerone',      page: 'Toblerone' },
+        { label: 'Ferrero Rocher', page: 'Ferrero Rocher' },
+        { label: 'Nutella',        page: 'Nutella' },
+        { label: 'Oreo',           page: 'Oreo' },
+        { label: 'Chupa Chups',    page: 'Chupa Chups' },
+        { label: 'Dragibus',       page: 'Dragibus' },
+        { label: 'Carambar',       page: 'Carambar' },
+        { label: 'Malabar',        page: 'Malabar (confiserie)' },
+        { label: 'Tic Tac',        page: 'Tic Tac' },
+        { label: 'Reese\'s',       page: "Reese's Peanut Butter Cups" },
+        { label: 'Lindt',          page: 'Lindt & Sprüngli' },
       ],
     },
   },
