@@ -122,7 +122,7 @@ function onDragChange(evt: any) {
 </script>
 
 <template>
-  <div class="group/row flex relative">
+  <div class="group/row flex border-b border-border last:border-b-0 relative">
     <!-- Tier Label -->
     <div
       :role="readonly ? 'heading' : 'button'"
@@ -174,12 +174,7 @@ function onDragChange(evt: any) {
         ghost-class="ghost"
         chosen-class="chosen"
         drag-class="drag"
-        :animation="0"
-        :force-fallback="true"
-        :fallback-tolerance="4"
-        :fallback-on-body="true"
-        :empty-insert-threshold="10"
-        :swap-threshold="0.65"
+        :animation="200"
         :disabled="isDragDisabled"
         class="flex min-h-[100px] flex-1 flex-wrap items-start gap-2 bg-surface/20 p-3 transition-colors duration-200"
         @change="onDragChange"

@@ -21,9 +21,8 @@ const store = useRoomStore()
     <!-- Toolbar -->
     <TierToolbar />
 
-    <!-- Tier Rows — a 4px dark gap between rows acts as a dead zone
-         SortableJS can never match, killing the boundary oscillation. -->
-    <div id="tier-rows-container" class="overflow-x-clip overflow-y-visible rounded-xl border border-border-hover shadow-2xl bg-background space-y-1">
+    <!-- Tier Rows -->
+    <div id="tier-rows-container" class="overflow-x-clip overflow-y-visible rounded-xl border border-border-hover shadow-2xl">
       <TierRow
         v-for="(row, index) in store.rows"
         :key="row.id"
