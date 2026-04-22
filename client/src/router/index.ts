@@ -46,6 +46,18 @@ const router = createRouter({
       meta: { title: 'Mon profil - TierTogether' },
     },
     {
+      path: '/admin/import',
+      name: 'admin-import',
+      component: () => import('@/views/AdminImportView.vue'),
+      meta: { title: 'Import TierMaker - TierTogether' },
+    },
+    {
+      path: '/admin/bookmarklet',
+      name: 'admin-bookmarklet',
+      component: () => import('@/views/AdminBookmarkletView.vue'),
+      meta: { title: 'Outils import - TierTogether' },
+    },
+    {
       path: '/stats',
       name: 'stats',
       component: () => import('@/views/StatsView.vue'),

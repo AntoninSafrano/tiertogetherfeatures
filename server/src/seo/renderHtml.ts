@@ -206,9 +206,14 @@ async function metaForPath(rawPath: string): Promise<Meta> {
       noindex: true,
     }
   }
-  if (p === '/stats' || p === '/me' || p.startsWith('/room/')) {
+  if (p === '/stats' || p === '/me' || p.startsWith('/room/') || p.startsWith('/admin/')) {
+    const titles: Record<string, string> = {
+      '/me': 'Mon profil — TierTogether',
+      '/admin/import': 'Import TierMaker — TierTogether',
+      '/admin/bookmarklet': 'Outils import — TierTogether',
+    }
     return {
-      title: p === '/me' ? 'Mon profil — TierTogether' : 'TierTogether',
+      title: titles[p] ?? 'TierTogether',
       description: 'TierTogether — tier lists collaboratives.',
       canonical: `${SITE}${p}`,
       noindex: true,

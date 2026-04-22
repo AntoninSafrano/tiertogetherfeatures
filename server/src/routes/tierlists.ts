@@ -7,10 +7,20 @@ import { env } from '../config/env'
 
 const router = Router()
 
+// Admin allowlist — shared by /api/tierlists/stats and /api/admin/import-tiermaker.
+const ADMIN_EMAILS = new Set([
+  'antonin.safrano@gmail.com',
+  'wingsoffeed95@gmail.com',
+])
+
 // A03: Input sanitization — strip NoSQL injection characters
 function sanitize(str: string, maxLen: number = 500): string {
   return str.replace(/[${}]/g, '').trim().slice(0, maxLen)
 }
+
+const ALLOWED_CATEGORIES = new Set(['Gaming', 'Food', 'Anime', 'Music', 'Movies', 'Sports', 'Other'])
+
+const IMAGE_URL_RE = /^https:\/\/res\.cloudinary\.com\/dnbnhjbyy\//
 
 // Auth middleware helper
 function getUserId(req: Request): string | null {
@@ -128,11 +138,6 @@ router.get('/api/tierlists/stats', async (req: Request, res: Response) => {
       return
     }
 
-    // Check if user is admin
-    const ADMIN_EMAILS = new Set([
-      'antonin.safrano@gmail.com',
-      'wingsoffeed95@gmail.com',
-    ])
     const user = await UserModel.findById(userId)
     if (!user || !ADMIN_EMAILS.has(user.email.toLowerCase())) {
       res.status(403).json({ error: 'Accès réservé aux administrateurs' })
@@ -503,6 +508,115 @@ router.patch('/api/tierlists/:id', async (req: Request, res: Response) => {
   } catch (err) {
     console.error('[API] Update failed:', err)
     res.status(500).json({ error: 'Échec de la mise à jour' })
+  }
+})
+
+// POST /api/admin/import-tiermaker — create a system template from a
+// browser-side TierMaker import (bookmarklet). Admin-only.
+// Body: { title, cover?, category, items: [{ src, label? }] }
+router.post('/api/admin/import-tiermaker', async (req: Request, res: Response) => {
+  try {
+    const userId = getUserId(req)
+    if (!userId) {
+      res.status(401).json({ error: 'Authentification requise' })
+      return
+    }
+    const user = await UserModel.findById(userId)
+    if (!user || !ADMIN_EMAILS.has(user.email.toLowerCase())) {
+      res.status(403).json({ error: 'Accès réservé aux administrateurs' })
+      return
+    }
+
+    const { title, cover, category, items } = req.body as {
+      title?: unknown; cover?: unknown; category?: unknown
+      items?: unknown
+    }
+
+    if (typeof title !== 'string' || !title.trim()) {
+      res.status(400).json({ error: 'Titre manquant' })
+      return
+    }
+    if (typeof category !== 'string' || !ALLOWED_CATEGORIES.has(category)) {
+      res.status(400).json({ error: 'Catégorie invalide' })
+      return
+    }
+    if (!Array.isArray(items) || items.length === 0) {
+      res.status(400).json({ error: 'Liste d\'items vide' })
+      return
+    }
+
+    // Validate each item URL belongs to our Cloudinary (no hotlinking of
+    // arbitrary third-party URLs as that would make us a re-distributor
+    // liable for broken/copyrighted content we never hosted).
+    const pool: Array<{ id: string; label: string; imageUrl: string }> = []
+    for (const raw of items) {
+      if (!raw || typeof raw !== 'object') continue
+      const rec = raw as { src?: unknown; label?: unknown; id?: unknown }
+      if (typeof rec.src !== 'string' || !IMAGE_URL_RE.test(rec.src)) continue
+      const label = typeof rec.label === 'string' ? rec.label.trim().slice(0, 60) : ''
+      pool.push({
+        id: (typeof rec.id === 'string' && rec.id) ? `tm-${rec.id}` : `tm-${pool.length + 1}-${Math.random().toString(36).slice(2, 6)}`,
+        label: label || `Item ${pool.length + 1}`,
+        imageUrl: rec.src,
+      })
+    }
+    if (pool.length === 0) {
+      res.status(400).json({ error: 'Aucun item valide (les URLs doivent être sur notre Cloudinary)' })
+      return
+    }
+
+    let coverImage = ''
+    if (typeof cover === 'string' && IMAGE_URL_RE.test(cover)) {
+      coverImage = cover
+    }
+    if (!coverImage) coverImage = pool[0]!.imageUrl
+
+    // Strip TierMaker-style title suffix.
+    const cleanTitle = (title as string)
+      .replace(/\s*Tier\s*List(\s*Maker)?\s*$/i, '')
+      .trim()
+      .slice(0, 100)
+
+    // Stable roomId by title so re-importing overwrites.
+    const { DEFAULT_TIERS } = await import('@tiertogether/shared')
+    const crypto = await import('crypto')
+    const roomId = 'T' + crypto.createHash('sha1').update('tm:' + cleanTitle).digest('hex').toUpperCase().slice(0, 7)
+
+    const payload = {
+      roomId,
+      title: cleanTitle,
+      rows: DEFAULT_TIERS.map(t => ({ ...t, items: [] })),
+      pool,
+      ownerId: 'system',
+      authorId: '',
+      isPublic: true,
+      downloads: 0,
+      category,
+      coverImage,
+    }
+
+    const existing = await TierListModel.findOne({ roomId })
+    let doc: any
+    if (existing) {
+      await TierListModel.updateOne({ _id: existing._id }, payload)
+      doc = await TierListModel.findById(existing._id).lean()
+    } else {
+      doc = await TierListModel.create(payload)
+      doc = doc.toObject()
+    }
+
+    res.json({
+      success: true,
+      tierlist: {
+        _id: (doc._id || existing?._id).toString(),
+        roomId,
+        title: cleanTitle,
+        poolSize: pool.length,
+      },
+    })
+  } catch (err) {
+    console.error('[Admin] TierMaker import failed:', err)
+    res.status(500).json({ error: 'Échec de l\'import' })
   }
 })
 
