@@ -391,14 +391,14 @@ onMounted(async () => {
             @click="viewTierlist(tl._id)"
           >
             <!-- Featured badge -->
-            <div v-if="featuredIds.has(tl._id)" class="absolute top-2 left-2 z-10 flex items-center gap-1 rounded-full bg-yellow-500/90 px-2 py-0.5">
+            <div v-if="featuredIds.has(tl._id)" class="absolute top-2 left-2 z-10 flex h-5 items-center gap-1 rounded-full bg-yellow-500/90 px-2 leading-none">
               <Star class="h-2.5 w-2.5 text-black" />
-              <span class="text-[9px] font-bold text-black">Populaire</span>
+              <span class="text-[10px] font-bold text-black">Populaire</span>
             </div>
 
             <!-- Category badge -->
             <div class="absolute top-2 right-2 z-10">
-              <span :class="['rounded-full px-2 py-0.5 text-[10px] font-medium backdrop-blur-sm', getCategoryBadgeColor(tl.category)]">
+              <span :class="['inline-flex h-5 items-center rounded-full px-2 text-[10px] font-bold leading-none backdrop-blur-sm', getCategoryBadgeColor(tl.category)]">
                 {{ getCategoryLabel(tl.category) }}
               </span>
             </div>
