@@ -333,8 +333,8 @@ async function seed() {
       created++
     }
 
-    // Respect Jikan rate limits (3 req/sec).
-    await sleep(500)
+    // Respect Jikan rate limits (3 req/sec, 60 req/min).
+    await sleep(1500)
   }
 
   console.log(`\n[Seed] Done. created=${created} replaced=${replaced} skipped=${skipped} failed=${failed}`)
