@@ -64,15 +64,26 @@ const showSettings = ref(false)
 const settingsPanel = ref<HTMLElement | null>(null)
 const gearButton = ref<HTMLElement | null>(null)
 
+const renameDraft = ref('')
+
 function toggleSettings(e: Event) {
   e.stopPropagation()
   showSettings.value = !showSettings.value
+  if (showSettings.value) {
+    renameDraft.value = rowData.value.label
+  }
 }
 
 function pickColor(hex: string) {
   showSettings.value = false
   if (hex === rowData.value.color) return
   store.updateRow({ rowId: rowData.value.id, color: hex })
+}
+
+function applyRename() {
+  const next = renameDraft.value.trim().slice(0, 40)
+  if (!next || next === rowData.value.label) return
+  store.updateRow({ rowId: rowData.value.id, label: next })
 }
 
 function onDocMouseDown(e: MouseEvent) {
@@ -218,10 +229,7 @@ function onDragChange(evt: any) {
       @keydown.escape.stop="showSettings = false"
     >
       <div class="flex items-start justify-between mb-3">
-        <div>
-          <p class="text-sm font-semibold text-foreground">Paramètres de la ligne</p>
-          <p class="text-[11px] text-foreground-muted mt-0.5">Clique sur le label pour renommer.</p>
-        </div>
+        <p class="text-sm font-semibold text-foreground">Paramètres de la ligne</p>
         <button
           type="button"
           class="text-foreground-muted hover:text-foreground transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 rounded"
@@ -231,6 +239,19 @@ function onDragChange(evt: any) {
           <X class="h-4 w-4" />
         </button>
       </div>
+
+      <label class="block mb-3">
+        <span class="mb-1 block text-[10px] font-medium uppercase tracking-wide text-foreground-muted">Nom</span>
+        <input
+          v-model="renameDraft"
+          type="text"
+          maxlength="40"
+          class="w-full rounded-md border border-border bg-background px-2.5 py-1.5 text-sm text-foreground focus:border-primary/50 focus:outline-none focus:ring-1 focus:ring-primary/20"
+          @keydown.enter.prevent="applyRename"
+          @keydown.escape.stop="showSettings = false"
+          @blur="applyRename"
+        />
+      </label>
 
       <p class="mb-2 text-[10px] font-medium uppercase tracking-wide text-foreground-muted">Couleur</p>
       <div class="grid grid-cols-6 gap-1.5">

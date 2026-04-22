@@ -101,6 +101,17 @@ export const useRoomStore = defineStore('room', () => {
   function bindEvents() {
     const { socket } = useSocket()
     if (!socket.value || socket.value === boundSocket) return
+    // Defensive: remove any pre-existing listeners before re-binding so a
+    // stale socket doesn't leave duplicate handlers that would double-swap
+    // rows on row:reordered, etc.
+    const EVENTS = [
+      'room:state', 'item:moved', 'item:created', 'item:skipped',
+      'room:locked', 'room:focus-toggled', 'room:vote-toggled',
+      'vote:started', 'vote:update', 'vote:result',
+      'room:reset', 'room:user-left', 'chat:message', 'error',
+      'row:updated', 'row:deleted', 'row:reordered', 'row:added',
+    ] as const
+    for (const ev of EVENTS) socket.value.off(ev as any)
     boundSocket = socket.value
     setupReconnect()
 

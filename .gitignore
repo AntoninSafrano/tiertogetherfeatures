@@ -9,9 +9,14 @@ Thumbs.db
 *.tsbuildinfo
 .env.production
 
-# IDE artifacts
+# IDE / tsc --build artifacts (generated next to .ts/.vue sources, never edit)
 client/src/**/*.vue.js
 client/src/**/*.vue.d.ts
 client/src/**/*.d.ts
+client/src/**/*.js
 !client/src/env.d.ts
 !client/src/vite-env.d.ts
+shared/types/*.js
+shared/types/*.d.ts
+client/vite.config.js
+client/vite.config.d.ts
