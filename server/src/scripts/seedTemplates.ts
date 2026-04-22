@@ -17,12 +17,20 @@ type SourceSpec =
   | { kind: 'pokeapi'; ids: number[] }
   | { kind: 'lol-champs'; names: string[] }
   | { kind: 'steam'; games: Array<{ label: string; appId: number }> }
+  | { kind: 'wiki-fr-pages'; pages: Array<{ label: string; page: string }>; thumbSize?: number }
   | { kind: 'curated'; items: Array<{ label: string; imageUrl: string }> }
+
+interface TierRowSpec {
+  id: string
+  label: string
+  color: string
+}
 
 interface Template {
   title: string
   category: string
   source: SourceSpec
+  rows?: TierRowSpec[] // override DEFAULT_TIERS when the template needs custom labels
 }
 
 function sleep(ms: number): Promise<void> {
@@ -155,6 +163,36 @@ async function fetchSteamCovers(
   return out
 }
 
+async function fetchWikipediaFrPages(
+  pages: Array<{ label: string; page: string }>,
+  thumbSize = 400,
+): Promise<Array<{ label: string; imageUrl: string }>> {
+  const out: Array<{ label: string; imageUrl: string }> = []
+  for (const p of pages) {
+    try {
+      const url = new URL('https://fr.wikipedia.org/w/api.php')
+      url.searchParams.set('action', 'query')
+      url.searchParams.set('prop', 'pageimages')
+      url.searchParams.set('format', 'json')
+      url.searchParams.set('pithumbsize', String(thumbSize))
+      url.searchParams.set('titles', p.page)
+      url.searchParams.set('redirects', '1')
+      const d = await fetchJson<any>(url.toString())
+      const pageEntry = Object.values(d?.query?.pages || {})[0] as any
+      const src = pageEntry?.thumbnail?.source as string | undefined
+      if (src) {
+        out.push({ label: p.label, imageUrl: src })
+      } else {
+        console.warn(`[Seed] wiki-fr "${p.page}": no thumbnail, skipped`)
+      }
+    } catch (err) {
+      console.warn(`[Seed] wiki-fr "${p.page}" failed:`, (err as Error).message)
+    }
+    await sleep(150)
+  }
+  return out
+}
+
 async function fetchSource(src: SourceSpec): Promise<Array<{ label: string; imageUrl: string }>> {
   switch (src.kind) {
     case 'jikan-chars':
@@ -169,6 +207,8 @@ async function fetchSource(src: SourceSpec): Promise<Array<{ label: string; imag
       return fetchLolChamps(src.names)
     case 'steam':
       return fetchSteamCovers(src.games)
+    case 'wiki-fr-pages':
+      return fetchWikipediaFrPages(src.pages, src.thumbSize)
     case 'curated':
       return src.items
   }
@@ -614,6 +654,65 @@ const TEMPLATES: Template[] = [
       ],
     },
   },
+
+  // ── Culturel — Villes du 93 (Wikipedia FR) ────────────────────
+  {
+    title: 'Villes du 93',
+    category: 'Other',
+    rows: [
+      { id: 'tier-s',        label: 'ça tire',        color: '#FF4D4D' },
+      { id: 'tier-vient-ou', label: "ça vient d'où",  color: '#FFA347' },
+      { id: 'tier-rue',      label: 'la rue',         color: '#FFD24D' },
+      { id: 'tier-chill',    label: 'chill',          color: '#8FE37A' },
+      { id: 'tier-campagne', label: 'la campagne',    color: '#7FD4FF' },
+      { id: 'tier-pas-buzz', label: 'pas de buzz',    color: '#9CA3AF' },
+    ],
+    source: {
+      kind: 'wiki-fr-pages',
+      pages: [
+        { label: 'Aubervilliers',         page: 'Aubervilliers' },
+        { label: 'Aulnay-sous-Bois',      page: 'Aulnay-sous-Bois' },
+        { label: 'Bagnolet',              page: 'Bagnolet' },
+        { label: 'Le Blanc-Mesnil',       page: 'Le Blanc-Mesnil' },
+        { label: 'Bobigny',               page: 'Bobigny' },
+        { label: 'Bondy',                 page: 'Bondy' },
+        { label: 'Le Bourget',            page: 'Le Bourget (Seine-Saint-Denis)' },
+        { label: 'Clichy-sous-Bois',      page: 'Clichy-sous-Bois' },
+        { label: 'Coubron',               page: 'Coubron' },
+        { label: 'La Courneuve',          page: 'La Courneuve' },
+        { label: 'Drancy',                page: 'Drancy' },
+        { label: 'Dugny',                 page: 'Dugny' },
+        { label: 'Épinay-sur-Seine',      page: 'Épinay-sur-Seine' },
+        { label: 'Gagny',                 page: 'Gagny' },
+        { label: 'Gournay-sur-Marne',     page: 'Gournay-sur-Marne' },
+        { label: "L'Île-Saint-Denis",     page: "L'Île-Saint-Denis" },
+        { label: 'Les Lilas',             page: 'Les Lilas' },
+        { label: 'Livry-Gargan',          page: 'Livry-Gargan' },
+        { label: 'Montfermeil',           page: 'Montfermeil' },
+        { label: 'Montreuil',             page: 'Montreuil (Seine-Saint-Denis)' },
+        { label: 'Neuilly-Plaisance',     page: 'Neuilly-Plaisance' },
+        { label: 'Neuilly-sur-Marne',     page: 'Neuilly-sur-Marne' },
+        { label: 'Noisy-le-Grand',        page: 'Noisy-le-Grand' },
+        { label: 'Noisy-le-Sec',          page: 'Noisy-le-Sec' },
+        { label: 'Pantin',                page: 'Pantin' },
+        { label: 'Les Pavillons-sous-Bois', page: 'Les Pavillons-sous-Bois' },
+        { label: 'Pierrefitte-sur-Seine', page: 'Pierrefitte-sur-Seine' },
+        { label: 'Le Pré-Saint-Gervais',  page: 'Le Pré-Saint-Gervais' },
+        { label: 'Le Raincy',             page: 'Le Raincy' },
+        { label: 'Romainville',           page: 'Romainville (Seine-Saint-Denis)' },
+        { label: 'Rosny-sous-Bois',       page: 'Rosny-sous-Bois' },
+        { label: 'Saint-Denis',           page: 'Saint-Denis (Seine-Saint-Denis)' },
+        { label: 'Saint-Ouen-sur-Seine',  page: 'Saint-Ouen-sur-Seine' },
+        { label: 'Sevran',                page: 'Sevran' },
+        { label: 'Stains',                page: 'Stains (Seine-Saint-Denis)' },
+        { label: 'Tremblay-en-France',    page: 'Tremblay-en-France' },
+        { label: 'Vaujours',              page: 'Vaujours' },
+        { label: 'Villemomble',           page: 'Villemomble' },
+        { label: 'Villepinte',            page: 'Villepinte (Seine-Saint-Denis)' },
+        { label: 'Villetaneuse',          page: 'Villetaneuse' },
+      ],
+    },
+  },
 ]
 
 // Stable roomId per template title — idempotent re-runs.
@@ -666,10 +765,11 @@ async function seed() {
       imageUrl: i.imageUrl,
     }))
 
+    const rowsTemplate = template.rows ?? DEFAULT_TIERS
     const payload = {
       roomId,
       title: template.title,
-      rows: DEFAULT_TIERS.map(t => ({ ...t, items: [] })),
+      rows: rowsTemplate.map(t => ({ ...t, items: [] })),
       pool,
       ownerId: 'system',
       authorId: '',
