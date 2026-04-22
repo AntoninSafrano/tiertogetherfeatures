@@ -7,12 +7,15 @@ import { TierBoard } from '@/components/tierlist'
 import RoomEntryGate from '@/components/room/RoomEntryGate.vue'
 import type { ChatMessage } from '@tiertogether/shared'
 import { useAutoScroll } from '@/composables/useAutoScroll'
-import { ArrowLeft, Crown, Users, MessageCircle, Send, PanelRightClose, PanelRightOpen, Copy, Check } from 'lucide-vue-next'
+import { ArrowLeft, Crown, Users, MessageCircle, Send, PanelRightClose, PanelRightOpen, Copy, Check, Flag } from 'lucide-vue-next'
+import { useAuth } from '@/composables/useAuth'
+import { API_BASE } from '@/config'
 
 const route = useRoute()
 const router = useRouter()
 const store = useRoomStore()
 const { socket } = useSocket()
+const { user } = useAuth()
 
 const roomId = route.params.id as string
 const error = ref<string | null>(null)
@@ -53,12 +56,24 @@ function scrollToBottom() {
   nextTick(() => messagesEnd.value?.scrollIntoView({ behavior: 'smooth' }))
 }
 
+const blockedError = ref<string | null>(null)
+const reportingId = ref<string | null>(null)
+const reportedIds = ref<Set<string>>(new Set())
+const reportError = ref<string | null>(null)
+
 watch(() => socket.value, (sock) => {
   if (!sock) return
   sock.on('chat:message', (msg: ChatMessage) => {
     chatMessages.value.push(msg)
     if (!panelOpen.value || activeTab.value !== 'chat') unreadCount.value++
     scrollToBottom()
+  })
+  sock.on('error', (serverMsg: string) => {
+    if (typeof serverMsg === 'string' && serverMsg.startsWith('Message bloqué')) {
+      blockedError.value = 'Ton message ne respecte pas les règles de la communauté et n\'a pas été envoyé.'
+      if (!panelOpen.value || activeTab.value !== 'chat') switchToChat()
+      setTimeout(() => { blockedError.value = null }, 4500)
+    }
   })
 }, { immediate: true })
 
@@ -68,6 +83,48 @@ function sendMessage() {
   socket.value.emit('chat:send', { text })
   chatInput.value = ''
   scrollToBottom()
+}
+
+async function reportMessage(msg: ChatMessage) {
+  if (!user.value) {
+    reportError.value = 'Connexion requise pour signaler.'
+    setTimeout(() => { reportError.value = null }, 2500)
+    return
+  }
+  const reason = window.prompt(
+    'Raison du signalement ? (harassment / inappropriate / spam / other)',
+    'inappropriate',
+  )
+  if (!reason || !['harassment', 'inappropriate', 'spam', 'other'].includes(reason)) return
+
+  reportingId.value = msg.id
+  try {
+    const res = await fetch(`${API_BASE}/api/chat/report`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({
+        roomId,
+        messageId: msg.id,
+        text: msg.text,
+        username: msg.username,
+        senderUserId: msg.userId,
+        reason,
+      }),
+    })
+    const data = await res.json()
+    if (!res.ok) {
+      reportError.value = data.error || `Erreur ${res.status}`
+      setTimeout(() => { reportError.value = null }, 3000)
+      return
+    }
+    reportedIds.value.add(msg.id)
+  } catch {
+    reportError.value = 'Erreur réseau'
+    setTimeout(() => { reportError.value = null }, 3000)
+  } finally {
+    reportingId.value = null
+  }
 }
 
 function switchToChat() {
@@ -257,21 +314,42 @@ function goHome() {
               <div v-if="chatMessages.length === 0" class="flex h-full items-center justify-center">
                 <p class="text-xs text-foreground-subtle">Aucun message</p>
               </div>
-              <div v-for="msg in chatMessages" :key="msg.id" class="flex items-start gap-2">
+              <div v-for="msg in chatMessages" :key="msg.id" class="group/msg flex items-start gap-2">
+                <img
+                  v-if="msg.avatar"
+                  :src="msg.avatar"
+                  :alt="msg.username"
+                  class="w-6 h-6 rounded-full shrink-0 object-cover mt-0.5"
+                  referrerpolicy="no-referrer"
+                />
                 <div
+                  v-else
                   class="w-6 h-6 rounded-full shrink-0 flex items-center justify-center text-[9px] font-bold text-white mt-0.5"
                   :style="{ backgroundColor: msg.color }"
                 >
                   {{ msg.username.slice(0, 2).toUpperCase() }}
                 </div>
-                <div class="min-w-0">
+                <div class="min-w-0 flex-1">
                   <div class="flex items-baseline gap-1.5">
                     <span class="text-xs font-semibold" :style="{ color: msg.color }">{{ msg.username }}</span>
                     <span class="text-[10px] text-foreground-subtle">{{ formatTime(msg.timestamp) }}</span>
                   </div>
                   <p class="text-[13px] leading-relaxed text-foreground-muted break-words">{{ msg.text }}</p>
                 </div>
+                <button
+                  v-if="user && msg.userId !== socket?.id && !reportedIds.has(msg.id)"
+                  type="button"
+                  aria-label="Signaler ce message"
+                  class="shrink-0 opacity-0 group-hover/msg:opacity-100 focus:opacity-100 transition-opacity p-1 rounded hover:bg-surface-hover text-foreground-subtle hover:text-amber-400 disabled:opacity-30"
+                  :disabled="reportingId === msg.id"
+                  @click="reportMessage(msg)"
+                >
+                  <Flag class="h-3 w-3" />
+                </button>
+                <span v-else-if="reportedIds.has(msg.id)" class="shrink-0 text-[10px] text-amber-400">✓ signalé</span>
               </div>
+              <div v-if="blockedError" class="rounded-md border border-amber-500/40 bg-amber-500/10 px-3 py-2 text-xs text-amber-300">{{ blockedError }}</div>
+              <div v-if="reportError" class="rounded-md border border-red-500/40 bg-red-500/10 px-3 py-2 text-xs text-red-300">{{ reportError }}</div>
               <div ref="messagesEnd" />
             </div>
 
