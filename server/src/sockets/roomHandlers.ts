@@ -17,6 +17,7 @@ import {
 import { randomUUID } from 'crypto'
 import jwt from 'jsonwebtoken'
 import { TierListModel } from '../models/TierList'
+import { UserModel } from '../models/User'
 import { env } from '../config/env'
 
 // A03: Sanitize user inputs — prevent NoSQL injection and XSS
@@ -837,11 +838,20 @@ export function registerRoomHandlers(io: TypedServer, socket: TypedSocket): void
 
     const tierList = await TierListModel.findOne({ roomId })
 
+    // Resolve avatar if the sender is authenticated
+    const authUserId = getAuthUserId(socket)
+    let avatar: string | undefined
+    if (authUserId) {
+      const u = await UserModel.findById(authUserId).select('avatar').lean().catch(() => null)
+      if (u && (u as any).avatar) avatar = (u as any).avatar
+    }
+
     const message = {
       id: randomUUID(),
       userId: socket.id,
       username: socket.data.username || 'Anonymous',
       color: socket.data.color || '#9147ff',
+      ...(avatar ? { avatar } : {}),
       text,
       isHost: tierList?.ownerId === socket.id,
       timestamp: Date.now(),

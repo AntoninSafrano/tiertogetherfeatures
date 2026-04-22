@@ -132,7 +132,15 @@ async function reportMessage(msg: ChatMessage) {
           :key="msg.id"
           class="group/msg flex items-start gap-2.5"
         >
+          <img
+            v-if="msg.avatar"
+            :src="msg.avatar"
+            :alt="msg.username"
+            class="w-6 h-6 rounded-full shrink-0 object-cover mt-0.5"
+            referrerpolicy="no-referrer"
+          />
           <div
+            v-else
             class="w-6 h-6 rounded-full shrink-0 flex items-center justify-center text-[9px] font-bold text-white mt-0.5"
             :style="{ backgroundColor: msg.color }"
           >

@@ -139,6 +139,7 @@ export interface ChatMessage {
   userId: string
   username: string
   color: string
+  avatar?: string
   text: string
   isHost: boolean
   timestamp: number
