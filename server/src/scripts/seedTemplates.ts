@@ -17,7 +17,7 @@ type SourceSpec =
   | { kind: 'pokeapi'; ids: number[] }
   | { kind: 'lol-champs'; names: string[] }
   | { kind: 'steam'; games: Array<{ label: string; appId: number }> }
-  | { kind: 'wiki-fr-pages'; pages: Array<{ label: string; page: string }>; thumbSize?: number }
+  | { kind: 'wiki-fr-pages'; pages: Array<{ label: string; page: string; imageUrl?: string }>; thumbSize?: number }
   | { kind: 'curated'; items: Array<{ label: string; imageUrl: string }> }
 
 interface TierRowSpec {
@@ -164,11 +164,15 @@ async function fetchSteamCovers(
 }
 
 async function fetchWikipediaFrPages(
-  pages: Array<{ label: string; page: string }>,
+  pages: Array<{ label: string; page: string; imageUrl?: string }>,
   thumbSize = 400,
 ): Promise<Array<{ label: string; imageUrl: string }>> {
   const out: Array<{ label: string; imageUrl: string }> = []
   for (const p of pages) {
+    if (p.imageUrl) {
+      out.push({ label: p.label, imageUrl: p.imageUrl })
+      continue
+    }
     try {
       const url = new URL('https://fr.wikipedia.org/w/api.php')
       url.searchParams.set('action', 'query')
@@ -672,7 +676,7 @@ const TEMPLATES: Template[] = [
       pages: [
         { label: 'Aubervilliers',         page: 'Aubervilliers' },
         { label: 'Aulnay-sous-Bois',      page: 'Aulnay-sous-Bois' },
-        { label: 'Bagnolet',              page: 'Bagnolet' },
+        { label: 'Bagnolet',              page: 'Bagnolet', imageUrl: 'https://commons.wikimedia.org/wiki/Special:FilePath/H%C3%B4tel%20Ville%20-%20Bagnolet%20%28FR93%29%20-%202022-02-09%20-%201.jpg?width=500' },
         { label: 'Le Blanc-Mesnil',       page: 'Le Blanc-Mesnil' },
         { label: 'Bobigny',               page: 'Bobigny' },
         { label: 'Bondy',                 page: 'Bondy' },
@@ -699,12 +703,12 @@ const TEMPLATES: Template[] = [
         { label: 'Pierrefitte-sur-Seine', page: 'Pierrefitte-sur-Seine' },
         { label: 'Le Pré-Saint-Gervais',  page: 'Le Pré-Saint-Gervais' },
         { label: 'Le Raincy',             page: 'Le Raincy' },
-        { label: 'Romainville',           page: 'Romainville (Seine-Saint-Denis)' },
+        { label: 'Romainville',           page: 'Romainville' },
         { label: 'Rosny-sous-Bois',       page: 'Rosny-sous-Bois' },
         { label: 'Saint-Denis',           page: 'Saint-Denis (Seine-Saint-Denis)' },
         { label: 'Saint-Ouen-sur-Seine',  page: 'Saint-Ouen-sur-Seine' },
         { label: 'Sevran',                page: 'Sevran' },
-        { label: 'Stains',                page: 'Stains (Seine-Saint-Denis)' },
+        { label: 'Stains',                page: 'Stains' },
         { label: 'Tremblay-en-France',    page: 'Tremblay-en-France' },
         { label: 'Vaujours',              page: 'Vaujours' },
         { label: 'Villemomble',           page: 'Villemomble' },
