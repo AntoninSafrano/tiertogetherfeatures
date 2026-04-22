@@ -42,7 +42,10 @@ onMounted(() => {
             class="flex items-center gap-2 ml-2 rounded-full pl-1 pr-3 py-1 hover:bg-surface-hover transition-colors"
             title="Mon profil"
           >
-            <div class="h-8 w-8 rounded-full bg-primary flex items-center justify-center overflow-hidden ring-2 ring-transparent group-hover:ring-primary/30">
+            <div
+              :class="['h-8 w-8 rounded-full flex items-center justify-center overflow-hidden',
+                user.avatar ? 'bg-surface-hover' : 'bg-primary']"
+            >
               <img
                 v-if="user.avatar"
                 :src="user.avatar"
@@ -95,7 +98,10 @@ onMounted(() => {
             @click="mobileMenuOpen = false"
             class="flex items-center gap-3 rounded-lg px-3 py-2 mt-1 border-t border-border pt-3 transition-colors hover:bg-surface-hover"
           >
-            <div class="h-8 w-8 rounded-full bg-primary flex items-center justify-center overflow-hidden">
+            <div
+              :class="['h-8 w-8 rounded-full flex items-center justify-center overflow-hidden',
+                user.avatar ? 'bg-surface-hover' : 'bg-primary']"
+            >
               <img
                 v-if="user.avatar"
                 :src="user.avatar"

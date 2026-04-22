@@ -5,6 +5,7 @@ import { useAuth } from '@/composables/useAuth'
 import { useCloudinary } from '@/composables/useCloudinary'
 import { getCategoryBadgeColor } from '@/lib/utils'
 import NavBar from '@/components/NavBar.vue'
+import AvatarCropper from '@/components/AvatarCropper.vue'
 import {
   Calendar,
   Camera,
@@ -51,6 +52,7 @@ const editDisplayName = ref('')
 const editAvatar = ref('')
 const avatarFileInput = ref<HTMLInputElement | null>(null)
 const isUploadingAvatar = ref(false)
+const cropperSrc = ref<string | null>(null)
 const editError = ref<string | null>(null)
 const isSaving = ref(false)
 
@@ -138,7 +140,7 @@ function openEditModal() {
   showEditModal.value = true
 }
 
-async function onAvatarFile(evt: Event) {
+function onAvatarFile(evt: Event) {
   const input = evt.target as HTMLInputElement
   const file = input.files?.[0]
   input.value = ''
@@ -151,9 +153,23 @@ async function onAvatarFile(evt: Event) {
     editError.value = "L'image ne doit pas dépasser 5 Mo."
     return
   }
+  editError.value = null
+  cropperSrc.value = URL.createObjectURL(file)
+}
+
+function onCropperClose() {
+  if (cropperSrc.value) URL.revokeObjectURL(cropperSrc.value)
+  cropperSrc.value = null
+}
+
+async function onCropperConfirm(blob: Blob) {
+  const src = cropperSrc.value
+  cropperSrc.value = null
+  if (src) URL.revokeObjectURL(src)
   isUploadingAvatar.value = true
   editError.value = null
   try {
+    const file = new File([blob], 'avatar.jpg', { type: 'image/jpeg' })
     const url = await uploadImage(file)
     editAvatar.value = url
   } catch (err) {
@@ -254,7 +270,10 @@ function formatDate(d: string): string {
       <section class="rounded-2xl border border-border bg-surface p-6 sm:p-8">
         <div class="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
           <div class="flex items-center gap-5">
-            <div class="h-20 w-20 shrink-0 overflow-hidden rounded-full bg-primary flex items-center justify-center">
+            <div
+              :class="['flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-full',
+                user.avatar ? 'bg-surface-hover' : 'bg-primary']"
+            >
               <img
                 v-if="user.avatar"
                 :src="user.avatar"
@@ -463,6 +482,14 @@ function formatDate(d: string): string {
       </section>
     </main>
 
+    <!-- Avatar cropper -->
+    <AvatarCropper
+      v-if="cropperSrc"
+      :src="cropperSrc"
+      @close="onCropperClose"
+      @confirm="onCropperConfirm"
+    />
+
     <!-- Delete confirmation modal -->
     <Teleport to="body">
       <div
@@ -520,7 +547,10 @@ function formatDate(d: string): string {
 
           <!-- Avatar upload -->
           <div class="mt-5 flex items-center gap-4">
-            <div class="relative h-20 w-20 shrink-0 overflow-hidden rounded-full bg-primary flex items-center justify-center">
+            <div
+              :class="['relative flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-full',
+                editAvatar ? 'bg-surface-hover' : 'bg-primary']"
+            >
               <img
                 v-if="editAvatar"
                 :src="editAvatar"
