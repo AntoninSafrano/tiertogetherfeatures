@@ -50,12 +50,12 @@ router.get('/api/tierlists/public', async (req: Request, res: Response) => {
     }
 
     let sortObj: any = { downloads: -1 }
-    if (sort === 'recent') sortObj = { createdAt: -1 }
+    if (sort === 'recent' || sort === 'newest') sortObj = { createdAt: -1 }
     else if (sort === 'popular') sortObj = { downloads: -1 }
 
     const tierlists = await TierListModel.find(filter)
       .sort(sortObj)
-      .limit(50)
+      .limit(200)
       .lean()
 
     // If sorting by popular, sort by (upvotes - downvotes) in memory
