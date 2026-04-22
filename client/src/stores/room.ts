@@ -454,24 +454,11 @@ export const useRoomStore = defineStore('room', () => {
     pool.value = tierList.pool
   }
 
-  /** Initialize with demo data for offline testing */
-  function initDemo() {
-    title.value = 'Meilleurs personnages Anime'
+  /** Initialize a blank solo tierlist — no room, no socket, user fills it in. */
+  function initSolo() {
+    title.value = 'Ma tier list'
     rows.value = DEFAULT_TIERS.map((tier) => ({ ...tier, items: [] }))
-    pool.value = [
-      { id: 'item-1', imageUrl: '', label: 'Naruto' },
-      { id: 'item-2', imageUrl: '', label: 'Goku' },
-      { id: 'item-3', imageUrl: '', label: 'Luffy' },
-      { id: 'item-4', imageUrl: '', label: 'Ichigo' },
-      { id: 'item-5', imageUrl: '', label: 'Eren' },
-      { id: 'item-6', imageUrl: '', label: 'Saitama' },
-      { id: 'item-7', imageUrl: '', label: 'Light' },
-      { id: 'item-8', imageUrl: '', label: 'Zoro' },
-      { id: 'item-9', imageUrl: '', label: 'Vegeta' },
-      { id: 'item-10', imageUrl: '', label: 'Kakashi' },
-      { id: 'item-11', imageUrl: '', label: 'All Might' },
-      { id: 'item-12', imageUrl: '', label: 'Levi' },
-    ]
+    pool.value = []
   }
 
   // ─── Room Management ────────────────────────────────────────────
@@ -544,7 +531,7 @@ export const useRoomStore = defineStore('room', () => {
     castVote,
     skipCurrentItem,
     loadTierList,
-    initDemo,
+    initSolo,
     // Drag tracking
     handleDragAdded,
     handleDragRemoved,

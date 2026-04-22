@@ -17,7 +17,7 @@ const { socket } = useSocket()
 const roomId = route.params.id as string
 const error = ref<string | null>(null)
 const isLoading = ref(false)
-const isDemo = roomId === 'demo'
+const isSolo = roomId === 'solo' || roomId === 'demo' // 'demo' kept for old bookmarks
 const gateResolved = ref(false)
 
 // Auto-scroll on drag
@@ -91,8 +91,8 @@ function formatTime(ts: number): string {
 }
 
 onMounted(async () => {
-  if (isDemo) {
-    store.initDemo()
+  if (isSolo) {
+    store.initSolo()
     gateResolved.value = true
     return
   }
@@ -105,7 +105,7 @@ onMounted(async () => {
 })
 
 onUnmounted(() => {
-  if (!isDemo) {
+  if (!isSolo) {
     store.clearRoom()
   }
 })
@@ -139,7 +139,7 @@ function goHome() {
 <template>
   <!-- Gate: shown before joining the room -->
   <RoomEntryGate
-    v-if="!isDemo && !gateResolved"
+    v-if="!isSolo && !gateResolved"
     :room-id="roomId"
     @ready="onGateReady"
   />
@@ -161,7 +161,7 @@ function goHome() {
           <span class="text-foreground-subtle">·</span>
           <span class="text-xs font-mono text-foreground-subtle">{{ roomId }}</span>
           <button
-            v-if="!isDemo"
+            v-if="!isSolo"
             class="flex items-center justify-center h-6 w-6 rounded-md text-foreground-subtle hover:text-foreground hover:bg-surface-hover transition-colors"
             title="Copier le lien de la room"
             @click="copyRoomLink"
@@ -180,14 +180,14 @@ function goHome() {
             <span v-if="linkCopied" class="text-[11px] font-medium text-emerald-400">Copie !</span>
           </Transition>
         </div>
-        <div v-if="isDemo" class="rounded-full bg-primary/10 px-2.5 py-0.5">
-          <span class="text-[11px] font-medium text-primary">Démo</span>
+        <div v-if="isSolo" class="rounded-full bg-primary/10 px-2.5 py-0.5">
+          <span class="text-[11px] font-medium text-primary">Solo</span>
         </div>
       </div>
 
       <!-- Right: Toggle panel -->
       <button
-        v-if="!isDemo"
+        v-if="!isSolo"
         class="flex items-center gap-2 h-8 px-3 rounded-lg text-foreground-muted hover:text-foreground hover:bg-surface-hover transition-colors"
         @click="panelOpen = !panelOpen"
       >
@@ -230,7 +230,7 @@ function goHome() {
         leave-to-class="opacity-0 max-sm:translate-x-full sm:w-0"
       >
         <aside
-          v-if="panelOpen && !isDemo"
+          v-if="panelOpen && !isSolo"
           class="w-80 shrink-0 border-l border-border bg-[#0D0D0D] flex flex-col overflow-hidden relative max-sm:w-full max-sm:absolute max-sm:inset-y-0 max-sm:right-0 max-sm:z-30"
         >
           <!-- Tabs -->

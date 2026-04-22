@@ -307,7 +307,7 @@ onMounted(async () => {
                   </button>
                 </div>
                 <p v-else-if="rep.status !== 'pending'" class="mt-2 text-[11px] text-foreground-subtle">
-                  {{ rep.status === 'resolved' ? '✓ Résolu' : 'Ignoré' }}
+                  {{ rep.status === 'resolved' ? 'Résolu' : 'Ignoré' }}
                 </p>
               </div>
             </li>

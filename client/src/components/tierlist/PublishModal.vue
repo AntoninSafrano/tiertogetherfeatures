@@ -4,7 +4,7 @@ import { useRouter, useRoute } from 'vue-router'
 import { useRoomStore } from '@/stores/room'
 import { useAuth } from '@/composables/useAuth'
 import { useCloudinary } from '@/composables/useCloudinary'
-import { X, Globe, Lock, Tag, LogIn, ImagePlus, Upload, Loader2 } from 'lucide-vue-next'
+import { X, Globe, Lock, Tag, LogIn, ImagePlus, Upload, Loader2, CheckCircle2 } from 'lucide-vue-next'
 import { API_BASE } from '@/config'
 
 const router = useRouter()
@@ -160,8 +160,8 @@ async function publish() {
 
         <template v-else-if="success">
           <div class="text-center py-8">
-            <div class="text-2xl mb-2">🎉</div>
-            <p class="text-foreground font-medium">Publié avec succès !</p>
+            <CheckCircle2 class="h-10 w-10 text-emerald-400 mx-auto mb-3" />
+            <p class="text-foreground font-medium">Publié avec succès</p>
           </div>
         </template>
 

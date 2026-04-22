@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref } from 'vue'
-import { X, Flag } from 'lucide-vue-next'
+import { X, Flag, CheckCircle2 } from 'lucide-vue-next'
 import { API_BASE } from '@/config'
 
 const props = defineProps<{ tierlistId: string; tierlistTitle?: string }>()
@@ -122,8 +122,9 @@ async function submit() {
           </div>
         </template>
 
-        <div v-else class="mt-5 rounded-md border border-emerald-500/40 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-400">
-          ✓ Signalement envoyé. Merci, on regarde ça.
+        <div v-else class="mt-5 flex items-start gap-2 rounded-md border border-emerald-500/40 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-400">
+          <CheckCircle2 class="h-4 w-4 shrink-0 mt-0.5" />
+          <span>Signalement envoyé. Merci, on regarde ça.</span>
         </div>
       </div>
     </div>

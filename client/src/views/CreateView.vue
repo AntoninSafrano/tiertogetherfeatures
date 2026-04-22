@@ -84,8 +84,8 @@ async function joinRoom() {
   }
 }
 
-function tryDemo() {
-  router.push({ name: 'room', params: { id: 'demo' } })
+function trySolo() {
+  router.push({ name: 'room', params: { id: 'solo' } })
 }
 </script>
 
@@ -201,9 +201,9 @@ function tryDemo() {
 
         <!-- Bottom row -->
         <div class="flex items-center gap-8 text-sm">
-          <button class="flex items-center gap-2 text-foreground-muted hover:text-foreground transition-colors" @click="tryDemo">
+          <button class="flex items-center gap-2 text-foreground-muted hover:text-foreground transition-colors" @click="trySolo">
             <Gamepad2 class="h-4 w-4" />
-            Essayer le mode Démo
+            Créer une tier list en solo
           </button>
         </div>
       </div>
