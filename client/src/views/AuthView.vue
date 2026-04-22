@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRouter, useRoute } from 'vue-router'
 import { useAuth } from '@/composables/useAuth'
 import { Mail, Lock, User, ArrowLeft, ArrowRight, Eye, EyeOff } from 'lucide-vue-next'
 
@@ -8,7 +8,20 @@ const showPassword = ref(false)
 const showNewPassword = ref(false)
 
 const router = useRouter()
+const route = useRoute()
 const { loginWithGoogle, loginWithEmail, signup, verifyEmail, resendVerification, forgotPassword, resetPassword, authError, isLoading } = useAuth()
+
+// Where to send the user after a successful auth. Sanity-check it stays
+// local: a next= that points to another origin would let an attacker use
+// our login page as an open redirect.
+function afterAuthRedirect() {
+  const next = route.query.next
+  if (typeof next === 'string' && next.startsWith('/') && !next.startsWith('//')) {
+    router.push(next)
+  } else {
+    router.push('/')
+  }
+}
 
 type AuthStep = 'login' | 'register' | 'verify' | 'forgot' | 'reset'
 const step = ref<AuthStep>('login')
@@ -47,8 +60,10 @@ async function handleLogin() {
   }
   const result = await loginWithEmail(email.value, password.value)
   if (result.success) {
-    router.push('/')
-  } else if (result.needsVerification) {
+    afterAuthRedirect()
+    return
+  }
+  if (result.needsVerification) {
     step.value = 'verify'
   }
 }
@@ -81,7 +96,7 @@ async function handleVerify() {
   }
   const result = await verifyEmail(email.value, verificationCode.value)
   if (result.success) {
-    router.push('/')
+    afterAuthRedirect()
   }
 }
 
@@ -116,7 +131,7 @@ async function handleResetPassword() {
   }
   const result = await resetPassword(email.value, resetCode.value, newPassword.value)
   if (result.success) {
-    router.push('/')
+    afterAuthRedirect()
   }
 }
 
@@ -163,7 +178,7 @@ const displayError = computed(() => localError.value || authError.value)
             <!-- Google button first -->
             <button
               class="mb-4 flex w-full items-center justify-center gap-2.5 rounded-lg bg-white px-4 py-2.5 text-sm font-semibold text-[#0A0A0A] transition-all hover:bg-gray-100"
-              @click="loginWithGoogle"
+              @click="loginWithGoogle(typeof route.query.next === 'string' ? route.query.next : undefined)"
             >
               <svg class="h-[18px] w-[18px]" viewBox="0 0 24 24">
                 <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4"/>
@@ -259,7 +274,7 @@ const displayError = computed(() => localError.value || authError.value)
             <!-- Google button first -->
             <button
               class="mb-4 flex w-full items-center justify-center gap-2.5 rounded-lg bg-white px-4 py-2.5 text-sm font-semibold text-[#0A0A0A] transition-all hover:bg-gray-100"
-              @click="loginWithGoogle"
+              @click="loginWithGoogle(typeof route.query.next === 'string' ? route.query.next : undefined)"
             >
               <svg class="h-[18px] w-[18px]" viewBox="0 0 24 24">
                 <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4"/>

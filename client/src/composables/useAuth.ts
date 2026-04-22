@@ -26,7 +26,12 @@ export function useAuth() {
     }
   }
 
-  function loginWithGoogle() {
+  function loginWithGoogle(next?: string) {
+    // Google OAuth is a full redirect out and back, so we stash `next` in
+    // sessionStorage and let App.vue pick it up after the round-trip.
+    if (next && typeof next === 'string' && next.startsWith('/') && !next.startsWith('//')) {
+      sessionStorage.setItem('postLoginNext', next)
+    }
     window.location.href = `${API_BASE}/auth/google`
   }
 

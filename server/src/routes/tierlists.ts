@@ -379,7 +379,24 @@ router.post('/api/tierlists/:id/publish', async (req: Request, res: Response) =>
         return
       }
 
-      // 3) Minimum 5 items in the pool/rows combined.
+      // 3) No duplicate public titles (case-insensitive, trimmed). This
+      //    blocks republishing a cloned/templated list under the same name:
+      //    the user has to rename it first, which prevents churn and
+      //    duplicates in the explore feed.
+      const titleRe = new RegExp(`^${title.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i')
+      const duplicate = await TierListModel.findOne({
+        _id: { $ne: tierList._id },
+        isPublic: true,
+        title: { $regex: titleRe },
+      }).select('_id').lean()
+      if (duplicate) {
+        res.status(409).json({
+          error: 'Une tier list publique avec ce titre existe déjà. Renomme-la avant de publier.',
+        })
+        return
+      }
+
+      // 4) Minimum 5 items in the pool/rows combined.
       const totalItems =
         (tierList.pool?.length || 0) +
         (tierList.rows || []).reduce((sum: number, r: any) => sum + (r.items?.length || 0), 0)
@@ -388,7 +405,7 @@ router.post('/api/tierlists/:id/publish', async (req: Request, res: Response) =>
         return
       }
 
-      // 4) Rate limit: max N publishes per 24h per user (skip for admins).
+      // 5) Rate limit: max N publishes per 24h per user (skip for admins).
       const admin = await isAdmin(userId)
       if (!admin) {
         const dayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000)
