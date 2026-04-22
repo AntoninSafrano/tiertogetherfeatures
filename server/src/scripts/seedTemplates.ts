@@ -16,6 +16,7 @@ type SourceSpec =
   | { kind: 'jikan-top-chars'; limit?: number }
   | { kind: 'pokeapi'; ids: number[] }
   | { kind: 'lol-champs'; names: string[] }
+  | { kind: 'steam'; games: Array<{ label: string; appId: number }> }
   | { kind: 'curated'; items: Array<{ label: string; imageUrl: string }> }
 
 interface Template {
@@ -124,6 +125,16 @@ async function fetchLolChamps(names: string[]): Promise<Array<{ label: string; i
   return picked
 }
 
+function fetchSteamCovers(
+  games: Array<{ label: string; appId: number }>,
+): Array<{ label: string; imageUrl: string }> {
+  // Steam CDN is public; library_600x900_2x gives the vertical box-art.
+  return games.map(g => ({
+    label: g.label,
+    imageUrl: `https://cdn.cloudflare.steamstatic.com/steam/apps/${g.appId}/library_600x900_2x.jpg`,
+  }))
+}
+
 async function fetchSource(src: SourceSpec): Promise<Array<{ label: string; imageUrl: string }>> {
   switch (src.kind) {
     case 'jikan-chars':
@@ -136,6 +147,8 @@ async function fetchSource(src: SourceSpec): Promise<Array<{ label: string; imag
       return fetchPokemon(src.ids)
     case 'lol-champs':
       return fetchLolChamps(src.names)
+    case 'steam':
+      return fetchSteamCovers(src.games)
     case 'curated':
       return src.items
   }
@@ -145,19 +158,28 @@ async function fetchSource(src: SourceSpec): Promise<Array<{ label: string; imag
 
 const TEMPLATES: Template[] = [
   // ── Anime — characters via Jikan ──────────────────────────────
-  { title: 'Personnages de One Piece', category: 'Anime', source: { kind: 'jikan-chars', malId: 21, limit: 20 } },
-  { title: 'Personnages de Naruto Shippuden', category: 'Anime', source: { kind: 'jikan-chars', malId: 1735, limit: 20 } },
-  { title: 'Personnages de Dragon Ball Z', category: 'Anime', source: { kind: 'jikan-chars', malId: 813, limit: 20 } },
-  { title: "Personnages d'Attack on Titan", category: 'Anime', source: { kind: 'jikan-chars', malId: 16498, limit: 20 } },
-  { title: 'Personnages de Demon Slayer', category: 'Anime', source: { kind: 'jikan-chars', malId: 38000, limit: 20 } },
-  { title: 'Personnages de My Hero Academia', category: 'Anime', source: { kind: 'jikan-chars', malId: 31964, limit: 20 } },
-  { title: 'Personnages de Jujutsu Kaisen', category: 'Anime', source: { kind: 'jikan-chars', malId: 40748, limit: 20 } },
+  { title: 'Personnages de One Piece', category: 'Anime', source: { kind: 'jikan-chars', malId: 21, limit: 50 } },
+  { title: 'Personnages de Naruto Shippuden', category: 'Anime', source: { kind: 'jikan-chars', malId: 1735, limit: 30 } },
+  { title: 'Personnages de Dragon Ball Z', category: 'Anime', source: { kind: 'jikan-chars', malId: 813, limit: 30 } },
+  { title: "Personnages d'Attack on Titan", category: 'Anime', source: { kind: 'jikan-chars', malId: 16498, limit: 30 } },
+  { title: 'Personnages de Demon Slayer', category: 'Anime', source: { kind: 'jikan-chars', malId: 38000, limit: 30 } },
+  { title: 'Personnages de My Hero Academia', category: 'Anime', source: { kind: 'jikan-chars', malId: 31964, limit: 30 } },
+  { title: 'Personnages de Jujutsu Kaisen', category: 'Anime', source: { kind: 'jikan-chars', malId: 40748, limit: 30 } },
   { title: 'Personnages de Death Note', category: 'Anime', source: { kind: 'jikan-chars', malId: 1535, limit: 15 } },
-  { title: 'Personnages de Hunter x Hunter', category: 'Anime', source: { kind: 'jikan-chars', malId: 11061, limit: 20 } },
-  { title: 'Personnages de Fullmetal Alchemist Brotherhood', category: 'Anime', source: { kind: 'jikan-chars', malId: 5114, limit: 20 } },
-  { title: 'Personnages de Bleach', category: 'Anime', source: { kind: 'jikan-chars', malId: 269, limit: 20 } },
+  { title: 'Personnages de Hunter x Hunter', category: 'Anime', source: { kind: 'jikan-chars', malId: 11061, limit: 30 } },
+  { title: 'Personnages de Fullmetal Alchemist Brotherhood', category: 'Anime', source: { kind: 'jikan-chars', malId: 5114, limit: 25 } },
+  { title: 'Personnages de Bleach', category: 'Anime', source: { kind: 'jikan-chars', malId: 269, limit: 30 } },
   { title: 'Personnages de One Punch Man', category: 'Anime', source: { kind: 'jikan-chars', malId: 30276, limit: 15 } },
   { title: 'Personnages de Chainsaw Man', category: 'Anime', source: { kind: 'jikan-chars', malId: 44511, limit: 15 } },
+  { title: "Personnages de JoJo's Bizarre Adventure", category: 'Anime', source: { kind: 'jikan-chars', malId: 14719, limit: 25 } },
+  { title: 'Personnages de Code Geass', category: 'Anime', source: { kind: 'jikan-chars', malId: 1575, limit: 15 } },
+  { title: 'Personnages de Vinland Saga', category: 'Anime', source: { kind: 'jikan-chars', malId: 37521, limit: 15 } },
+  { title: 'Personnages de Spy x Family', category: 'Anime', source: { kind: 'jikan-chars', malId: 50265, limit: 15 } },
+  { title: 'Personnages de Steins;Gate', category: 'Anime', source: { kind: 'jikan-chars', malId: 9253, limit: 12 } },
+  { title: 'Personnages de Cowboy Bebop', category: 'Anime', source: { kind: 'jikan-chars', malId: 1, limit: 12 } },
+  { title: 'Personnages de Haikyuu', category: 'Anime', source: { kind: 'jikan-chars', malId: 20583, limit: 25 } },
+  { title: 'Personnages de Tokyo Ghoul', category: 'Anime', source: { kind: 'jikan-chars', malId: 22319, limit: 15 } },
+  { title: 'Personnages de Mob Psycho 100', category: 'Anime', source: { kind: 'jikan-chars', malId: 32182, limit: 12 } },
 
   // ── Anime — meta ──────────────────────────────────────────────
   { title: 'Top animes de tous les temps', category: 'Anime', source: { kind: 'jikan-top-anime', limit: 25 } },
@@ -196,46 +218,217 @@ const TEMPLATES: Template[] = [
     },
   },
 
-  // ── Curated lists (stable Wikimedia assets) ───────────────────
+  // ── Gaming — franchise covers via Steam CDN ───────────────────
+  {
+    title: "Jeux Assassin's Creed",
+    category: 'Gaming',
+    source: {
+      kind: 'steam',
+      games: [
+        { label: "Assassin's Creed",              appId: 15100 },
+        { label: "Assassin's Creed II",           appId: 33230 },
+        { label: "Assassin's Creed Brotherhood",  appId: 48190 },
+        { label: "Assassin's Creed Revelations",  appId: 201870 },
+        { label: "Assassin's Creed III",          appId: 208480 },
+        { label: "Assassin's Creed IV Black Flag", appId: 242050 },
+        { label: "Assassin's Creed Rogue",        appId: 311560 },
+        { label: "Assassin's Creed Unity",        appId: 289650 },
+        { label: "Assassin's Creed Syndicate",    appId: 368500 },
+        { label: "Assassin's Creed Origins",      appId: 582160 },
+        { label: "Assassin's Creed Odyssey",      appId: 812140 },
+        { label: "Assassin's Creed Valhalla",     appId: 2208920 },
+        { label: "Assassin's Creed Mirage",       appId: 2221490 },
+      ],
+    },
+  },
+  {
+    title: 'Jeux Grand Theft Auto',
+    category: 'Gaming',
+    source: {
+      kind: 'steam',
+      games: [
+        { label: 'GTA III',          appId: 12100 },
+        { label: 'GTA Vice City',    appId: 12110 },
+        { label: 'GTA San Andreas',  appId: 12120 },
+        { label: 'GTA IV',           appId: 12210 },
+        { label: 'GTA V',            appId: 271590 },
+      ],
+    },
+  },
+  {
+    title: 'Jeux Resident Evil',
+    category: 'Gaming',
+    source: {
+      kind: 'steam',
+      games: [
+        { label: 'Resident Evil HD',        appId: 304240 },
+        { label: 'Resident Evil 0',         appId: 339340 },
+        { label: 'Resident Evil 4 (2005)',  appId: 254700 },
+        { label: 'Resident Evil 5',         appId: 21690 },
+        { label: 'Resident Evil 6',         appId: 221040 },
+        { label: 'Resident Evil 7',         appId: 418370 },
+        { label: 'Resident Evil 2 Remake',  appId: 883710 },
+        { label: 'Resident Evil 3 Remake',  appId: 952060 },
+        { label: 'Resident Evil Village',   appId: 1196590 },
+        { label: 'Resident Evil 4 Remake',  appId: 2050650 },
+      ],
+    },
+  },
+  {
+    title: 'Jeux Final Fantasy',
+    category: 'Gaming',
+    source: {
+      kind: 'steam',
+      games: [
+        { label: 'Final Fantasy VII',           appId: 39140 },
+        { label: 'Final Fantasy VIII Remastered', appId: 1026680 },
+        { label: 'Final Fantasy IX',            appId: 377840 },
+        { label: 'Final Fantasy X/X-2 HD',      appId: 359870 },
+        { label: 'Final Fantasy XII',           appId: 595520 },
+        { label: 'Final Fantasy XIII',          appId: 292120 },
+        { label: 'Final Fantasy XIV',           appId: 39210 },
+        { label: 'Final Fantasy XV',            appId: 637650 },
+        { label: 'Final Fantasy VII Remake',    appId: 1462040 },
+      ],
+    },
+  },
+  {
+    title: 'Jeux FromSoftware',
+    category: 'Gaming',
+    source: {
+      kind: 'steam',
+      games: [
+        { label: 'Dark Souls: Prepare to Die', appId: 211420 },
+        { label: 'Dark Souls II',              appId: 236430 },
+        { label: 'Dark Souls III',             appId: 374320 },
+        { label: 'Sekiro',                     appId: 814380 },
+        { label: 'Elden Ring',                 appId: 1245620 },
+        { label: 'Armored Core VI',            appId: 1888160 },
+      ],
+    },
+  },
+  {
+    title: 'Jeux Far Cry',
+    category: 'Gaming',
+    source: {
+      kind: 'steam',
+      games: [
+        { label: 'Far Cry',   appId: 13520 },
+        { label: 'Far Cry 2', appId: 19900 },
+        { label: 'Far Cry 3', appId: 220240 },
+        { label: 'Far Cry 4', appId: 298110 },
+        { label: 'Far Cry 5', appId: 552520 },
+        { label: 'Far Cry 6', appId: 2369390 },
+      ],
+    },
+  },
+  {
+    title: 'Jeux Battlefield',
+    category: 'Gaming',
+    source: {
+      kind: 'steam',
+      games: [
+        { label: 'Battlefield 1942',  appId: 1608900 },
+        { label: 'Battlefield: Bad Company 2', appId: 24960 },
+        { label: 'Battlefield 3',     appId: 1238820 },
+        { label: 'Battlefield 4',     appId: 1238860 },
+        { label: 'Battlefield 1',     appId: 1238840 },
+        { label: 'Battlefield V',     appId: 1238810 },
+        { label: 'Battlefield 2042',  appId: 1517290 },
+      ],
+    },
+  },
+  {
+    title: 'Jeux Metal Gear',
+    category: 'Gaming',
+    source: {
+      kind: 'steam',
+      games: [
+        { label: 'Metal Gear Solid V: Ground Zeroes', appId: 287700 },
+        { label: 'Metal Gear Solid V: The Phantom Pain', appId: 287700 },
+        { label: 'Metal Gear Rising: Revengeance', appId: 235460 },
+        { label: 'Metal Gear Solid: Master Collection', appId: 2131370 },
+      ],
+    },
+  },
+  {
+    title: 'Jeux indé cultes',
+    category: 'Gaming',
+    source: {
+      kind: 'steam',
+      games: [
+        { label: 'Hollow Knight',   appId: 367520 },
+        { label: 'Celeste',         appId: 504230 },
+        { label: 'Undertale',       appId: 391540 },
+        { label: 'Stardew Valley',  appId: 413150 },
+        { label: 'Hades',           appId: 1145360 },
+        { label: 'Cuphead',         appId: 268910 },
+        { label: 'Terraria',        appId: 105600 },
+        { label: 'Dead Cells',      appId: 588650 },
+        { label: 'Ori and the Blind Forest', appId: 261570 },
+        { label: 'Inscryption',     appId: 1092790 },
+        { label: 'Disco Elysium',   appId: 632470 },
+        { label: 'Papers, Please',  appId: 239030 },
+      ],
+    },
+  },
+  {
+    title: 'Jeux compétitifs en ligne',
+    category: 'Gaming',
+    source: {
+      kind: 'steam',
+      games: [
+        { label: 'Counter-Strike 2', appId: 730 },
+        { label: 'Dota 2',           appId: 570 },
+        { label: 'Team Fortress 2',  appId: 440 },
+        { label: 'Rocket League',    appId: 252950 },
+        { label: 'Apex Legends',     appId: 1172470 },
+        { label: 'Rainbow Six Siege', appId: 359550 },
+        { label: 'Overwatch 2',      appId: 2357570 },
+        { label: 'PUBG',             appId: 578080 },
+      ],
+    },
+  },
+
+  // ── Curated lists (Simple Icons CDN, SVG, brand colors) ──────
+  // Each icon comes from https://cdn.simpleicons.org/{slug}. The slug list
+  // is pre-verified — every entry returns HTTP 200 and the brand color
+  // makes the logo recognizable on our dark surface.
   {
     title: 'Chaînes de fast-food',
     category: 'Food',
     source: {
       kind: 'curated',
       items: [
-        { label: "McDonald's",     imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/3/36/McDonald%27s_Golden_Arches.svg' },
-        { label: 'Burger King',    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/b/be/Burger_King_2020.svg' },
-        { label: 'KFC',            imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/b/bf/KFC_logo.svg' },
-        { label: 'Subway',         imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/4/41/Subway_2016_logo.svg' },
-        { label: 'Starbucks',      imageUrl: 'https://upload.wikimedia.org/wikipedia/en/d/d3/Starbucks_Corporation_Logo_2011.svg' },
-        { label: 'Pizza Hut',      imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/1/1c/Pizza_Hut_Logo.svg' },
-        { label: "Domino's Pizza", imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/c/c9/Dominos_pizza_logo.svg' },
-        { label: 'Taco Bell',      imageUrl: 'https://upload.wikimedia.org/wikipedia/en/b/b3/Taco_Bell_2016.svg' },
-        { label: "Wendy's",        imageUrl: 'https://upload.wikimedia.org/wikipedia/en/f/fd/Wendy%27s_logo.svg' },
-        { label: 'Quick',          imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/f/fb/Quick_Logo.svg' },
-        { label: 'Chipotle',       imageUrl: 'https://upload.wikimedia.org/wikipedia/en/9/98/Chipotle_Mexican_Grill_logo.svg' },
-        { label: 'Five Guys',      imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/6/66/Five_Guys_logo.svg' },
+        { label: "McDonald's",  imageUrl: 'https://cdn.simpleicons.org/mcdonalds' },
+        { label: 'Burger King', imageUrl: 'https://cdn.simpleicons.org/burgerking' },
+        { label: 'KFC',         imageUrl: 'https://cdn.simpleicons.org/kfc' },
+        { label: 'Starbucks',   imageUrl: 'https://cdn.simpleicons.org/starbucks' },
+        { label: 'Taco Bell',   imageUrl: 'https://cdn.simpleicons.org/tacobell' },
+        { label: 'Uber Eats',   imageUrl: 'https://cdn.simpleicons.org/ubereats' },
       ],
     },
   },
   {
-    title: 'Plateformes de streaming',
+    title: 'Plateformes vidéo & musique',
     category: 'Other',
     source: {
       kind: 'curated',
       items: [
-        { label: 'Netflix',              imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/0/08/Netflix_2015_logo.svg' },
-        { label: 'Disney+',              imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/3/3e/Disney%2B_logo.svg' },
-        { label: 'Amazon Prime Video',   imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/f/f1/Prime_Video.png' },
-        { label: 'HBO Max',              imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/1/17/HBO_Max_Logo.svg' },
-        { label: 'Apple TV+',            imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/2/28/Apple_TV_Plus_Logo.svg' },
-        { label: 'Crunchyroll',          imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/0/08/Crunchyroll_Logo.svg' },
-        { label: 'YouTube',              imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/0/09/YouTube_full-color_icon_%282017%29.svg' },
-        { label: 'Twitch',               imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/2/26/Twitch_logo.svg' },
-        { label: 'Paramount+',           imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/a/a5/Paramount%2B_logo.svg' },
-        { label: 'Canal+',               imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/5/58/Canal%2B_logo_%28yellow%29.svg' },
-        { label: 'Spotify',              imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/1/19/Spotify_logo_without_text.svg' },
-        { label: 'Deezer',               imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/a/a5/Deezer_logo%2C_2023.svg' },
+        { label: 'Netflix',       imageUrl: 'https://cdn.simpleicons.org/netflix' },
+        { label: 'YouTube',       imageUrl: 'https://cdn.simpleicons.org/youtube' },
+        { label: 'Twitch',        imageUrl: 'https://cdn.simpleicons.org/twitch' },
+        { label: 'HBO Max',       imageUrl: 'https://cdn.simpleicons.org/hbomax' },
+        { label: 'Paramount+',    imageUrl: 'https://cdn.simpleicons.org/paramountplus' },
+        { label: 'Crunchyroll',   imageUrl: 'https://cdn.simpleicons.org/crunchyroll' },
+        { label: 'Dailymotion',   imageUrl: 'https://cdn.simpleicons.org/dailymotion' },
+        { label: 'Vimeo',         imageUrl: 'https://cdn.simpleicons.org/vimeo' },
+        { label: 'Spotify',       imageUrl: 'https://cdn.simpleicons.org/spotify' },
+        { label: 'Apple Music',   imageUrl: 'https://cdn.simpleicons.org/applemusic' },
+        { label: 'SoundCloud',    imageUrl: 'https://cdn.simpleicons.org/soundcloud' },
+        { label: 'Tidal',         imageUrl: 'https://cdn.simpleicons.org/tidal' },
+        { label: 'YouTube Music', imageUrl: 'https://cdn.simpleicons.org/youtubemusic' },
+        { label: 'Pandora',       imageUrl: 'https://cdn.simpleicons.org/pandora' },
       ],
     },
   },
@@ -245,16 +438,162 @@ const TEMPLATES: Template[] = [
     source: {
       kind: 'curated',
       items: [
-        { label: 'Apple',     imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/f/fa/Apple_logo_black.svg' },
-        { label: 'Samsung',   imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/2/24/Samsung_Logo.svg' },
-        { label: 'Google Pixel', imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/0/0e/Pixel_logo_%282023%29.svg' },
-        { label: 'Xiaomi',    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/a/ae/Xiaomi_logo_%282021-%29.svg' },
-        { label: 'Huawei',    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/e/e8/Huawei_Standard_logo.svg' },
-        { label: 'OnePlus',   imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/3/3c/OnePlus_logo.svg' },
-        { label: 'Oppo',      imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/1/1a/OPPO_LOGO_2019.svg' },
-        { label: 'Sony',      imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/c/ca/Sony_logo.svg' },
-        { label: 'Motorola',  imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/5/57/Motorola_wordmark.svg' },
-        { label: 'Nothing',   imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/2/26/Nothing_Logo.svg' },
+        { label: 'Apple',   imageUrl: 'https://cdn.simpleicons.org/apple/FFFFFF' },
+        { label: 'Samsung', imageUrl: 'https://cdn.simpleicons.org/samsung' },
+        { label: 'Google',  imageUrl: 'https://cdn.simpleicons.org/google' },
+        { label: 'Xiaomi',  imageUrl: 'https://cdn.simpleicons.org/xiaomi' },
+        { label: 'Huawei',  imageUrl: 'https://cdn.simpleicons.org/huawei' },
+        { label: 'OnePlus', imageUrl: 'https://cdn.simpleicons.org/oneplus' },
+        { label: 'Oppo',    imageUrl: 'https://cdn.simpleicons.org/oppo' },
+        { label: 'Sony',    imageUrl: 'https://cdn.simpleicons.org/sony/FFFFFF' },
+        { label: 'Motorola', imageUrl: 'https://cdn.simpleicons.org/motorola' },
+      ],
+    },
+  },
+  {
+    title: 'Plateformes de jeu',
+    category: 'Gaming',
+    source: {
+      kind: 'curated',
+      items: [
+        { label: 'PlayStation',      imageUrl: 'https://cdn.simpleicons.org/playstation' },
+        { label: 'Xbox',             imageUrl: 'https://cdn.simpleicons.org/xbox' },
+        { label: 'Nintendo Switch',  imageUrl: 'https://cdn.simpleicons.org/nintendoswitch' },
+        { label: 'Steam',            imageUrl: 'https://cdn.simpleicons.org/steam/FFFFFF' },
+        { label: 'Epic Games',       imageUrl: 'https://cdn.simpleicons.org/epicgames/FFFFFF' },
+        { label: 'GOG.com',          imageUrl: 'https://cdn.simpleicons.org/gogdotcom/FFFFFF' },
+        { label: 'Ubisoft',          imageUrl: 'https://cdn.simpleicons.org/ubisoft/FFFFFF' },
+        { label: 'EA',               imageUrl: 'https://cdn.simpleicons.org/ea' },
+        { label: 'Rockstar Games',   imageUrl: 'https://cdn.simpleicons.org/rockstargames/FFFFFF' },
+        { label: 'Sega',             imageUrl: 'https://cdn.simpleicons.org/sega' },
+        { label: 'Square Enix',      imageUrl: 'https://cdn.simpleicons.org/squareenix' },
+      ],
+    },
+  },
+  {
+    title: 'Navigateurs web',
+    category: 'Other',
+    source: {
+      kind: 'curated',
+      items: [
+        { label: 'Google Chrome', imageUrl: 'https://cdn.simpleicons.org/googlechrome' },
+        { label: 'Safari',        imageUrl: 'https://cdn.simpleicons.org/safari' },
+        { label: 'Firefox',       imageUrl: 'https://cdn.simpleicons.org/firefox' },
+        { label: 'Opera',         imageUrl: 'https://cdn.simpleicons.org/opera' },
+        { label: 'Brave',         imageUrl: 'https://cdn.simpleicons.org/brave' },
+        { label: 'Arc',           imageUrl: 'https://cdn.simpleicons.org/arc' },
+        { label: 'Vivaldi',       imageUrl: 'https://cdn.simpleicons.org/vivaldi' },
+        { label: 'DuckDuckGo',    imageUrl: 'https://cdn.simpleicons.org/duckduckgo' },
+        { label: 'Tor',           imageUrl: 'https://cdn.simpleicons.org/torproject' },
+      ],
+    },
+  },
+  {
+    title: 'Marques de voitures',
+    category: 'Other',
+    source: {
+      kind: 'curated',
+      items: [
+        { label: 'Ferrari',     imageUrl: 'https://cdn.simpleicons.org/ferrari' },
+        { label: 'Lamborghini', imageUrl: 'https://cdn.simpleicons.org/lamborghini' },
+        { label: 'Porsche',     imageUrl: 'https://cdn.simpleicons.org/porsche/FFFFFF' },
+        { label: 'BMW',         imageUrl: 'https://cdn.simpleicons.org/bmw' },
+        { label: 'Mercedes-AMG', imageUrl: 'https://cdn.simpleicons.org/amg' },
+        { label: 'Maserati',    imageUrl: 'https://cdn.simpleicons.org/maserati' },
+        { label: 'Bentley',     imageUrl: 'https://cdn.simpleicons.org/bentley' },
+        { label: 'Rolls-Royce', imageUrl: 'https://cdn.simpleicons.org/rollsroyce' },
+        { label: 'Audi',        imageUrl: 'https://cdn.simpleicons.org/audi/FFFFFF' },
+        { label: 'Volkswagen',  imageUrl: 'https://cdn.simpleicons.org/volkswagen' },
+        { label: 'Toyota',      imageUrl: 'https://cdn.simpleicons.org/toyota' },
+        { label: 'Honda',       imageUrl: 'https://cdn.simpleicons.org/honda/FFFFFF' },
+        { label: 'Nissan',      imageUrl: 'https://cdn.simpleicons.org/nissan' },
+        { label: 'Mazda',       imageUrl: 'https://cdn.simpleicons.org/mazda' },
+        { label: 'Subaru',      imageUrl: 'https://cdn.simpleicons.org/subaru' },
+        { label: 'Ford',        imageUrl: 'https://cdn.simpleicons.org/ford' },
+        { label: 'Chevrolet',   imageUrl: 'https://cdn.simpleicons.org/chevrolet' },
+        { label: 'Cadillac',    imageUrl: 'https://cdn.simpleicons.org/cadillac' },
+        { label: 'Jeep',        imageUrl: 'https://cdn.simpleicons.org/jeep/FFFFFF' },
+        { label: 'Tesla',       imageUrl: 'https://cdn.simpleicons.org/tesla/FFFFFF' },
+        { label: 'Renault',     imageUrl: 'https://cdn.simpleicons.org/renault' },
+        { label: 'Peugeot',     imageUrl: 'https://cdn.simpleicons.org/peugeot/FFFFFF' },
+        { label: 'Citroën',     imageUrl: 'https://cdn.simpleicons.org/citroen' },
+        { label: 'Hyundai',     imageUrl: 'https://cdn.simpleicons.org/hyundai' },
+        { label: 'Kia',         imageUrl: 'https://cdn.simpleicons.org/kia' },
+        { label: 'Fiat',        imageUrl: 'https://cdn.simpleicons.org/fiat' },
+        { label: 'Mini',        imageUrl: 'https://cdn.simpleicons.org/mini/FFFFFF' },
+        { label: 'Škoda',       imageUrl: 'https://cdn.simpleicons.org/skoda' },
+      ],
+    },
+  },
+  {
+    title: 'Marques de sneakers',
+    category: 'Other',
+    source: {
+      kind: 'curated',
+      items: [
+        { label: 'Nike',   imageUrl: 'https://cdn.simpleicons.org/nike/FFFFFF' },
+        { label: 'Adidas', imageUrl: 'https://cdn.simpleicons.org/adidas/FFFFFF' },
+        { label: 'Jordan', imageUrl: 'https://cdn.simpleicons.org/jordan/FFFFFF' },
+        { label: 'Puma',   imageUrl: 'https://cdn.simpleicons.org/puma' },
+        { label: 'Reebok', imageUrl: 'https://cdn.simpleicons.org/reebok/FFFFFF' },
+      ],
+    },
+  },
+  {
+    title: 'Boissons énergisantes & sodas',
+    category: 'Food',
+    source: {
+      kind: 'curated',
+      items: [
+        { label: 'Coca-Cola', imageUrl: 'https://cdn.simpleicons.org/cocacola' },
+        { label: 'Red Bull',  imageUrl: 'https://cdn.simpleicons.org/redbull' },
+        { label: 'Monster',   imageUrl: 'https://cdn.simpleicons.org/monster/FFFFFF' },
+      ],
+    },
+  },
+  {
+    title: 'Langages de programmation',
+    category: 'Other',
+    source: {
+      kind: 'curated',
+      items: [
+        { label: 'JavaScript',   imageUrl: 'https://cdn.simpleicons.org/javascript' },
+        { label: 'TypeScript',   imageUrl: 'https://cdn.simpleicons.org/typescript' },
+        { label: 'Python',       imageUrl: 'https://cdn.simpleicons.org/python' },
+        { label: 'Rust',         imageUrl: 'https://cdn.simpleicons.org/rust/FFFFFF' },
+        { label: 'Go',           imageUrl: 'https://cdn.simpleicons.org/go' },
+        { label: 'Ruby',         imageUrl: 'https://cdn.simpleicons.org/ruby' },
+        { label: 'PHP',          imageUrl: 'https://cdn.simpleicons.org/php' },
+        { label: 'Swift',        imageUrl: 'https://cdn.simpleicons.org/swift' },
+        { label: 'Kotlin',       imageUrl: 'https://cdn.simpleicons.org/kotlin' },
+        { label: '.NET (C#)',    imageUrl: 'https://cdn.simpleicons.org/dotnet' },
+        { label: 'C',            imageUrl: 'https://cdn.simpleicons.org/c' },
+        { label: 'Dart',         imageUrl: 'https://cdn.simpleicons.org/dart' },
+        { label: 'Scala',        imageUrl: 'https://cdn.simpleicons.org/scala' },
+        { label: 'Elixir',       imageUrl: 'https://cdn.simpleicons.org/elixir/FFFFFF' },
+        { label: 'Haskell',      imageUrl: 'https://cdn.simpleicons.org/haskell' },
+        { label: 'Lua',          imageUrl: 'https://cdn.simpleicons.org/lua/FFFFFF' },
+        { label: 'R',            imageUrl: 'https://cdn.simpleicons.org/r' },
+        { label: 'HTML5',        imageUrl: 'https://cdn.simpleicons.org/html5' },
+      ],
+    },
+  },
+  {
+    title: 'Réseaux sociaux',
+    category: 'Other',
+    source: {
+      kind: 'curated',
+      items: [
+        { label: 'Instagram', imageUrl: 'https://cdn.simpleicons.org/instagram' },
+        { label: 'X',         imageUrl: 'https://cdn.simpleicons.org/x/FFFFFF' },
+        { label: 'Facebook',  imageUrl: 'https://cdn.simpleicons.org/facebook' },
+        { label: 'YouTube',   imageUrl: 'https://cdn.simpleicons.org/youtube' },
+        { label: 'Reddit',    imageUrl: 'https://cdn.simpleicons.org/reddit' },
+        { label: 'Discord',   imageUrl: 'https://cdn.simpleicons.org/discord' },
+        { label: 'Twitch',    imageUrl: 'https://cdn.simpleicons.org/twitch' },
+        { label: 'WhatsApp',  imageUrl: 'https://cdn.simpleicons.org/whatsapp' },
+        { label: 'Telegram',  imageUrl: 'https://cdn.simpleicons.org/telegram' },
+        { label: 'Meta',      imageUrl: 'https://cdn.simpleicons.org/meta' },
       ],
     },
   },
