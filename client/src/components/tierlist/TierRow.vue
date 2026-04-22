@@ -1,9 +1,9 @@
 <script setup lang="ts">
-import { computed, ref, nextTick } from 'vue'
+import { computed, ref, nextTick, onMounted, onBeforeUnmount } from 'vue'
 import draggable from 'vuedraggable'
 import { useRoomStore } from '@/stores/room'
 import TierItem from './TierItem.vue'
-import { Trash2, ArrowUp, ArrowDown, Palette, MoreVertical } from 'lucide-vue-next'
+import { Trash2, ChevronUp, ChevronDown, Settings, X } from 'lucide-vue-next'
 import type { TierRow as TierRowData } from '@tiertogether/shared'
 
 const props = defineProps<{
@@ -49,28 +49,40 @@ function finishEditing() {
   }
 }
 
-// Color palette — swap the native <input type="color"> (flaky on
-// Chromium/Windows, and it spammed row:update on every drag inside the
-// native popup, tripping the Socket.io rate limiter → crash on the
-// second open). Now a fixed 12-swatch popup emits exactly one update.
+// Settings popup — gear icon opens a TierMaker-style panel with a fixed
+// 18-swatch palette + delete button. One click = one row:update emit, no
+// socket flood, no native color picker weirdness.
 const TIER_COLOR_SWATCHES = [
-  '#FF7F7F', '#FFBF7F', '#FFDF7F', '#BFFF7F',
-  '#7FFFBF', '#7FFFFF', '#7FBFFF', '#7F7FFF',
-  '#BF7FFF', '#FF7FFF', '#FF7FBF', '#9CA3AF',
+  '#FF4D4D', '#FF7F7F', '#FFA347', '#FFBF7F',
+  '#FFD24D', '#FFDF7F', '#BFFF7F', '#8FE37A',
+  '#7FFFBF', '#7FFFFF', '#7FD4FF', '#7FBFFF',
+  '#7F7FFF', '#BF7FFF', '#FF7FFF', '#FF7FBF',
+  '#9CA3AF', '#FFFFFF',
 ]
 
-const showPalette = ref(false)
-const showMobileActions = ref(false)
+const showSettings = ref(false)
+const settingsPanel = ref<HTMLElement | null>(null)
+const gearButton = ref<HTMLElement | null>(null)
 
-function openColorPicker() {
-  showPalette.value = !showPalette.value
+function toggleSettings(e: Event) {
+  e.stopPropagation()
+  showSettings.value = !showSettings.value
 }
 
 function pickColor(hex: string) {
-  showPalette.value = false
+  showSettings.value = false
   if (hex === rowData.value.color) return
   store.updateRow({ rowId: rowData.value.id, color: hex })
 }
+
+function onDocMouseDown(e: MouseEvent) {
+  if (!showSettings.value) return
+  const t = e.target as Node
+  if (settingsPanel.value?.contains(t) || gearButton.value?.contains(t)) return
+  showSettings.value = false
+}
+onMounted(() => document.addEventListener('mousedown', onDocMouseDown))
+onBeforeUnmount(() => document.removeEventListener('mousedown', onDocMouseDown))
 
 // Delete confirmation
 const showDeleteConfirm = ref(false)
@@ -105,7 +117,7 @@ function onDragChange(evt: any) {
       class="flex w-16 sm:w-24 shrink-0 items-center justify-center font-extrabold select-none relative overflow-hidden text-center leading-tight px-1"
       :class="[
         rowData.label.length > 4 ? (rowData.label.length > 8 ? 'text-xs' : 'text-sm') : 'text-3xl',
-        readonly ? '' : 'group/label cursor-pointer',
+        readonly ? '' : 'cursor-pointer',
       ]"
       style="overflow-wrap: anywhere; word-break: break-word;"
       :style="{
@@ -130,65 +142,6 @@ function onDragChange(evt: any) {
       <template v-else>
         <span class="block w-full break-words overflow-wrap-anywhere">{{ rowData.label }}</span>
       </template>
-
-      <!-- Row action buttons: toggle on mobile, hover on desktop -->
-      <button
-        v-if="!readonly"
-        class="absolute right-1 top-1 sm:hidden z-20 p-1 rounded bg-surface/80 text-foreground-muted"
-        @click.stop="showMobileActions = !showMobileActions"
-      >
-        <MoreVertical class="h-3 w-3" />
-      </button>
-      <div v-if="!readonly" :class="[
-        'absolute -right-0 top-0 bottom-0 flex flex-col items-center justify-center gap-0.5 transition-all duration-200 z-10 px-1',
-        showMobileActions ? 'opacity-100 bg-surface/90' : 'opacity-0 pointer-events-none sm:pointer-events-auto',
-        'sm:opacity-0 sm:group-hover/row:opacity-100 sm:translate-x-full sm:group-hover/row:translate-x-0 sm:bg-transparent'
-      ]">
-        <button
-          class="p-1 rounded hover:bg-surface-active text-foreground-muted hover:text-foreground transition-colors"
-          title="Monter"
-          @click.stop="store.reorderRow({ rowId: rowData.id, direction: 'up' })"
-        >
-          <ArrowUp class="h-3.5 w-3.5" />
-        </button>
-        <div class="relative">
-          <button
-            class="p-1 rounded hover:bg-surface-active text-foreground-muted hover:text-foreground transition-colors"
-            title="Changer la couleur"
-            @click.stop="openColorPicker"
-          >
-            <Palette class="h-3.5 w-3.5" />
-          </button>
-
-          <div
-            v-if="showPalette"
-            class="absolute left-full top-1/2 ml-2 -translate-y-1/2 z-30 rounded-lg border border-border bg-surface p-2 shadow-2xl grid grid-cols-4 gap-1.5"
-            @click.stop
-          >
-            <button
-              v-for="hex in TIER_COLOR_SWATCHES"
-              :key="hex"
-              class="h-6 w-6 rounded-md border border-black/40 transition-transform hover:scale-110 focus:outline-none focus:ring-2 focus:ring-white/60"
-              :style="{ backgroundColor: hex }"
-              @click.stop="pickColor(hex)"
-            />
-          </div>
-        </div>
-        <button
-          class="p-1 rounded hover:bg-surface-active text-foreground-muted hover:text-foreground transition-colors"
-          title="Descendre"
-          @click.stop="store.reorderRow({ rowId: rowData.id, direction: 'down' })"
-        >
-          <ArrowDown class="h-3.5 w-3.5" />
-        </button>
-        <button
-          class="p-1 rounded hover:bg-red-500/20 text-foreground-muted hover:text-red-400 transition-colors"
-          title="Supprimer la ligne"
-          @click.stop="showDeleteConfirm = true"
-        >
-          <Trash2 class="h-3.5 w-3.5" />
-        </button>
-      </div>
     </div>
 
     <!-- Items Zone -->
@@ -207,7 +160,7 @@ function onDragChange(evt: any) {
         drag-class="drag"
         :animation="200"
         :disabled="isDragDisabled"
-        class="flex min-h-[100px] flex-1 flex-wrap items-start gap-2 bg-surface/20 p-3 transition-colors duration-200 group-hover/row:bg-surface/40"
+        class="flex min-h-[100px] flex-1 flex-wrap items-start gap-2 bg-surface/20 p-3 transition-colors duration-200"
         @change="onDragChange"
       >
         <template #item="{ element }">
@@ -215,6 +168,77 @@ function onDragChange(evt: any) {
         </template>
       </draggable>
     </template>
+
+    <!-- Side actions column (always visible, TierMaker-style) -->
+    <div
+      v-if="!readonly"
+      class="flex w-10 shrink-0 flex-col border-l border-border/60 bg-surface/40"
+    >
+      <button
+        ref="gearButton"
+        class="flex flex-1 items-center justify-center text-foreground-muted hover:text-foreground hover:bg-surface-active transition-colors"
+        title="Paramètres"
+        @click.stop="toggleSettings"
+      >
+        <Settings class="h-4 w-4" />
+      </button>
+      <button
+        class="flex flex-1 items-center justify-center border-t border-border/60 text-foreground-muted hover:text-foreground hover:bg-surface-active transition-colors"
+        title="Monter"
+        @click.stop="store.reorderRow({ rowId: rowData.id, direction: 'up' })"
+      >
+        <ChevronUp class="h-4 w-4" />
+      </button>
+      <button
+        class="flex flex-1 items-center justify-center border-t border-border/60 text-foreground-muted hover:text-foreground hover:bg-surface-active transition-colors"
+        title="Descendre"
+        @click.stop="store.reorderRow({ rowId: rowData.id, direction: 'down' })"
+      >
+        <ChevronDown class="h-4 w-4" />
+      </button>
+    </div>
+
+    <!-- Settings popup -->
+    <div
+      v-if="!readonly && showSettings"
+      ref="settingsPanel"
+      class="absolute right-11 top-1/2 z-40 w-64 -translate-y-1/2 rounded-xl border border-border-hover bg-surface p-4 shadow-2xl"
+      @click.stop
+    >
+      <div class="flex items-start justify-between mb-3">
+        <div>
+          <p class="text-sm font-semibold text-foreground">Paramètres de la ligne</p>
+          <p class="text-[11px] text-foreground-muted mt-0.5">Clique sur le label pour renommer.</p>
+        </div>
+        <button
+          class="text-foreground-muted hover:text-foreground transition-colors"
+          @click.stop="showSettings = false"
+        >
+          <X class="h-4 w-4" />
+        </button>
+      </div>
+
+      <p class="mb-2 text-[10px] font-medium uppercase tracking-wide text-foreground-muted">Couleur</p>
+      <div class="grid grid-cols-6 gap-1.5">
+        <button
+          v-for="hex in TIER_COLOR_SWATCHES"
+          :key="hex"
+          class="h-7 w-7 rounded-md border-2 transition-transform hover:scale-110 focus:outline-none focus:ring-2 focus:ring-white/60"
+          :class="hex === rowData.color ? 'border-white' : 'border-black/40'"
+          :style="{ backgroundColor: hex }"
+          :title="hex"
+          @click.stop="pickColor(hex)"
+        />
+      </div>
+
+      <button
+        class="mt-4 flex w-full items-center justify-center gap-2 rounded-md border border-red-500/30 bg-red-500/10 px-3 py-2 text-xs font-semibold text-red-400 hover:bg-red-500/20 transition-colors"
+        @click.stop="showSettings = false; showDeleteConfirm = true"
+      >
+        <Trash2 class="h-3.5 w-3.5" />
+        Supprimer la ligne
+      </button>
+    </div>
 
     <!-- Delete confirmation modal - hidden in readonly -->
     <Teleport v-if="!readonly" to="body">
