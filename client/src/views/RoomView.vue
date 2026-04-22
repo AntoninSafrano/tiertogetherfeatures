@@ -7,7 +7,7 @@ import { TierBoard } from '@/components/tierlist'
 import RoomEntryGate from '@/components/room/RoomEntryGate.vue'
 import type { ChatMessage } from '@tiertogether/shared'
 import { useAutoScroll } from '@/composables/useAutoScroll'
-import { ArrowLeft, Crown, Users, MessageCircle, Send, PanelRightClose, PanelRightOpen, Copy, Check, Flag } from 'lucide-vue-next'
+import { ArrowLeft, Crown, Users, MessageCircle, Send, PanelRightClose, PanelRightOpen, Copy, Check, Flag, X } from 'lucide-vue-next'
 import { useAuth } from '@/composables/useAuth'
 import { API_BASE } from '@/config'
 
@@ -16,6 +16,9 @@ const router = useRouter()
 const store = useRoomStore()
 const { socket } = useSocket()
 const { user } = useAuth()
+
+const ADMIN_EMAILS = new Set(['antonin.safrano@gmail.com', 'wingsoffeed95@gmail.com'])
+const isAdmin = computed(() => !!user.value && ADMIN_EMAILS.has(user.value.email.toLowerCase()))
 
 const roomId = route.params.id as string
 const error = ref<string | null>(null)
@@ -61,6 +64,21 @@ const reportingId = ref<string | null>(null)
 const reportedIds = ref<Set<string>>(new Set())
 const reportError = ref<string | null>(null)
 
+// Report modal state
+const reportTarget = ref<ChatMessage | null>(null)
+const reportReason = ref<'harassment' | 'inappropriate' | 'spam' | 'other'>('inappropriate')
+const reportDetails = ref('')
+
+function openReportModal(msg: ChatMessage) {
+  reportTarget.value = msg
+  reportReason.value = 'inappropriate'
+  reportDetails.value = ''
+  reportError.value = null
+}
+function closeReportModal() {
+  reportTarget.value = null
+}
+
 watch(() => socket.value, (sock) => {
   if (!sock) return
   sock.on('chat:message', (msg: ChatMessage) => {
@@ -85,19 +103,12 @@ function sendMessage() {
   scrollToBottom()
 }
 
-async function reportMessage(msg: ChatMessage) {
-  if (!user.value) {
-    reportError.value = 'Connexion requise pour signaler.'
-    setTimeout(() => { reportError.value = null }, 2500)
-    return
-  }
-  const reason = window.prompt(
-    'Raison du signalement ? (harassment / inappropriate / spam / other)',
-    'inappropriate',
-  )
-  if (!reason || !['harassment', 'inappropriate', 'spam', 'other'].includes(reason)) return
+async function submitReport() {
+  const msg = reportTarget.value
+  if (!msg || !isAdmin.value) return
 
   reportingId.value = msg.id
+  reportError.value = null
   try {
     const res = await fetch(`${API_BASE}/api/chat/report`, {
       method: 'POST',
@@ -109,19 +120,19 @@ async function reportMessage(msg: ChatMessage) {
         text: msg.text,
         username: msg.username,
         senderUserId: msg.userId,
-        reason,
+        reason: reportReason.value,
+        details: reportDetails.value.trim(),
       }),
     })
     const data = await res.json()
     if (!res.ok) {
       reportError.value = data.error || `Erreur ${res.status}`
-      setTimeout(() => { reportError.value = null }, 3000)
       return
     }
     reportedIds.value.add(msg.id)
+    closeReportModal()
   } catch {
     reportError.value = 'Erreur réseau'
-    setTimeout(() => { reportError.value = null }, 3000)
   } finally {
     reportingId.value = null
   }
@@ -337,12 +348,12 @@ function goHome() {
                   <p class="text-[13px] leading-relaxed text-foreground-muted break-words">{{ msg.text }}</p>
                 </div>
                 <button
-                  v-if="user && msg.userId !== socket?.id && !reportedIds.has(msg.id)"
+                  v-if="isAdmin && msg.userId !== socket?.id && !reportedIds.has(msg.id)"
                   type="button"
                   aria-label="Signaler ce message"
                   class="shrink-0 opacity-0 group-hover/msg:opacity-100 focus:opacity-100 transition-opacity p-1 rounded hover:bg-surface-hover text-foreground-subtle hover:text-amber-400 disabled:opacity-30"
                   :disabled="reportingId === msg.id"
-                  @click="reportMessage(msg)"
+                  @click="openReportModal(msg)"
                 >
                   <Flag class="h-3 w-3" />
                 </button>
@@ -416,5 +427,85 @@ function goHome() {
         </aside>
       </Transition>
     </div>
+
+    <!-- Chat report modal (admin only) -->
+    <Teleport to="body">
+      <div
+        v-if="reportTarget"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="report-modal-title"
+        class="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4"
+        @click.self="closeReportModal"
+        @keydown.escape="closeReportModal"
+      >
+        <div class="w-full max-w-md rounded-xl border border-border bg-surface p-5 shadow-2xl">
+          <div class="flex items-start justify-between gap-3">
+            <div class="flex items-center gap-2">
+              <Flag class="h-4 w-4 text-amber-400" />
+              <h3 id="report-modal-title" class="text-base font-semibold text-foreground">Signaler ce message</h3>
+            </div>
+            <button
+              type="button"
+              class="text-foreground-muted hover:text-foreground transition-colors"
+              aria-label="Fermer"
+              @click="closeReportModal"
+            >
+              <X class="h-4 w-4" />
+            </button>
+          </div>
+
+          <div class="mt-3 rounded-lg border border-border bg-background px-3 py-2">
+            <p class="text-[11px] font-semibold text-foreground">{{ reportTarget.username }}</p>
+            <p class="mt-0.5 text-sm text-foreground-muted break-words">{{ reportTarget.text }}</p>
+          </div>
+
+          <label class="mt-4 block">
+            <span class="mb-1 block text-[10px] font-medium uppercase tracking-wide text-foreground-muted">Raison</span>
+            <select
+              v-model="reportReason"
+              class="w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground focus:border-primary/50 focus:outline-none focus:ring-1 focus:ring-primary/20"
+            >
+              <option value="harassment">Harcèlement</option>
+              <option value="inappropriate">Contenu inapproprié</option>
+              <option value="spam">Spam</option>
+              <option value="other">Autre</option>
+            </select>
+          </label>
+
+          <label class="mt-3 block">
+            <span class="mb-1 block text-[10px] font-medium uppercase tracking-wide text-foreground-muted">Détails (optionnel)</span>
+            <textarea
+              v-model="reportDetails"
+              rows="3"
+              maxlength="500"
+              placeholder="Contexte pour la modération…"
+              class="w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground resize-none focus:border-primary/50 focus:outline-none focus:ring-1 focus:ring-primary/20"
+            />
+          </label>
+
+          <p v-if="reportError" class="mt-3 text-xs text-red-400">{{ reportError }}</p>
+
+          <div class="mt-5 flex justify-end gap-2">
+            <button
+              type="button"
+              class="rounded-lg px-4 py-2 text-xs font-medium text-foreground-muted hover:bg-surface-hover transition-colors"
+              :disabled="reportingId === reportTarget.id"
+              @click="closeReportModal"
+            >
+              Annuler
+            </button>
+            <button
+              type="button"
+              class="rounded-lg bg-amber-500 px-4 py-2 text-xs font-semibold text-black hover:bg-amber-400 transition-colors disabled:opacity-50"
+              :disabled="reportingId === reportTarget.id"
+              @click="submitReport"
+            >
+              {{ reportingId === reportTarget.id ? 'Envoi…' : 'Envoyer' }}
+            </button>
+          </div>
+        </div>
+      </div>
+    </Teleport>
   </div>
 </template>

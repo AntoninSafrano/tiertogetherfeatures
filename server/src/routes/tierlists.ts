@@ -608,10 +608,15 @@ const CHAT_REPORT_REASONS = new Set(['harassment', 'inappropriate', 'spam', 'oth
 
 // POST /api/chat/report — flag a chat message (snapshot-based: text is
 // frozen at report time since messages aren't persisted server-side).
+// Admin-only: chat moderation is initiated by staff, not by end users.
 router.post('/api/chat/report', writeLimiter, async (req: Request, res: Response) => {
   const userId = getUserId(req)
   if (!userId) {
     res.status(401).json({ error: 'Authentification requise pour signaler.' })
+    return
+  }
+  if (!await isAdmin(userId)) {
+    res.status(403).json({ error: 'Signalement réservé aux administrateurs.' })
     return
   }
 

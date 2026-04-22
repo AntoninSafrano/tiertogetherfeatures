@@ -7,6 +7,53 @@ import { env } from '../config/env'
 const SITE = env.CLIENT_URL.replace(/\/$/, '')
 const DEFAULT_OG_IMAGE = `${SITE}/og-default.png?v=2`
 
+// ─── Cloudinary OG composer ────────────────────────────────────────
+// Build a 1200×630 share card on-the-fly: base = tierlist cover (cropped),
+// up to 3 item thumbnails overlaid on the right as a visual column with
+// rounded corners + white border + slight shadow. Purely URL-driven, no
+// server-side image processing.
+const CLOUDINARY_PREFIX = 'https://res.cloudinary.com/dnbnhjbyy/image/upload/'
+
+function extractCloudinaryId(url: string | undefined | null): string | null {
+  if (!url || typeof url !== 'string') return null
+  if (!url.startsWith(CLOUDINARY_PREFIX)) return null
+  const rest = url.slice(CLOUDINARY_PREFIX.length)
+  const noVer = rest.replace(/^v\d+\//, '')
+  return noVer.replace(/\.[a-zA-Z0-9]+$/, '') || null
+}
+
+function buildTierlistOgImage(
+  coverUrl: string | undefined | null,
+  candidateItems: Array<{ imageUrl?: string } | null | undefined>,
+): string | undefined {
+  const coverId = extractCloudinaryId(coverUrl)
+  if (!coverId) return coverUrl || undefined
+
+  const seen = new Set<string>([coverId])
+  const itemIds: string[] = []
+  for (const it of candidateItems) {
+    if (itemIds.length >= 3) break
+    const id = extractCloudinaryId(it?.imageUrl)
+    if (id && !seen.has(id)) {
+      seen.add(id)
+      itemIds.push(id)
+    }
+  }
+
+  // Base canvas: cover cropped to 1200×630, slight darkening so overlays pop
+  const base = 'w_1200,h_630,c_fill,g_auto,q_auto,f_jpg/e_brightness:-10'
+  // Right-side column of 3 items, rounded corners + white border
+  const overlays = itemIds
+    .map((id, idx) => {
+      const y = -210 + idx * 210
+      return `l_${id.replace(/\//g, ':')},w_180,h_180,c_fill,r_18,bo_3px_solid_white,g_east,x_50,y_${y}`
+    })
+    .join('/')
+
+  const transform = overlays ? `${base}/${overlays}` : base
+  return `${CLOUDINARY_PREFIX}${transform}/${coverId}.jpg`
+}
+
 let baseHtml = ''
 
 export function loadIndexHtml(clientDist: string): void {
@@ -101,12 +148,16 @@ async function metaForPath(rawPath: string): Promise<Meta> {
         const desc = cat
           ? `Tier list ${cat} sur TierTogether — ${title}. Classez, débattez, partagez cette liste avec la communauté.`
           : `Tier list « ${title} » sur TierTogether. Classez, débattez, partagez cette liste avec la communauté.`
+        const rows = ((tl as any).rows || []) as Array<{ items?: Array<{ imageUrl?: string }> }>
+        const pool = ((tl as any).pool || []) as Array<{ imageUrl?: string }>
+        const allItems = [...pool, ...rows.flatMap((r) => r.items || [])]
+        const ogImage = buildTierlistOgImage((tl as any).coverImage, allItems)
         return {
           title: `${title} — TierTogether`,
           description: desc,
           canonical: `${SITE}/tierlist/${id}`,
           ogType: 'article',
-          image: (tl as any).coverImage || undefined,
+          image: ogImage,
           jsonLd: {
             '@context': 'https://schema.org',
             '@type': 'CreativeWork',
@@ -116,7 +167,7 @@ async function metaForPath(rawPath: string): Promise<Meta> {
             dateModified: new Date((tl as any).updatedAt).toISOString(),
             datePublished: new Date((tl as any).createdAt).toISOString(),
             ...(cat ? { genre: cat } : {}),
-            ...((tl as any).coverImage ? { image: (tl as any).coverImage } : {}),
+            ...(ogImage ? { image: ogImage } : {}),
           },
         }
       }
