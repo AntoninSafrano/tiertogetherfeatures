@@ -100,7 +100,15 @@ async function run() {
     throw new Error('Payload has no items')
   }
 
-  const finalTitle = (titleArg || payload.title || 'Imported Template').trim().slice(0, 100)
+  // Strip TierMaker title suffixes so we don't seed "... Tier List Maker" lists.
+  const cleanTitle = (t: string) =>
+    t.replace(/\s*Tier\s*List(\s*Maker)?\s*$/i, '').trim()
+  const finalTitle = (titleArg || cleanTitle(payload.title) || 'Imported Template').trim().slice(0, 100)
+
+  // Absolutize relative src URLs (TierMaker returns paths like /images/...).
+  const absolutize = (src: string) =>
+    src.startsWith('http') ? src : `https://tiermaker.com${src.startsWith('/') ? '' : '/'}${src}`
+
   console.log(`[Import] "${finalTitle}" — ${payload.items.length} items, category=${category}`)
 
   await mongoose.connect(env.MONGODB_URI)
@@ -116,9 +124,10 @@ async function run() {
   const pool: Array<{ id: string; label: string; imageUrl: string }> = []
   for (let i = 0; i < payload.items.length; i++) {
     const it = payload.items[i]!
-    const label = prettifyLabel(it.label ?? '', it.src)
+    const absSrc = absolutize(it.src)
+    const label = prettifyLabel(it.label ?? '', absSrc)
     try {
-      const cloudUrl = await uploadRemoteToCloudinary(it.src)
+      const cloudUrl = await uploadRemoteToCloudinary(absSrc)
       pool.push({ id: randomUUID(), label, imageUrl: cloudUrl })
       console.log(`[Import] ${String(i + 1).padStart(3)}/${payload.items.length} ✓ ${label}`)
     } catch (err) {
@@ -135,7 +144,7 @@ async function run() {
   let coverImage = ''
   if (payload.cover) {
     try {
-      coverImage = await uploadRemoteToCloudinary(payload.cover)
+      coverImage = await uploadRemoteToCloudinary(absolutize(payload.cover))
       console.log(`[Import] cover ✓`)
     } catch (err) {
       console.warn(`[Import] cover upload failed: ${(err as Error).message}`)
