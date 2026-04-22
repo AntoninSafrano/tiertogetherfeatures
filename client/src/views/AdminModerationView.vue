@@ -5,6 +5,8 @@ import { useAuth } from '@/composables/useAuth'
 import NavBar from '@/components/NavBar.vue'
 import { API_BASE } from '@/config'
 import { Flag, Trash2, EyeOff, Check, RefreshCw, Search, Loader2, BarChart3 } from 'lucide-vue-next'
+// Chat reports feature removed — banned-word filter is enough, no need to
+// signal individual messages.
 
 interface TierListMini {
   _id: string
@@ -49,7 +51,7 @@ const router = useRouter()
 const { user, fetchUser } = useAuth()
 const isAdmin = computed(() => !!user.value && ADMIN_EMAILS.has(user.value.email.toLowerCase()))
 
-const tab = ref<'reports' | 'publications' | 'chat'>('reports')
+const tab = ref<'reports' | 'publications'>('reports')
 
 // Reports tab
 const reports = ref<ReportItem[]>([])
@@ -65,26 +67,6 @@ const loadingTierlists = ref(false)
 const busyTierlists = ref<Set<string>>(new Set())
 
 const confirmDelete = ref<TierListMini | null>(null)
-
-// Chat reports tab
-interface ChatReportItem {
-  _id: string
-  roomId: string
-  messageId: string
-  snapshotText: string
-  snapshotUsername: string
-  snapshotUserId: string
-  reporterId: string
-  reason: string
-  details: string
-  status: 'pending' | 'resolved' | 'dismissed'
-  createdAt: string
-  reporter: { _id: string; displayName: string; email: string } | null
-}
-const chatReports = ref<ChatReportItem[]>([])
-const chatStatus = ref<'pending' | 'resolved' | 'dismissed' | 'all'>('pending')
-const loadingChat = ref(false)
-const busyChat = ref<Set<string>>(new Set())
 
 async function fetchReports() {
   loadingReports.value = true
@@ -173,37 +155,10 @@ function formatDate(d?: string): string {
   return new Date(d).toLocaleString('fr-FR', { dateStyle: 'short', timeStyle: 'short' })
 }
 
-async function fetchChatReports() {
-  loadingChat.value = true
-  try {
-    const res = await fetch(`${API_BASE}/api/admin/chat-reports?status=${chatStatus.value}`, { credentials: 'include' })
-    const data = await res.json()
-    chatReports.value = data.reports ?? []
-  } finally {
-    loadingChat.value = false
-  }
-}
-
-async function resolveChatReport(rep: ChatReportItem, action: 'dismiss' | 'resolve') {
-  if (busyChat.value.has(rep._id)) return
-  busyChat.value.add(rep._id)
-  try {
-    const res = await fetch(`${API_BASE}/api/admin/chat-reports/${rep._id}/resolve`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      credentials: 'include',
-      body: JSON.stringify({ action }),
-    })
-    if (res.ok) chatReports.value = chatReports.value.filter(r => r._id !== rep._id)
-  } finally {
-    busyChat.value.delete(rep._id)
-  }
-}
-
 onMounted(async () => {
   await fetchUser()
   if (!isAdmin.value) return
-  await Promise.all([fetchReports(), fetchTierlists(), fetchChatReports()])
+  await Promise.all([fetchReports(), fetchTierlists()])
 })
 </script>
 
@@ -250,15 +205,6 @@ onMounted(async () => {
             @click="tab = 'publications'"
           >
             Publications
-          </button>
-          <button
-            type="button"
-            :class="['px-4 py-2 text-sm font-medium transition-colors border-b-2 -mb-px',
-              tab === 'chat' ? 'border-primary text-primary' : 'border-transparent text-foreground-muted hover:text-foreground']"
-            @click="tab = 'chat'"
-          >
-            Chat
-            <span v-if="chatReports.length" class="ml-1 rounded-full bg-amber-500/20 px-1.5 text-[10px] text-amber-400">{{ chatReports.length }}</span>
           </button>
         </div>
 
@@ -459,89 +405,6 @@ onMounted(async () => {
                 <Trash2 class="h-3.5 w-3.5" />
                 Supprimer
               </button>
-            </li>
-          </ul>
-        </section>
-
-        <!-- Chat reports tab -->
-        <section v-else-if="tab === 'chat'" class="mt-6">
-          <div class="flex flex-wrap items-center gap-3">
-            <label class="text-xs text-foreground-muted">Statut</label>
-            <select
-              v-model="chatStatus"
-              class="rounded-md border border-border bg-surface px-3 py-1.5 text-sm text-foreground focus:border-primary/50 focus:outline-none"
-              @change="fetchChatReports"
-            >
-              <option value="pending">En attente</option>
-              <option value="resolved">Résolus</option>
-              <option value="dismissed">Ignorés</option>
-              <option value="all">Tous</option>
-            </select>
-            <button
-              type="button"
-              class="inline-flex items-center gap-1.5 rounded-md border border-border-hover bg-surface-hover px-3 py-1.5 text-xs font-medium text-foreground hover:bg-surface-active transition-colors"
-              @click="fetchChatReports"
-            >
-              <RefreshCw class="h-3.5 w-3.5" :class="{ 'animate-spin': loadingChat }" />
-              Actualiser
-            </button>
-          </div>
-
-          <div v-if="loadingChat" class="mt-6 flex items-center justify-center py-12">
-            <Loader2 class="h-6 w-6 animate-spin text-foreground-muted" />
-          </div>
-
-          <div v-else-if="!chatReports.length" class="mt-6 rounded-xl border border-border bg-surface p-8 text-center text-sm text-foreground-muted">
-            Aucun signalement de message à afficher.
-          </div>
-
-          <ul v-else class="mt-4 space-y-3">
-            <li
-              v-for="rep in chatReports"
-              :key="rep._id"
-              class="rounded-xl border border-border-hover bg-surface p-4"
-            >
-              <div class="flex flex-wrap items-start justify-between gap-3">
-                <div class="min-w-0 flex-1">
-                  <div class="flex flex-wrap items-center gap-2 text-xs text-foreground-muted">
-                    <span class="rounded-full bg-amber-500/10 px-2 py-0.5 text-[10px] font-medium text-amber-300">
-                      {{ rep.reason }}
-                    </span>
-                    <span>Room <span class="font-mono text-foreground">{{ rep.roomId }}</span></span>
-                    <span>· {{ formatDate(rep.createdAt) }}</span>
-                  </div>
-                  <div class="mt-2 rounded-lg border border-border bg-background px-3 py-2">
-                    <p class="text-[11px] font-semibold text-foreground">{{ rep.snapshotUsername }}</p>
-                    <p class="mt-0.5 text-sm text-foreground-muted whitespace-pre-wrap break-words">{{ rep.snapshotText }}</p>
-                  </div>
-                  <p v-if="rep.details" class="mt-2 text-xs text-foreground-muted">
-                    <span class="font-medium text-foreground">Détails reporter :</span> {{ rep.details }}
-                  </p>
-                  <p v-if="rep.reporter" class="mt-1 text-[11px] text-foreground-subtle">
-                    Signalé par {{ rep.reporter.displayName }} ({{ rep.reporter.email }})
-                  </p>
-                </div>
-                <div v-if="rep.status === 'pending'" class="flex shrink-0 gap-2">
-                  <button
-                    type="button"
-                    class="inline-flex items-center gap-1.5 rounded-md border border-border-hover bg-surface-hover px-3 py-1.5 text-xs font-medium text-foreground-muted hover:text-foreground transition-colors disabled:opacity-50"
-                    :disabled="busyChat.has(rep._id)"
-                    @click="resolveChatReport(rep, 'dismiss')"
-                  >
-                    <Check class="h-3.5 w-3.5" />
-                    Ignorer
-                  </button>
-                  <button
-                    type="button"
-                    class="inline-flex items-center gap-1.5 rounded-md bg-amber-500/10 border border-amber-500/40 px-3 py-1.5 text-xs font-medium text-amber-300 hover:bg-amber-500/20 transition-colors disabled:opacity-50"
-                    :disabled="busyChat.has(rep._id)"
-                    @click="resolveChatReport(rep, 'resolve')"
-                  >
-                    Traité
-                  </button>
-                </div>
-                <span v-else class="text-[10px] text-foreground-subtle">{{ rep.status }}</span>
-              </div>
             </li>
           </ul>
         </section>
