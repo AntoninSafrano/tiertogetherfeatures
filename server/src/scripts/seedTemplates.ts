@@ -125,14 +125,34 @@ async function fetchLolChamps(names: string[]): Promise<Array<{ label: string; i
   return picked
 }
 
-function fetchSteamCovers(
+async function checkUrl(url: string): Promise<boolean> {
+  try {
+    const res = await fetch(url, { method: 'HEAD' })
+    return res.ok
+  } catch {
+    return false
+  }
+}
+
+async function fetchSteamCovers(
   games: Array<{ label: string; appId: number }>,
-): Array<{ label: string; imageUrl: string }> {
-  // Steam CDN is public; library_600x900_2x gives the vertical box-art.
-  return games.map(g => ({
-    label: g.label,
-    imageUrl: `https://cdn.cloudflare.steamstatic.com/steam/apps/${g.appId}/library_600x900_2x.jpg`,
-  }))
+): Promise<Array<{ label: string; imageUrl: string }>> {
+  // Preflight each appId: prefer library_600x900_2x (vertical box art);
+  // fall back to header.jpg for older/delisted games that lack the newer
+  // asset. Drop entries where both are missing.
+  const out: Array<{ label: string; imageUrl: string }> = []
+  for (const g of games) {
+    const boxArt = `https://cdn.cloudflare.steamstatic.com/steam/apps/${g.appId}/library_600x900_2x.jpg`
+    const header = `https://cdn.cloudflare.steamstatic.com/steam/apps/${g.appId}/header.jpg`
+    if (await checkUrl(boxArt)) {
+      out.push({ label: g.label, imageUrl: boxArt })
+    } else if (await checkUrl(header)) {
+      out.push({ label: g.label, imageUrl: header })
+    } else {
+      console.warn(`[Seed] steam appId ${g.appId} ("${g.label}") has no usable cover, skipped`)
+    }
+  }
+  return out
 }
 
 async function fetchSource(src: SourceSpec): Promise<Array<{ label: string; imageUrl: string }>> {
@@ -225,10 +245,9 @@ const TEMPLATES: Template[] = [
     source: {
       kind: 'steam',
       games: [
-        { label: "Assassin's Creed",              appId: 15100 },
+        // AC1 and Revelations were delisted from Steam — no cover available.
         { label: "Assassin's Creed II",           appId: 33230 },
         { label: "Assassin's Creed Brotherhood",  appId: 48190 },
-        { label: "Assassin's Creed Revelations",  appId: 201870 },
         { label: "Assassin's Creed III",          appId: 208480 },
         { label: "Assassin's Creed IV Black Flag", appId: 242050 },
         { label: "Assassin's Creed Rogue",        appId: 311560 },
@@ -237,7 +256,7 @@ const TEMPLATES: Template[] = [
         { label: "Assassin's Creed Origins",      appId: 582160 },
         { label: "Assassin's Creed Odyssey",      appId: 812140 },
         { label: "Assassin's Creed Valhalla",     appId: 2208920 },
-        { label: "Assassin's Creed Mirage",       appId: 2221490 },
+        // Mirage released on Steam only in Oct 2024; appId TBD.
       ],
     },
   },
@@ -313,7 +332,7 @@ const TEMPLATES: Template[] = [
     source: {
       kind: 'steam',
       games: [
-        { label: 'Far Cry',   appId: 13520 },
+        // Far Cry 1 was delisted; skipped.
         { label: 'Far Cry 2', appId: 19900 },
         { label: 'Far Cry 3', appId: 220240 },
         { label: 'Far Cry 4', appId: 298110 },
@@ -344,10 +363,8 @@ const TEMPLATES: Template[] = [
     source: {
       kind: 'steam',
       games: [
-        { label: 'Metal Gear Solid V: Ground Zeroes', appId: 287700 },
         { label: 'Metal Gear Solid V: The Phantom Pain', appId: 287700 },
-        { label: 'Metal Gear Rising: Revengeance', appId: 235460 },
-        { label: 'Metal Gear Solid: Master Collection', appId: 2131370 },
+        { label: 'Metal Gear Rising: Revengeance',       appId: 235460 },
       ],
     },
   },
