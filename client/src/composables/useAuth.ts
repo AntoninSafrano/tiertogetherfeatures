@@ -177,13 +177,18 @@ export function useAuth() {
     user.value = null
   }
 
-  async function updateProfile(displayName: string): Promise<{ success: boolean; error?: string }> {
+  async function updateProfile(
+    displayName: string,
+    avatar?: string,
+  ): Promise<{ success: boolean; error?: string }> {
     try {
+      const body: { displayName: string; avatar?: string } = { displayName }
+      if (avatar !== undefined) body.avatar = avatar
       const res = await fetch(`${API_BASE}/auth/me`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        body: JSON.stringify({ displayName }),
+        body: JSON.stringify(body),
       })
       const data = await res.json()
       if (!res.ok) {

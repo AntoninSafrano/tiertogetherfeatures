@@ -493,7 +493,7 @@ router.patch('/auth/me', async (req: Request, res: Response) => {
       return
     }
 
-    const { displayName } = req.body as { displayName?: unknown }
+    const { displayName, avatar } = req.body as { displayName?: unknown; avatar?: unknown }
 
     if (typeof displayName !== 'string') {
       res.status(400).json({ error: 'Le pseudo est requis.' })
@@ -506,9 +506,24 @@ router.patch('/auth/me', async (req: Request, res: Response) => {
       return
     }
 
+    const update: { displayName: string; avatar?: string } = { displayName: cleaned }
+
+    if (avatar !== undefined) {
+      if (typeof avatar !== 'string') {
+        res.status(400).json({ error: 'Avatar invalide.' })
+        return
+      }
+      const trimmed = avatar.trim().slice(0, 500)
+      if (trimmed && !/^https:\/\/(res\.cloudinary\.com|lh\d+\.googleusercontent\.com)\//i.test(trimmed)) {
+        res.status(400).json({ error: "URL d'avatar non autorisée." })
+        return
+      }
+      update.avatar = trimmed
+    }
+
     const user = await UserModel.findByIdAndUpdate(
       decoded.userId,
-      { displayName: cleaned },
+      update,
       { new: true },
     )
     if (!user) {
