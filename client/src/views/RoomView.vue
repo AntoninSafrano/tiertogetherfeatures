@@ -7,7 +7,7 @@ import { TierBoard } from '@/components/tierlist'
 import RoomEntryGate from '@/components/room/RoomEntryGate.vue'
 import type { ChatMessage } from '@tiertogether/shared'
 import { useAutoScroll } from '@/composables/useAutoScroll'
-import { ArrowLeft, Crown, Users, MessageCircle, Send, PanelRightClose, PanelRightOpen, Check, Share2 } from 'lucide-vue-next'
+import { ArrowLeft, Crown, Users, MessageCircle, Send, PanelRightClose, PanelRightOpen, Copy, Check } from 'lucide-vue-next'
 
 const route = useRoute()
 const router = useRouter()
@@ -32,25 +32,10 @@ const chatMessages = ref<ChatMessage[]>([])
 const unreadCount = ref(0)
 const messagesEnd = ref<HTMLElement | null>(null)
 
-// Invite / share
+// Copy link
 const linkCopied = ref(false)
 async function copyRoomLink() {
-  const url = window.location.href
-  const title = store.title || 'TierTogether'
-  const text = `Rejoins-moi sur TierTogether pour classer « ${title} » ensemble.`
-
-  // Use the native share sheet when available (mobile Safari, Android
-  // Chrome, some desktop browsers). Fall back to clipboard copy.
-  if (typeof navigator.share === 'function') {
-    try {
-      await navigator.share({ title, text, url })
-      return
-    } catch {
-      // user dismissed the share sheet — still copy so they can paste manually
-    }
-  }
-
-  await navigator.clipboard.writeText(url)
+  await navigator.clipboard.writeText(window.location.href)
   linkCopied.value = true
   setTimeout(() => linkCopied.value = false, 2000)
 }
@@ -171,26 +156,29 @@ function goHome() {
         >
           <ArrowLeft class="h-4 w-4" />
         </button>
-        <div class="flex items-center gap-2">
+        <div class="flex items-center gap-1.5">
           <span class="text-sm font-semibold text-foreground truncate max-w-[200px]">{{ store.title || 'Tier List' }}</span>
           <span class="text-foreground-subtle">·</span>
           <span class="text-xs font-mono text-foreground-subtle">{{ roomId }}</span>
           <button
             v-if="!isSolo"
-            :class="[
-              'inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold transition-all shadow-sm',
-              linkCopied
-                ? 'bg-emerald-500/15 text-emerald-300 border border-emerald-500/40'
-                : 'bg-primary text-white border border-primary hover:bg-primary-hover shadow-primary/20',
-            ]"
-            :title="linkCopied ? 'Lien copié !' : 'Copier le lien et inviter tes amis'"
-            aria-label="Inviter des amis dans la room"
+            class="flex items-center justify-center h-6 w-6 rounded-md text-foreground-subtle hover:text-foreground hover:bg-surface-hover transition-colors"
+            title="Copier le lien de la room"
             @click="copyRoomLink"
           >
-            <Check v-if="linkCopied" class="h-3.5 w-3.5" />
-            <Share2 v-else class="h-3.5 w-3.5" />
-            <span>{{ linkCopied ? 'Lien copié' : 'Inviter' }}</span>
+            <Check v-if="linkCopied" class="h-3.5 w-3.5 text-emerald-400" />
+            <Copy v-else class="h-3.5 w-3.5" />
           </button>
+          <Transition
+            enter-active-class="transition-opacity duration-200"
+            enter-from-class="opacity-0"
+            enter-to-class="opacity-100"
+            leave-active-class="transition-opacity duration-200"
+            leave-from-class="opacity-100"
+            leave-to-class="opacity-0"
+          >
+            <span v-if="linkCopied" class="text-[11px] font-medium text-emerald-400">Copie !</span>
+          </Transition>
         </div>
         <div v-if="isSolo" class="rounded-full bg-primary/10 px-2.5 py-0.5">
           <span class="text-[11px] font-medium text-primary">Solo</span>
