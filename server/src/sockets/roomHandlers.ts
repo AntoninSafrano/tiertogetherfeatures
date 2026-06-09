@@ -20,6 +20,7 @@ import { TierListModel } from '../models/TierList'
 import { UserModel } from '../models/User'
 import { env } from '../config/env'
 import { containsBannedWord } from '../middleware/moderation'
+import { connectTwitchChat, disconnectTwitchChat, getTwitchChannel } from '../twitch/chatBridge'
 
 // A03: Sanitize user inputs — prevent NoSQL injection and XSS
 function sanitize(str: string, maxLen: number = 500): string {
@@ -52,9 +53,51 @@ const MAX_USERS_PER_ROOM = 5
 // ─── Vote Mode State ────────────────────────────────────────────────
 const activeVotes = new Map<string, {
   itemId: string
-  votes: Map<string, string>  // userId -> rowId
-  voters: Set<string>         // userIds who can vote
+  votes: Map<string, string>        // socketId -> rowId
+  voters: Set<string>               // socketIds who can vote
+  twitchVotes: Map<string, string>  // twitch username -> rowId
+  labelToRow: Map<string, string>   // lowercase row label -> rowId (for chat votes)
 }>()
+
+/** Combined tally: room votes + Twitch chat votes */
+function buildTally(vote: { votes: Map<string, string>; twitchVotes: Map<string, string> }): Record<string, number> {
+  const tally: Record<string, number> = {}
+  for (const rowId of vote.votes.values()) tally[rowId] = (tally[rowId] || 0) + 1
+  for (const rowId of vote.twitchVotes.values()) tally[rowId] = (tally[rowId] || 0) + 1
+  return tally
+}
+
+// Throttle Twitch-driven vote:update broadcasts (chat can spam)
+const twitchUpdateTimers = new Map<string, NodeJS.Timeout>()
+
+function broadcastVoteUpdate(io: TypedServer, roomId: string): void {
+  const vote = activeVotes.get(roomId)
+  if (!vote) return
+  io.in(roomId).emit('vote:update', {
+    itemId: vote.itemId,
+    votes: buildTally(vote),
+    votedCount: vote.votes.size,
+    totalVoters: vote.voters.size,
+    twitchVotedCount: vote.twitchVotes.size,
+  })
+}
+
+function handleTwitchMessage(io: TypedServer, roomId: string, username: string, message: string): void {
+  const vote = activeVotes.get(roomId)
+  if (!vote) return
+  const label = message.trim().toLowerCase()
+  const rowId = vote.labelToRow.get(label)
+  if (!rowId) return
+  if (vote.twitchVotes.get(username) === rowId) return
+  vote.twitchVotes.set(username, rowId)
+
+  if (!twitchUpdateTimers.has(roomId)) {
+    twitchUpdateTimers.set(roomId, setTimeout(() => {
+      twitchUpdateTimers.delete(roomId)
+      broadcastVoteUpdate(io, roomId)
+    }, 400))
+  }
+}
 
 // Store vote timers per room
 const voteTimers = new Map<string, NodeJS.Timeout>()
@@ -80,6 +123,8 @@ async function startNextVote(roomId: string, io: TypedServer): Promise<void> {
     itemId: item.id,
     votes: new Map(),
     voters: voterIds,
+    twitchVotes: new Map(),
+    labelToRow: new Map(tierList.rows.map((r) => [r.label.trim().toLowerCase(), r.id])),
   })
 
   io.in(roomId).emit('vote:started', {
@@ -94,7 +139,7 @@ async function startNextVote(roomId: string, io: TypedServer): Promise<void> {
   // Set 30s auto-resolve timer
   const timer = setTimeout(() => {
     const activeVote = activeVotes.get(roomId)
-    if (activeVote && activeVote.votes.size > 0) {
+    if (activeVote && (activeVote.votes.size > 0 || activeVote.twitchVotes.size > 0)) {
       resolveVote(roomId, io)
     } else {
       // No votes at all, skip item
@@ -118,16 +163,9 @@ async function resolveVote(roomId: string, io: TypedServer): Promise<void> {
   const tierList = await TierListModel.findOne({ roomId })
   if (!tierList) return
 
-  // Count votes per row
-  const tally = new Map<string, number>()
-  for (const rowId of vote.votes.values()) {
-    tally.set(rowId, (tally.get(rowId) || 0) + 1)
-  }
-
-  const votesRecord: Record<string, number> = {}
-  for (const [rowId, count] of tally.entries()) {
-    votesRecord[rowId] = count
-  }
+  // Count votes per row (room players + Twitch chat)
+  const votesRecord = buildTally(vote)
+  const tally = new Map<string, number>(Object.entries(votesRecord))
 
   // Find the winner (most votes)
   let maxCount = 0
@@ -326,25 +364,14 @@ export function registerRoomHandlers(io: TypedServer, socket: TypedSocket): void
           timeLimit: 30, // approximate — timer already running on server
         })
 
-        // Send current vote progress
-        const voteCounts: Record<string, number> = {}
-        for (const rowId of activeVote.votes.values()) {
-          voteCounts[rowId] = (voteCounts[rowId] || 0) + 1
-        }
-        socket.emit('vote:update', {
-          itemId: activeVote.itemId,
-          votes: voteCounts,
-          votedCount: activeVote.votes.size,
-          totalVoters: activeVote.voters.size,
-        })
+        // Send current vote progress to everyone (totalVoters changed)
+        broadcastVoteUpdate(io, roomId)
+      }
 
-        // Update total voters for everyone else too
-        io.in(roomId).emit('vote:update', {
-          itemId: activeVote.itemId,
-          votes: voteCounts,
-          votedCount: activeVote.votes.size,
-          totalVoters: activeVote.voters.size,
-        })
+      // Tell the new joiner whether a Twitch chat is plugged in
+      const twitchChannel = getTwitchChannel(roomId)
+      if (twitchChannel) {
+        socket.emit('twitch:status', { connected: true, channel: twitchChannel })
       }
 
       console.log(`[Room] ${username} ${isRejoin ? 'rejoined' : 'joined'} room ${roomId}`)
@@ -623,21 +650,11 @@ export function registerRoomHandlers(io: TypedServer, socket: TypedSocket): void
     // Record the vote (overwrite if already voted)
     vote.votes.set(socket.id, data.rowId)
 
-    // Build vote counts per row
-    const tally: Record<string, number> = {}
-    for (const rowId of vote.votes.values()) {
-      tally[rowId] = (tally[rowId] || 0) + 1
-    }
+    // Broadcast update (includes Twitch chat votes)
+    broadcastVoteUpdate(io, roomId)
 
-    // Broadcast update
-    io.in(roomId).emit('vote:update', {
-      itemId: vote.itemId,
-      votes: tally,
-      votedCount: vote.votes.size,
-      totalVoters: vote.voters.size,
-    })
-
-    // Check if all voters have voted
+    // Check if all room voters have voted (Twitch votes don't end the round
+    // early — chat keeps voting until the timer or the players are done)
     if (vote.votes.size >= vote.voters.size) {
       await resolveVote(roomId, io)
     }
@@ -833,6 +850,51 @@ export function registerRoomHandlers(io: TypedServer, socket: TypedSocket): void
     }
   })
 
+  // ─── twitch:connect (host only) ────────────────────────────────
+  socket.on('twitch:connect', async (data) => {
+    const roomId = socket.data.roomId
+    if (!roomId) { socket.emit('error', 'Pas dans une room'); return }
+
+    try {
+      const tierList = await TierListModel.findOne({ roomId }).select('ownerId').lean()
+      if (!tierList || tierList.ownerId !== socket.id) {
+        socket.emit('error', 'Seul l\'hôte peut connecter un chat Twitch')
+        return
+      }
+
+      const channel = String(data?.channel ?? '').trim().replace(/^#/, '')
+      const result = connectTwitchChat(roomId, channel, {
+        onMessage: (username, message) => handleTwitchMessage(io, roomId, username, message),
+        onStatus: (connected, error) => {
+          io.in(roomId).emit('twitch:status', { connected, channel: channel.toLowerCase(), ...(error ? { error } : {}) })
+        },
+      })
+      if (!result.ok) {
+        socket.emit('twitch:status', { connected: false, channel, error: result.error })
+        return
+      }
+      console.log(`[Twitch] Room ${roomId} connecting to #${channel.toLowerCase()}`)
+    } catch (err) {
+      console.error('[Twitch] Connect failed:', err)
+      socket.emit('error', 'Échec de la connexion au chat Twitch')
+    }
+  })
+
+  // ─── twitch:disconnect (host only) ─────────────────────────────
+  socket.on('twitch:disconnect', async () => {
+    const roomId = socket.data.roomId
+    if (!roomId) return
+    try {
+      const tierList = await TierListModel.findOne({ roomId }).select('ownerId').lean()
+      if (!tierList || tierList.ownerId !== socket.id) return
+      disconnectTwitchChat(roomId)
+      io.in(roomId).emit('twitch:status', { connected: false, channel: '' })
+      console.log(`[Twitch] Room ${roomId} disconnected from Twitch chat`)
+    } catch (err) {
+      console.error('[Twitch] Disconnect failed:', err)
+    }
+  })
+
   // ─── chat:send ─────────────────────────────────────────────────
   socket.on('chat:send', async (data) => {
     const roomId = socket.data.roomId
@@ -893,6 +955,14 @@ function leaveCurrentRoom(io: TypedServer, socket: TypedSocket): void {
   socket.to(roomId).emit('room:user-left', socket.id)
   socket.data.roomId = null
   console.log(`[Room] ${socket.data.username ?? socket.id} left room ${roomId}`)
+
+  // Tear down the Twitch bridge once the room is empty
+  setImmediate(async () => {
+    try {
+      const remaining = await io.in(roomId).fetchSockets()
+      if (remaining.length === 0) disconnectTwitchChat(roomId)
+    } catch { /* room already gone */ }
+  })
 }
 
 async function buildRoomState(io: TypedServer, roomId: string): Promise<Room | null> {

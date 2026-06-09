@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted } from 'vue'
 import { useRoomStore } from '@/stores/room'
-import { Lock, Unlock, RotateCcw, Download, Maximize, Upload, Vote, Palette } from 'lucide-vue-next'
+import { Lock, Unlock, RotateCcw, Download, Maximize, Upload, Vote, Palette, Twitch } from 'lucide-vue-next'
 import { toPng } from 'html-to-image'
 import PublishModal from './PublishModal.vue'
 
@@ -10,6 +10,14 @@ const isExporting = ref(false)
 const showPublishModal = ref(false)
 const showResetConfirm = ref(false)
 const showThemeMenu = ref(false)
+const showTwitchMenu = ref(false)
+const twitchChannelInput = ref('')
+
+function submitTwitch() {
+  const channel = twitchChannelInput.value.trim().replace(/^#/, '').replace(/^https?:\/\/(www\.)?twitch\.tv\//i, '')
+  if (!channel) return
+  store.connectTwitch(channel)
+}
 
 const colorThemes: { name: string; colors: string[] }[] = [
   { name: 'Classique', colors: ['#FF7F7F', '#FFBF7F', '#FFFF7F', '#7FFF7F', '#7FBFFF', '#BF7FFF'] },
@@ -26,12 +34,13 @@ function applyTheme(theme: { name: string; colors: string[] }) {
   showThemeMenu.value = false
 }
 
-function closeThemeMenu() {
+function closeMenus() {
   showThemeMenu.value = false
+  showTwitchMenu.value = false
 }
 
-onMounted(() => document.addEventListener('click', closeThemeMenu))
-onUnmounted(() => document.removeEventListener('click', closeThemeMenu))
+onMounted(() => document.addEventListener('click', closeMenus))
+onUnmounted(() => document.removeEventListener('click', closeMenus))
 
 function resetRankings() {
   showResetConfirm.value = true
@@ -173,11 +182,74 @@ async function exportImage() {
         <span class="hidden sm:inline">{{ store.isVoteMode ? 'Arrêter Vote' : 'Mode Vote' }}</span>
       </button>
 
+      <!-- Twitch chat bridge -->
+      <div class="relative">
+        <button
+          :class="[
+            'inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition-colors',
+            store.twitchConnected
+              ? 'bg-[#9146FF]/20 text-[#bf94ff] ring-1 ring-[#9146FF]/50'
+              : 'text-foreground-muted hover:bg-[#9146FF]/10 hover:text-[#bf94ff]',
+          ]"
+          @click.stop="showTwitchMenu = !showTwitchMenu; showThemeMenu = false"
+        >
+          <Twitch class="h-3.5 w-3.5" />
+          <span class="hidden sm:inline">{{ store.twitchConnected ? store.twitchChannel : 'Twitch' }}</span>
+        </button>
+        <div
+          v-if="showTwitchMenu"
+          class="absolute left-0 top-full mt-1 z-50 w-72 rounded-lg border border-border-hover bg-surface shadow-xl p-3"
+          @click.stop
+        >
+          <p class="text-sm font-semibold text-foreground mb-1">Chat Twitch</p>
+          <p class="text-[11px] leading-relaxed text-foreground-muted mb-2.5">
+            Connecte ta chaîne : pendant un vote, tes viewers votent en tapant
+            le nom du tier (<span class="font-mono">S</span>, <span class="font-mono">A</span>,
+            <span class="font-mono">B</span>…) dans le chat. Sans inscription.
+          </p>
+
+          <template v-if="!store.twitchConnected">
+            <form class="flex gap-2" @submit.prevent="submitTwitch">
+              <input
+                v-model="twitchChannelInput"
+                type="text"
+                placeholder="nom_de_ta_chaine"
+                maxlength="25"
+                class="min-w-0 flex-1 rounded-md border border-border bg-background px-2.5 py-1.5 text-xs text-foreground placeholder:text-foreground-subtle focus:border-[#9146FF]/60 focus:outline-none"
+              />
+              <button
+                type="submit"
+                :disabled="!twitchChannelInput.trim()"
+                class="rounded-md bg-[#9146FF] px-3 py-1.5 text-xs font-semibold text-white hover:bg-[#7c2df0] transition-colors disabled:opacity-50"
+              >
+                Connecter
+              </button>
+            </form>
+            <p v-if="store.twitchError" class="mt-2 text-[11px] text-red-400">{{ store.twitchError }}</p>
+          </template>
+
+          <template v-else>
+            <div class="flex items-center justify-between gap-2">
+              <span class="inline-flex items-center gap-1.5 text-xs text-foreground">
+                <span class="h-2 w-2 rounded-full bg-emerald-400" />
+                Connecté à <span class="font-semibold text-[#bf94ff]">#{{ store.twitchChannel }}</span>
+              </span>
+              <button
+                class="rounded-md border border-border-hover px-2.5 py-1 text-[11px] font-medium text-foreground-muted hover:text-red-400 hover:border-red-500/40 transition-colors"
+                @click="store.disconnectTwitch()"
+              >
+                Déconnecter
+              </button>
+            </div>
+          </template>
+        </div>
+      </div>
+
       <!-- Theme picker -->
       <div class="relative">
         <button
           class="inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium text-foreground-muted transition-colors hover:bg-purple-500/10 hover:text-purple-400"
-          @click.stop="showThemeMenu = !showThemeMenu"
+          @click.stop="showThemeMenu = !showThemeMenu; showTwitchMenu = false"
         >
           <Palette class="h-3.5 w-3.5" />
           <span class="hidden sm:inline">Thème</span>

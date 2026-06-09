@@ -41,6 +41,12 @@ export const useRoomStore = defineStore('room', () => {
   const voteTimeLeft = ref(0)
   let voteTimerInterval: number | null = null
 
+  // ─── Twitch Chat Bridge ─────────────────────────────────────────
+  const twitchConnected = ref(false)
+  const twitchChannel = ref('')
+  const twitchError = ref<string | null>(null)
+  const twitchVotedCount = ref(0)
+
   // ─── Focus Mode ───────────────────────────────────────────────
   const currentFocusItem = computed(() => pool.value[0] ?? null)
 
@@ -109,7 +115,7 @@ export const useRoomStore = defineStore('room', () => {
       'room:locked', 'room:focus-toggled', 'room:vote-toggled',
       'vote:started', 'vote:update', 'vote:result',
       'room:reset', 'room:user-joined', 'room:user-left', 'chat:message', 'error',
-      'row:updated', 'row:deleted', 'row:reordered', 'row:added',
+      'row:updated', 'row:deleted', 'row:reordered', 'row:added', 'twitch:status',
     ] as const
     for (const ev of EVENTS) socket.value.off(ev as any)
     boundSocket = socket.value
@@ -169,6 +175,7 @@ export const useRoomStore = defineStore('room', () => {
         totalVoters.value = 0
         hasVoted.value = false
         voteWinner.value = null
+        twitchVotedCount.value = 0
         // Clear countdown timer
         if (voteTimerInterval) {
           clearInterval(voteTimerInterval)
@@ -185,6 +192,7 @@ export const useRoomStore = defineStore('room', () => {
       voteResults.value = {}
       hasVoted.value = false
       voteWinner.value = null
+      twitchVotedCount.value = 0
 
       // Start countdown timer
       if (voteTimerInterval) clearInterval(voteTimerInterval)
@@ -202,6 +210,13 @@ export const useRoomStore = defineStore('room', () => {
       voteResults.value = data.votes
       votedCount.value = data.votedCount
       totalVoters.value = data.totalVoters
+      twitchVotedCount.value = data.twitchVotedCount ?? 0
+    })
+
+    socket.value.on('twitch:status', (data) => {
+      twitchConnected.value = data.connected
+      twitchChannel.value = data.channel
+      twitchError.value = data.error ?? null
     })
 
     socket.value.on('vote:result', (data) => {
@@ -364,6 +379,21 @@ export const useRoomStore = defineStore('room', () => {
     }
   }
 
+  function connectTwitch(channel: string) {
+    const { socket } = useSocket()
+    twitchError.value = null
+    if (socket.value?.connected) {
+      socket.value.emit('twitch:connect', { channel })
+    }
+  }
+
+  function disconnectTwitch() {
+    const { socket } = useSocket()
+    if (socket.value?.connected) {
+      socket.value.emit('twitch:disconnect')
+    }
+  }
+
   function saveRoomToHistory(roomId: string, titleName: string) {
     const history = JSON.parse(localStorage.getItem('tt-my-rooms') || '[]')
     if (!history.some((r: any) => r.roomId === roomId)) {
@@ -487,6 +517,10 @@ export const useRoomStore = defineStore('room', () => {
     totalVoters.value = 0
     hasVoted.value = false
     voteWinner.value = null
+    twitchConnected.value = false
+    twitchChannel.value = ''
+    twitchError.value = null
+    twitchVotedCount.value = 0
     // Clear countdown timer
     if (voteTimerInterval) {
       clearInterval(voteTimerInterval)
@@ -522,6 +556,13 @@ export const useRoomStore = defineStore('room', () => {
     voteWinner,
     voteTimeLeft,
     currentFocusItem,
+    // Twitch
+    twitchConnected,
+    twitchChannel,
+    twitchError,
+    twitchVotedCount,
+    connectTwitch,
+    disconnectTwitch,
     moveItem,
     emitMove,
     resetRoom,

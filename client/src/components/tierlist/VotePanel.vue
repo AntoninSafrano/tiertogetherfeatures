@@ -2,7 +2,7 @@
 import { computed } from 'vue'
 import { useRoomStore } from '@/stores/room'
 import { getPlaceholderColor } from '@/lib/utils'
-import { Check, Trophy, Users, Timer } from 'lucide-vue-next'
+import { Check, Trophy, Users, Twitch } from 'lucide-vue-next'
 
 const store = useRoomStore()
 
@@ -72,9 +72,15 @@ const timerColor = computed(() => {
     <!-- Active vote -->
     <template v-else-if="voteItem">
       <!-- Header -->
-      <div class="flex items-center gap-2 text-sm font-medium text-emerald-400">
-        <Users class="h-4 w-4" />
-        <span>{{ store.votedCount }}/{{ store.totalVoters }} joueurs ont vote</span>
+      <div class="flex flex-wrap items-center justify-center gap-x-4 gap-y-1">
+        <div class="flex items-center gap-2 text-sm font-medium text-emerald-400">
+          <Users class="h-4 w-4" />
+          <span>{{ store.votedCount }}/{{ store.totalVoters }} joueurs ont vote</span>
+        </div>
+        <div v-if="store.twitchConnected" class="flex items-center gap-1.5 text-sm font-medium text-[#bf94ff]">
+          <Twitch class="h-4 w-4" />
+          <span>{{ store.twitchVotedCount }} vote{{ store.twitchVotedCount !== 1 ? 's' : '' }} du chat</span>
+        </div>
       </div>
 
       <!-- Countdown timer -->

@@ -106,6 +106,8 @@ export interface ClientToServerEvents {
   'vote:cast': (data: { itemId: string; rowId: string }) => void
   'item:skip': () => void
   'chat:send': (data: { text: string }) => void
+  'twitch:connect': (data: { channel: string }) => void
+  'twitch:disconnect': () => void
   'row:update': (data: RowUpdatePayload) => void
   'row:delete': (data: RowDeletePayload) => void
   'row:reorder': (data: RowReorderPayload) => void
@@ -124,7 +126,8 @@ export interface ServerToClientEvents {
   'room:focus-toggled': (isFocusMode: boolean) => void
   'room:vote-toggled': (isVoteMode: boolean) => void
   'vote:started': (data: { itemId: string; totalVoters: number; timeLimit: number }) => void
-  'vote:update': (data: { itemId: string; votes: Record<string, number>; votedCount: number; totalVoters: number }) => void
+  'vote:update': (data: { itemId: string; votes: Record<string, number>; votedCount: number; totalVoters: number; twitchVotedCount?: number }) => void
+  'twitch:status': (data: { connected: boolean; channel: string; error?: string }) => void
   'vote:result': (data: { itemId: string; winnerRowId: string; votes: Record<string, number> }) => void
   'item:skipped': () => void
   'chat:message': (message: ChatMessage) => void
