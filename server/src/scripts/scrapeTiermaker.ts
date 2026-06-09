@@ -23,28 +23,40 @@ const CLOUDINARY_CLOUD = 'dnbnhjbyy'
 const CLOUDINARY_PRESET = 'tiertogether_preset'
 
 // TierMaker category slug → { app category, how many templates to keep }
-const SOURCES: Array<{ slug: string; category: string; take: number }> = [
-  { slug: 'video-games', category: 'Gaming', take: 14 },
-  { slug: 'pokemon', category: 'Gaming', take: 4 },
-  { slug: 'league-of-legends', category: 'Gaming', take: 3 },
-  { slug: 'food-and-drink', category: 'Food', take: 10 },
-  { slug: 'fast-food', category: 'Food', take: 6 },
-  { slug: 'anime-and-manga', category: 'Anime', take: 10 },
-  { slug: 'anime', category: 'Anime', take: 6 },
-  { slug: 'music', category: 'Music', take: 10 },
-  { slug: 'albums', category: 'Music', take: 4 },
-  { slug: 'movies', category: 'Movies', take: 8 },
-  { slug: 'tv-and-movies', category: 'Movies', take: 5 },
-  { slug: 'netflix', category: 'Movies', take: 3 },
-  { slug: 'sports', category: 'Sports', take: 6 },
-  { slug: 'football-soccer', category: 'Sports', take: 5 },
-  { slug: 'nfl', category: 'Sports', take: 3 },
-  { slug: 'animals', category: 'Other', take: 4 },
-  { slug: 'cartoons', category: 'Other', take: 4 },
-  { slug: 'disney', category: 'Other', take: 4 },
-  { slug: 'celebrities', category: 'Other', take: 3 },
-  { slug: 'board-games', category: 'Other', take: 3 },
+// pages: how many listing pages to crawl (default 1)
+// titleFilter: keep only templates whose title matches
+// auto: classify the app category from the title keywords (mixed sources)
+interface Source {
+  slug: string
+  category: string
+  take: number
+  pages?: number
+  titleFilter?: RegExp
+  auto?: boolean
+}
+
+const SOURCES: Source[] = [
+  // ── Populaires en France ──
+  { slug: 'france', category: 'Other', take: 45, pages: 3, auto: true },
+  { slug: 'rap', category: 'Music', take: 10, pages: 2, titleFilter: /fran[cç]ais|francophone|\bfr\b|belge|qu[ée]b[ée]c/i },
+  { slug: 'youtube-and-streaming', category: 'Other', take: 8, pages: 2, titleFilter: /youtubeur|fran[cç]ais|\bfr\b|streamer fr/i },
 ]
+
+const FR_CATEGORY_RULES: Array<[RegExp, string]> = [
+  [/rap|chanteur|chanson|musique|album|artiste|dj\b/i, 'Music'],
+  [/bonbon|g[âa]teau|dessert|boulangerie|fromage|plat|chips|c[ée]r[ée]ale|alcool|boisson|fast.?food|restaurant|nourriture|pizza|kebab|soda|sucrerie|biscuit|food/i, 'Food'],
+  [/foot|stade|ligue|joueur|sport|club|basket|tennis|rugby/i, 'Sports'],
+  [/jeu(x| )|gaming|video.?game|console/i, 'Gaming'],
+  [/film|dessin.?anim|s[ée]rie|cin[ée]ma|netflix|disney/i, 'Movies'],
+  [/anime|manga/i, 'Anime'],
+]
+
+function classifyTitle(title: string, fallback: string): string {
+  for (const [re, cat] of FR_CATEGORY_RULES) {
+    if (re.test(title)) return cat
+  }
+  return fallback
+}
 
 const MIN_ITEMS = 8
 const MAX_ITEMS = 100          // cap per template (Cloudinary quota)
@@ -129,9 +141,9 @@ function prettifyLabel(filename: string): string {
   return label.replace(/\b\w/g, (c) => c.toUpperCase()).slice(0, 60)
 }
 
-async function uploadToCloudinary(sourceUrl: string): Promise<string> {
+async function cloudinaryUpload(file: string | Blob): Promise<string> {
   const form = new FormData()
-  form.append('file', sourceUrl)
+  form.append('file', file)
   form.append('upload_preset', CLOUDINARY_PRESET)
   const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD}/image/upload`, {
     method: 'POST',
@@ -144,6 +156,25 @@ async function uploadToCloudinary(sourceUrl: string): Promise<string> {
   const data = (await res.json()) as { secure_url?: string }
   if (!data.secure_url) throw new Error('Cloudinary: no secure_url')
   return data.secure_url
+}
+
+async function uploadToCloudinary(sourceUrl: string): Promise<string> {
+  // 1st try: let Cloudinary fetch the remote URL itself.
+  try {
+    return await cloudinaryUpload(sourceUrl)
+  } catch (err) {
+    // Cloudflare blocks Cloudinary's fetcher on some TierMaker paths
+    // (403) — fall back to downloading the bytes ourselves with a
+    // browser UA and uploading the binary.
+    const { stdout } = await execFileAsync(
+      'curl', ['-s', '-A', UA, '--compressed', sourceUrl],
+      { encoding: 'buffer', maxBuffer: 32 * 1024 * 1024 },
+    ) as unknown as { stdout: Buffer }
+    if (stdout.length < 100 || stdout.subarray(0, 20).toString().trimStart().startsWith('<')) {
+      throw new Error(`download failed (${stdout.length}o): ${(err as Error).message.slice(0, 80)}`)
+    }
+    return await cloudinaryUpload(new Blob([new Uint8Array(stdout)]))
+  }
 }
 
 async function uploadPool(
@@ -250,13 +281,18 @@ async function run() {
   const seen = new Set<string>()
   for (const src of SOURCES) {
     console.log(`\n── Catégorie ${src.slug} → ${src.category}`)
-    const res = await tmFetch(`/categories/${src.slug}`)
-    if (res.status !== 200) { console.warn(`  listing HTTP ${res.status}, skip`); continue }
-    const all = parseListing(res.text, src.category)
+    const all: ListedTemplate[] = []
+    for (let page = 1; page <= (src.pages ?? 1); page++) {
+      const res = await tmFetch(`/categories/${src.slug}${page > 1 ? `?page=${page}&sort=` : ''}`)
+      if (res.status !== 200) { console.warn(`  listing p${page} HTTP ${res.status}, skip`); continue }
+      all.push(...parseListing(res.text, src.category))
+    }
     const kept = all
       .filter((t) => t.count >= MIN_ITEMS && t.count <= MAX_LISTED_COUNT)
       .filter((t) => !seen.has(t.slug))
+      .filter((t) => !src.titleFilter || src.titleFilter.test(t.title))
       .slice(0, src.take)
+      .map((t) => (src.auto ? { ...t, category: classifyTitle(t.title, src.category) } : t))
     kept.forEach((t) => seen.add(t.slug))
     console.log(`  ${all.length} templates trouvés, ${kept.length} retenus`)
     listed.push(...kept)
