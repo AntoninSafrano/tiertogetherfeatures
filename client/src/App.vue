@@ -2,6 +2,7 @@
 import { onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { RouterView } from 'vue-router'
+import CookieBanner from '@/components/CookieBanner.vue'
 
 const router = useRouter()
 
@@ -18,4 +19,5 @@ onMounted(() => {
 
 <template>
   <RouterView />
+  <CookieBanner />
 </template>

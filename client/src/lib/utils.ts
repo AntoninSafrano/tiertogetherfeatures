@@ -1,5 +1,29 @@
 import { type ClassValue, clsx } from 'clsx'
 import { twMerge } from 'tailwind-merge'
+import { slugifyTitle } from '@tiertogether/shared'
+
+/** SEO path for a tier list: /tierlist/<slug>-<id> */
+export function tierlistSlugId(id: string, title: string): string {
+  return `${slugifyTitle(title)}-${id}`
+}
+
+/** Category value (Gaming, Food…) ↔ SEO slug (jeux-video, cuisine…) */
+export const CATEGORY_SLUGS: Record<string, string> = {
+  'jeux-video': 'Gaming',
+  'cuisine': 'Food',
+  'anime': 'Anime',
+  'musique': 'Music',
+  'films': 'Movies',
+  'sport': 'Sports',
+  'autre': 'Other',
+}
+
+export function getCategorySlug(value: string): string | null {
+  for (const [slug, v] of Object.entries(CATEGORY_SLUGS)) {
+    if (v === value) return slug
+  }
+  return null
+}
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))

@@ -3,7 +3,7 @@ import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuth } from '@/composables/useAuth'
 import { useCloudinary } from '@/composables/useCloudinary'
-import { getCategoryBadgeColor, getCategoryLabel } from '@/lib/utils'
+import { getCategoryBadgeColor, getCategoryLabel, tierlistSlugId } from '@/lib/utils'
 import NavBar from '@/components/NavBar.vue'
 import AvatarCropper from '@/components/AvatarCropper.vue'
 import {
@@ -184,8 +184,8 @@ async function handleLogout() {
   router.push({ name: 'explore' })
 }
 
-function viewTierlist(id: string) {
-  router.push({ name: 'tierlist-view', params: { id } })
+function viewTierlist(tl: MyTierList) {
+  router.push({ name: 'tierlist-view', params: { id: tierlistSlugId(tl._id, tl.title) } })
 }
 
 function goToRoom(roomId: string) {
@@ -358,7 +358,7 @@ function formatDate(d: string): string {
             v-for="tl in recentLists"
             :key="tl._id"
             class="flex items-center gap-3 rounded-lg border border-border bg-surface px-4 py-3 transition-colors hover:border-border-hover cursor-pointer"
-            @click="tl.isPublic ? viewTierlist(tl._id) : goToRoom(tl.roomId)"
+            @click="tl.isPublic ? viewTierlist(tl) : goToRoom(tl.roomId)"
           >
             <div class="h-10 w-10 shrink-0 overflow-hidden rounded-md bg-surface-hover">
               <img
@@ -408,7 +408,7 @@ function formatDate(d: string): string {
             v-for="tl in tierlists"
             :key="tl._id"
             class="group relative cursor-pointer overflow-hidden rounded-xl border border-transparent bg-surface transition-all duration-300 hover:border-border-hover"
-            @click="tl.isPublic ? viewTierlist(tl._id) : goToRoom(tl.roomId)"
+            @click="tl.isPublic ? viewTierlist(tl) : goToRoom(tl.roomId)"
           >
             <!-- Privacy badge (top-left) -->
             <div

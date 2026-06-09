@@ -26,7 +26,7 @@ const emit = defineEmits<{
         <div class="absolute inset-0 bg-black/70" />
 
         <!-- Popup -->
-        <div class="relative w-[380px] rounded-xl border border-border bg-surface p-6 shadow-[0_4px_24px_rgba(0,0,0,0.25)] flex flex-col gap-4">
+        <div class="relative w-full max-w-[380px] rounded-xl border border-border bg-surface p-6 shadow-[0_4px_24px_rgba(0,0,0,0.25)] flex flex-col gap-4">
           <!-- Title Row -->
           <div class="flex items-center gap-2.5">
             <div class="h-2 w-2 rounded-full bg-destructive shrink-0" />

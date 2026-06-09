@@ -35,6 +35,20 @@ export const DEFAULT_TIERS: Omit<TierRow, 'items'>[] = [
   { id: 'tier-d', label: 'D', color: '#7FFFFF' },
 ]
 
+/** URL-safe slug from a tier list title (SEO: /tierlist/<slug>-<id>) */
+export function slugifyTitle(title: string): string {
+  return (
+    title
+      .normalize('NFD')
+      .replace(/[̀-ͯ]/g, '')
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '')
+      .slice(0, 60)
+      .replace(/-+$/, '') || 'tierlist'
+  )
+}
+
 // ─── Room / User ────────────────────────────────────────────────────
 
 export interface RoomUser {

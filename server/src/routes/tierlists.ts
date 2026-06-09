@@ -277,10 +277,15 @@ router.get('/api/tierlists/stats', async (req: Request, res: Response) => {
   }
 })
 
-// GET /api/tierlists/:id
+// GET /api/tierlists/:id — also accepts SEO slugs ("mon-titre-<id>")
 router.get('/api/tierlists/:id', async (req: Request, res: Response) => {
   try {
-    const tierlist = await TierListModel.findById(req.params.id).lean()
+    const idMatch = String(req.params.id).match(/([a-fA-F0-9]{24})$/)
+    if (!idMatch) {
+      res.status(404).json({ error: 'Tier list introuvable' })
+      return
+    }
+    const tierlist = await TierListModel.findById(idMatch[1]).lean()
     if (!tierlist) {
       res.status(404).json({ error: 'Tier list introuvable' })
       return

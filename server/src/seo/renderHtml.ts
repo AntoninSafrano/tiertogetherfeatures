@@ -3,6 +3,7 @@ import path from 'path'
 import { TierListModel } from '../models/TierList'
 import { UserModel } from '../models/User'
 import { env } from '../config/env'
+import { slugifyTitle } from '@tiertogether/shared'
 
 const SITE = env.CLIENT_URL.replace(/\/$/, '')
 const DEFAULT_OG_IMAGE = `${SITE}/og-default.png?v=2`
@@ -134,12 +135,50 @@ const CATEGORY_FR: Record<string, string> = {
 
 const OBJECT_ID_RE = /^[a-fA-F0-9]{24}$/
 
+// SEO category landing pages: /tierlists/<slug>
+const CATEGORY_PAGES: Record<string, { value: string; label: string; desc: string }> = {
+  'jeux-video': { value: 'Gaming', label: 'Jeux vidéo', desc: 'tier lists de jeux vidéo : personnages, franchises, consoles' },
+  'cuisine': { value: 'Food', label: 'Cuisine', desc: 'tier lists cuisine et bouffe : fast foods, desserts, chips, sodas' },
+  'anime': { value: 'Anime', label: 'Anime', desc: 'tier lists anime et manga : One Piece, Naruto, personnages' },
+  'musique': { value: 'Music', label: 'Musique', desc: 'tier lists musique : rap français, albums, artistes, K-pop' },
+  'films': { value: 'Movies', label: 'Films & Séries', desc: 'tier lists films et séries : Marvel, Star Wars, Disney, Netflix' },
+  'sport': { value: 'Sports', label: 'Sport', desc: 'tier lists sport : football, Ligue 1, NBA, F1' },
+  'autre': { value: 'Other', label: 'Divers', desc: 'tier lists diverses : youtubeurs, villes, marques, animaux' },
+}
+
 async function metaForPath(rawPath: string): Promise<Meta> {
   const p = (rawPath.split('?')[0] || '/').replace(/\/+$/, '') || '/'
 
-  const tlMatch = p.match(/^\/tierlist\/([A-Za-z0-9]+)$/)
+  const catMatch = p.match(/^\/tierlists\/([a-z-]+)$/)
+  if (catMatch) {
+    const page = CATEGORY_PAGES[catMatch[1]!]
+    if (page) {
+      return {
+        title: `Tier lists ${page.label} — TierTogether`,
+        description: `Découvrez et clonez les meilleures ${page.desc}. Classez en temps réel avec vos amis sur TierTogether.`,
+        canonical: `${SITE}/tierlists/${catMatch[1]}`,
+        jsonLd: {
+          '@context': 'https://schema.org',
+          '@type': 'CollectionPage',
+          name: `Tier lists ${page.label}`,
+          url: `${SITE}/tierlists/${catMatch[1]}`,
+          inLanguage: 'fr',
+        },
+      }
+    }
+    return {
+      title: 'Catégorie introuvable — TierTogether',
+      description: 'Cette catégorie est introuvable.',
+      canonical: `${SITE}${p}`,
+      noindex: true,
+    }
+  }
+
+  // /tierlist/<slug>-<id> or /tierlist/<id>
+  const tlMatch = p.match(/^\/tierlist\/([A-Za-z0-9-]+)$/)
   if (tlMatch) {
-    const id = tlMatch[1]!
+    const idMatch = tlMatch[1]!.match(/([a-fA-F0-9]{24})$/)
+    const id = idMatch?.[1] ?? ''
     if (OBJECT_ID_RE.test(id)) {
       const tl = await TierListModel.findById(id).lean().catch(() => null)
       if (tl && (tl as any).isPublic) {
@@ -152,17 +191,18 @@ async function metaForPath(rawPath: string): Promise<Meta> {
         const pool = ((tl as any).pool || []) as Array<{ imageUrl?: string }>
         const allItems = [...pool, ...rows.flatMap((r) => r.items || [])]
         const ogImage = buildTierlistOgImage((tl as any).coverImage, allItems)
+        const canonicalUrl = `${SITE}/tierlist/${slugifyTitle(title)}-${id}`
         return {
           title: `${title} — TierTogether`,
           description: desc,
-          canonical: `${SITE}/tierlist/${id}`,
+          canonical: canonicalUrl,
           ogType: 'article',
           image: ogImage,
           jsonLd: {
             '@context': 'https://schema.org',
             '@type': 'CreativeWork',
             name: title,
-            url: `${SITE}/tierlist/${id}`,
+            url: canonicalUrl,
             inLanguage: 'fr',
             dateModified: new Date((tl as any).updatedAt).toISOString(),
             datePublished: new Date((tl as any).createdAt).toISOString(),

@@ -22,6 +22,12 @@ const router = createRouter({
       meta: { title: 'Connexion - TierTogether' },
     },
     {
+      path: '/tierlists/:cat',
+      name: 'category',
+      component: () => import('@/views/ExploreView.vue'),
+      meta: { title: 'Tier lists - TierTogether' },
+    },
+    {
       path: '/tierlist/:id',
       name: 'tierlist-view',
       component: () => import('@/views/TierListView.vue'),

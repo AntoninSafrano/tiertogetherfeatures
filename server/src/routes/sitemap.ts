@@ -1,6 +1,7 @@
 import { Router, type Request, type Response } from 'express'
 import { TierListModel } from '../models/TierList'
 import { env } from '../config/env'
+import { slugifyTitle } from '@tiertogether/shared'
 
 const router = Router()
 
@@ -28,15 +29,23 @@ router.get('/sitemap.xml', async (_req: Request, res: Response) => {
       `  <url><loc>${SITE}/legal</loc><changefreq>yearly</changefreq><priority>0.3</priority></url>`,
     ]
 
+    // Category landing pages
+    for (const cat of ['jeux-video', 'cuisine', 'anime', 'musique', 'films', 'sport', 'autre']) {
+      urls.push(
+        `  <url><loc>${SITE}/tierlists/${cat}</loc><changefreq>daily</changefreq><priority>0.9</priority><lastmod>${now}</lastmod></url>`,
+      )
+    }
+
     const tierlists = await TierListModel.find({ isPublic: true })
-      .select('_id updatedAt')
+      .select('_id title updatedAt')
       .sort({ updatedAt: -1 })
       .limit(10000)
       .lean()
 
     for (const tl of tierlists) {
+      const slug = slugifyTitle(String((tl as any).title || ''))
       urls.push(
-        `  <url><loc>${SITE}/tierlist/${xmlEsc(String(tl._id))}</loc><lastmod>${iso(tl.updatedAt)}</lastmod><changefreq>weekly</changefreq><priority>0.7</priority></url>`,
+        `  <url><loc>${SITE}/tierlist/${xmlEsc(`${slug}-${tl._id}`)}</loc><lastmod>${iso(tl.updatedAt)}</lastmod><changefreq>weekly</changefreq><priority>0.7</priority></url>`,
       )
     }
 

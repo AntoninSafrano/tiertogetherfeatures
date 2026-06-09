@@ -1,15 +1,23 @@
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted, watch } from 'vue'
-import { useRouter } from 'vue-router'
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
+import { useRouter, useRoute } from 'vue-router'
 import { useAuth } from '@/composables/useAuth'
 import NavBar from '@/components/NavBar.vue'
 import ErrorPopup from '@/components/ErrorPopup.vue'
 import { Search, Download, Clock, TrendingUp, Gamepad2, UtensilsCrossed, Tv, Music, Film, Dumbbell, MoreHorizontal, LayoutGrid, Star, History, Trash2, Pencil, EyeOff, Eye, X, Check, ThumbsUp, ThumbsDown, Share2 } from 'lucide-vue-next'
 import { API_BASE } from '@/config'
-import { getCategoryBadgeColor, getCategoryLabel, getRelativeTime } from '@/lib/utils'
+import { getCategoryBadgeColor, getCategoryLabel, getRelativeTime, tierlistSlugId, CATEGORY_SLUGS, getCategorySlug } from '@/lib/utils'
 
 const router = useRouter()
+const route = useRoute()
 const { user, fetchUser } = useAuth()
+
+function categoryFromRoute(): string {
+  if (route.name === 'category') {
+    return CATEGORY_SLUGS[String(route.params.cat)] ?? 'All'
+  }
+  return 'All'
+}
 
 interface PublicTierList {
   _id: string
@@ -33,7 +41,7 @@ const featuredIds = ref<Set<string>>(new Set())
 const tierlists = ref<PublicTierList[]>([])
 const isLoading = ref(true)
 const searchQuery = ref('')
-const activeCategory = ref('All')
+const activeCategory = ref(categoryFromRoute())
 const activeSort = ref('downloads')
 const activeTab = ref<'explore' | 'mine'>('explore')
 const myLists = ref<PublicTierList[]>([])
@@ -106,9 +114,31 @@ async function fetchFeatured() {
   }
 }
 
-function viewTierlist(id: string) {
-  router.push({ name: 'tierlist-view', params: { id } })
+function viewTierlist(tl: PublicTierList) {
+  router.push({ name: 'tierlist-view', params: { id: tierlistSlugId(tl._id, tl.title) } })
 }
+
+/** Category chip click → SEO-friendly URL; the route watcher updates the filter */
+function selectCategory(value: string) {
+  const slug = value === 'All' ? null : getCategorySlug(value)
+  router.replace(slug ? `/tierlists/${slug}` : '/')
+}
+
+const pageTitle = computed(() =>
+  activeCategory.value === 'All'
+    ? 'EXPLORER LES TIER LISTS'
+    : `TIER LISTS ${getCategoryLabel(activeCategory.value).toUpperCase()}`,
+)
+
+watch(() => route.fullPath, () => {
+  if (route.name === 'explore' || route.name === 'category') {
+    const next = categoryFromRoute()
+    if (next !== activeCategory.value) activeCategory.value = next
+    document.title = activeCategory.value === 'All'
+      ? 'TierTogether'
+      : `Tier lists ${getCategoryLabel(activeCategory.value)} - TierTogether`
+  }
+})
 
 function getCoverImage(tierlist: PublicTierList): string {
   if (tierlist.coverImage) return tierlist.coverImage
@@ -122,7 +152,7 @@ function getCoverImage(tierlist: PublicTierList): string {
 
 async function shareTierList(e: Event, tl: PublicTierList) {
   e.stopPropagation()
-  const url = `${window.location.origin}/tierlist/${tl._id}`
+  const url = `${window.location.origin}/tierlist/${tierlistSlugId(tl._id, tl.title)}`
   const title = tl.title || 'TierTogether'
 
   if (navigator.share) {
@@ -275,7 +305,7 @@ onMounted(async () => {
     <main class="mx-auto max-w-6xl px-4 sm:px-10 py-8">
       <!-- Header -->
       <div class="mb-8">
-        <h1 class="text-3xl sm:text-[40px] font-bold tracking-tight text-foreground mb-2">EXPLORER LES TIER LISTS</h1>
+        <h1 class="text-3xl sm:text-[40px] font-bold tracking-tight text-foreground mb-2">{{ pageTitle }}</h1>
         <p class="text-base text-foreground-muted mb-5">Découvrez et clonez des tier lists créées par la communauté</p>
 
         <!-- Search -->
@@ -319,7 +349,7 @@ onMounted(async () => {
                 ? 'bg-primary text-white'
                 : 'bg-surface border border-border text-foreground-muted hover:bg-surface-hover hover:text-foreground'
             ]"
-            @click="activeCategory = cat.value"
+            @click="selectCategory(cat.value)"
           >
             <component :is="cat.icon" class="h-3.5 w-3.5" />
             {{ cat.label }}
@@ -365,7 +395,7 @@ onMounted(async () => {
             v-for="tl in tierlists"
             :key="tl._id"
             class="group relative rounded-xl bg-surface overflow-hidden transition-all duration-300 cursor-pointer border border-transparent hover:border-border-hover"
-            @click="viewTierlist(tl._id)"
+            @click="viewTierlist(tl)"
           >
             <!-- Featured badge -->
             <div v-if="featuredIds.has(tl._id)" class="absolute top-2 left-2 z-10 inline-flex h-5 items-center gap-1 rounded-full bg-yellow-500/90 px-2 text-[10px] font-bold leading-none text-black">
@@ -619,6 +649,19 @@ onMounted(async () => {
 
       <!-- Footer -->
       <footer class="border-t border-border mt-12 py-6 text-center text-xs text-foreground-subtle">
+        <nav aria-label="Tier lists par catégorie" class="flex flex-wrap items-center justify-center gap-x-3 gap-y-1 mb-4">
+          <router-link to="/tierlists/jeux-video" class="hover:text-foreground transition-colors">Tier lists jeux vidéo</router-link>
+          <span>&middot;</span>
+          <router-link to="/tierlists/anime" class="hover:text-foreground transition-colors">Tier lists anime</router-link>
+          <span>&middot;</span>
+          <router-link to="/tierlists/musique" class="hover:text-foreground transition-colors">Tier lists musique</router-link>
+          <span>&middot;</span>
+          <router-link to="/tierlists/films" class="hover:text-foreground transition-colors">Tier lists films</router-link>
+          <span>&middot;</span>
+          <router-link to="/tierlists/sport" class="hover:text-foreground transition-colors">Tier lists sport</router-link>
+          <span>&middot;</span>
+          <router-link to="/tierlists/cuisine" class="hover:text-foreground transition-colors">Tier lists cuisine</router-link>
+        </nav>
         <div class="flex items-center justify-center gap-4">
           <router-link to="/legal" class="hover:text-foreground transition-colors">Mentions légales</router-link>
           <span>&middot;</span>

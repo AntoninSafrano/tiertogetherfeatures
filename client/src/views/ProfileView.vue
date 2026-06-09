@@ -4,7 +4,7 @@ import { useRoute, useRouter } from 'vue-router'
 import NavBar from '@/components/NavBar.vue'
 import { ArrowLeft, Download, ThumbsUp, Calendar, LayoutGrid, User } from 'lucide-vue-next'
 import { API_BASE } from '@/config'
-import { getCategoryBadgeColor, getCategoryLabel, getRelativeTime } from '@/lib/utils'
+import { getCategoryBadgeColor, getCategoryLabel, getRelativeTime, tierlistSlugId } from '@/lib/utils'
 
 const route = useRoute()
 const router = useRouter()
@@ -101,7 +101,7 @@ onMounted(() => {
             <div class="h-4 w-32 rounded bg-surface-hover animate-pulse" />
           </div>
         </div>
-        <div class="grid grid-cols-3 gap-4">
+        <div class="grid grid-cols-3 gap-2 sm:gap-4">
           <div v-for="i in 3" :key="i" class="h-20 rounded-xl bg-surface-hover animate-pulse" />
         </div>
         <div class="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
@@ -186,7 +186,7 @@ onMounted(() => {
               v-for="tl in profile.tierlists"
               :key="tl._id"
               class="group relative rounded-xl bg-surface overflow-hidden transition-all duration-300 cursor-pointer border border-transparent hover:border-border-hover"
-              @click="router.push({ name: 'tierlist-view', params: { id: tl._id } })"
+              @click="router.push({ name: 'tierlist-view', params: { id: tierlistSlugId(tl._id, tl.title) } })"
             >
               <!-- Category badge -->
               <div class="absolute top-2 right-2 z-10">
