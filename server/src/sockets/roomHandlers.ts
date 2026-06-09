@@ -46,6 +46,9 @@ function getAuthUserId(socket: TypedSocket): string | null {
 type TypedServer = Server<ClientToServerEvents, ServerToClientEvents, InterServerEvents, SocketData>
 type TypedSocket = Socket<ClientToServerEvents, ServerToClientEvents, InterServerEvents, SocketData>
 
+// Free-tier room size limit (future premium: unlimited)
+const MAX_USERS_PER_ROOM = 5
+
 // ─── Vote Mode State ────────────────────────────────────────────────
 const activeVotes = new Map<string, {
   itemId: string
@@ -254,6 +257,12 @@ export function registerRoomHandlers(io: TypedServer, socket: TypedSocket): void
       const oldSocket = existingSockets.find((s) => s.data.username === username && s.id !== socket.id)
       const isRejoin = !!oldSocket
       const color = oldSocket?.data.color || generateUserColor()
+
+      // Free tier: rooms are capped (rejoins are always allowed back in)
+      if (!isRejoin && existingSockets.length >= MAX_USERS_PER_ROOM) {
+        callback({ success: false, error: `Room pleine — ${MAX_USERS_PER_ROOM} joueurs maximum.` })
+        return
+      }
 
       // Link authenticated user to tier list if not yet linked
       const authUserId = getAuthUserId(socket)

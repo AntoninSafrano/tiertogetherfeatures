@@ -136,10 +136,13 @@ async function onGateReady(payload: { username: string; avatar: string; isGuest:
     gateResolved.value = true
     bindChatListeners()
   } else {
-    const isNotFound = res.error === 'Room introuvable'
-    error.value = isNotFound
-      ? 'Room introuvable — ce code ne correspond à aucune room active.'
-      : 'Impossible de rejoindre la room. Vérifiez votre connexion.'
+    if (res.error === 'Room introuvable') {
+      error.value = 'Room introuvable — ce code ne correspond à aucune room active.'
+    } else if (res.error) {
+      error.value = res.error
+    } else {
+      error.value = 'Impossible de rejoindre la room. Vérifiez votre connexion.'
+    }
     gateResolved.value = true
   }
 }

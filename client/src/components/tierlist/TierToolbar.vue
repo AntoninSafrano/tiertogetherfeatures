@@ -42,6 +42,54 @@ function confirmReset() {
   showResetConfirm.value = false
 }
 
+/** Add a footer banner with the title + tiertogether.fr branding — every
+ *  shared screenshot becomes an ad for the site. */
+async function addWatermark(dataUrl: string, title: string): Promise<string> {
+  const img = new Image()
+  await new Promise<void>((resolve, reject) => {
+    img.onload = () => resolve()
+    img.onerror = reject
+    img.src = dataUrl
+  })
+
+  const banner = 64 // px (image is exported at pixelRatio 2)
+  const canvas = document.createElement('canvas')
+  canvas.width = img.width
+  canvas.height = img.height + banner
+  const ctx = canvas.getContext('2d')
+  if (!ctx) return dataUrl
+
+  ctx.fillStyle = '#0c0d14'
+  ctx.fillRect(0, 0, canvas.width, canvas.height)
+  ctx.drawImage(img, 0, 0)
+
+  const midY = img.height + banner / 2
+  ctx.textBaseline = 'middle'
+
+  // Left: tier list title
+  ctx.font = '600 24px system-ui, -apple-system, sans-serif'
+  ctx.fillStyle = 'rgba(255,255,255,0.45)'
+  const maxTitleWidth = canvas.width * 0.55
+  let label = title
+  while (label && ctx.measureText(label).width > maxTitleWidth) label = label.slice(0, -1)
+  if (label !== title) label += '…'
+  if (label) ctx.fillText(label, 24, midY)
+
+  // Right: brand ("Tier" in primary purple + "together.fr" in white)
+  ctx.font = '700 26px system-ui, -apple-system, sans-serif'
+  const part1 = 'tier'
+  const part2 = 'together.fr'
+  const w1 = ctx.measureText(part1).width
+  const w2 = ctx.measureText(part2).width
+  const startX = canvas.width - w1 - w2 - 24
+  ctx.fillStyle = '#a855f7'
+  ctx.fillText(part1, startX, midY)
+  ctx.fillStyle = 'rgba(255,255,255,0.85)'
+  ctx.fillText(part2, startX + w1, midY)
+
+  return canvas.toDataURL('image/png')
+}
+
 async function exportImage() {
   const target = document.getElementById('tier-rows-container')
   if (!target) return
@@ -60,9 +108,11 @@ async function exportImage() {
       },
     })
 
+    const branded = await addWatermark(dataUrl, store.title || 'Tier list')
+
     const link = document.createElement('a')
     link.download = `${store.title || 'tierlist'}.png`
-    link.href = dataUrl
+    link.href = branded
     link.click()
   } catch (err) {
     console.error('[Export] Failed:', err)
