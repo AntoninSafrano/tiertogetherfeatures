@@ -36,10 +36,22 @@ interface Source {
 }
 
 const SOURCES: Source[] = [
-  // ── Populaires en France ──
-  { slug: 'france', category: 'Other', take: 45, pages: 3, auto: true },
-  { slug: 'rap', category: 'Music', take: 10, pages: 2, titleFilter: /fran[cç]ais|francophone|\bfr\b|belge|qu[ée]b[ée]c/i },
-  { slug: 'youtube-and-streaming', category: 'Other', take: 8, pages: 2, titleFilter: /youtubeur|fran[cç]ais|\bfr\b|streamer fr/i },
+  // ── Vague 2 : franchises populaires ──
+  { slug: 'marvel', category: 'Movies', take: 4 },
+  { slug: 'star-wars', category: 'Movies', take: 4 },
+  { slug: 'harry-potter', category: 'Movies', take: 3 },
+  { slug: 'simpsons', category: 'Movies', take: 3 },
+  { slug: 'tv', category: 'Movies', take: 4 },
+  { slug: 'kpop', category: 'Music', take: 5 },
+  { slug: 'nba', category: 'Sports', take: 4 },
+  { slug: 'formula-1', category: 'Sports', take: 4 },
+  { slug: 'naruto', category: 'Anime', take: 4 },
+  { slug: 'dragon-ball-z', category: 'Anime', take: 3 },
+  { slug: 'one-piece', category: 'Anime', take: 4 },
+  { slug: 'fortnite', category: 'Gaming', take: 3 },
+  { slug: 'minecraft', category: 'Gaming', take: 3 },
+  { slug: 'super-smash-bros-ultimate', category: 'Gaming', take: 3 },
+  { slug: 'mario-kart', category: 'Gaming', take: 3 },
 ]
 
 const FR_CATEGORY_RULES: Array<[RegExp, string]> = [
