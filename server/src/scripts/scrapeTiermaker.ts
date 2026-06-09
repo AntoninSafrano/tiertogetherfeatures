@@ -207,9 +207,10 @@ async function scrapeTemplate(tpl: ListedTemplate): Promise<void> {
 
   const entries = images.slice(1, MAX_ITEMS + 1).map((img) => {
     const src = typeof img === 'object' ? img.src : img
+    // baseTierImagePath already starts with /images/…
     const abs = src.includes('tiermaker.com/')
       ? src
-      : `${BASE}/images${basePath}/${src}`
+      : `${BASE}${basePath}/${src}`
     return { src: abs, label: prettifyLabel(typeof img === 'object' ? img.src : img) }
   })
 
