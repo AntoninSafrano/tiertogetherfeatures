@@ -20,3 +20,4 @@ shared/types/*.js
 shared/types/*.d.ts
 client/vite.config.js
 client/vite.config.d.ts
+data/
