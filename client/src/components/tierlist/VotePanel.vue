@@ -41,6 +41,11 @@ const timerColor = computed(() => {
   if (store.voteTimeLeft <= 10) return '#f97316'  // orange
   return '#10b981'                                  // emerald
 })
+
+// "S / A / B…" hint shown on screen so stream viewers know what to type
+const chatVoteHint = computed(() =>
+  store.rows.slice(0, 6).map((r) => r.label).join(' / '),
+)
 </script>
 
 <template>
@@ -81,6 +86,18 @@ const timerColor = computed(() => {
           <Twitch class="h-4 w-4" />
           <span>{{ store.twitchVotedCount }} vote{{ store.twitchVotedCount !== 1 ? 's' : '' }} du chat</span>
         </div>
+      </div>
+
+      <!-- On-screen instruction for stream viewers -->
+      <div
+        v-if="store.twitchConnected"
+        class="flex items-center gap-2 rounded-lg border border-[#9146FF]/40 bg-[#9146FF]/10 px-4 py-2"
+      >
+        <Twitch class="h-4 w-4 shrink-0 text-[#bf94ff]" />
+        <p class="text-sm text-foreground">
+          <span class="font-semibold text-[#bf94ff]">Viewers :</span>
+          tapez <span class="font-mono font-bold">{{ chatVoteHint }}</span> dans le chat pour voter !
+        </p>
       </div>
 
       <!-- Countdown timer -->

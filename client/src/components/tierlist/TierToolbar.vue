@@ -174,7 +174,9 @@ async function exportImage() {
           'inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition-colors',
           store.isVoteMode
             ? 'bg-emerald-500/20 text-emerald-400 ring-1 ring-emerald-500/50'
-            : 'text-foreground-muted hover:bg-emerald-500/10 hover:text-emerald-400',
+            : store.twitchConnected
+              ? 'text-emerald-400 ring-1 ring-emerald-500/60 animate-pulse hover:bg-emerald-500/10'
+              : 'text-foreground-muted hover:bg-emerald-500/10 hover:text-emerald-400',
         ]"
         @click="store.toggleVoteMode()"
       >
@@ -201,47 +203,84 @@ async function exportImage() {
           class="absolute left-0 top-full mt-1 z-50 w-72 rounded-lg border border-border-hover bg-surface shadow-xl p-3"
           @click.stop
         >
-          <p class="text-sm font-semibold text-foreground mb-1">Chat Twitch</p>
-          <p class="text-[11px] leading-relaxed text-foreground-muted mb-2.5">
-            Connecte ta chaîne : pendant un vote, tes viewers votent en tapant
-            le nom du tier (<span class="font-mono">S</span>, <span class="font-mono">A</span>,
-            <span class="font-mono">B</span>…) dans le chat. Sans inscription.
-          </p>
+          <p class="text-sm font-semibold text-foreground mb-2.5">Faire voter ton chat Twitch</p>
 
-          <template v-if="!store.twitchConnected">
-            <form class="flex gap-2" @submit.prevent="submitTwitch">
-              <input
-                v-model="twitchChannelInput"
-                type="text"
-                placeholder="nom_de_ta_chaine"
-                maxlength="25"
-                class="min-w-0 flex-1 rounded-md border border-border bg-background px-2.5 py-1.5 text-xs text-foreground placeholder:text-foreground-subtle focus:border-[#9146FF]/60 focus:outline-none"
-              />
-              <button
-                type="submit"
-                :disabled="!twitchChannelInput.trim()"
-                class="rounded-md bg-[#9146FF] px-3 py-1.5 text-xs font-semibold text-white hover:bg-[#7c2df0] transition-colors disabled:opacity-50"
-              >
-                Connecter
-              </button>
-            </form>
-            <p v-if="store.twitchError" class="mt-2 text-[11px] text-red-400">{{ store.twitchError }}</p>
-          </template>
-
-          <template v-else>
-            <div class="flex items-center justify-between gap-2">
-              <span class="inline-flex items-center gap-1.5 text-xs text-foreground">
-                <span class="h-2 w-2 rounded-full bg-emerald-400" />
-                Connecté à <span class="font-semibold text-[#bf94ff]">#{{ store.twitchChannel }}</span>
-              </span>
-              <button
-                class="rounded-md border border-border-hover px-2.5 py-1 text-[11px] font-medium text-foreground-muted hover:text-red-400 hover:border-red-500/40 transition-colors"
-                @click="store.disconnectTwitch()"
-              >
-                Déconnecter
-              </button>
+          <!-- Étape 1 : connecter la chaîne -->
+          <div class="flex items-start gap-2 mb-2.5">
+            <span
+              :class="['flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[10px] font-bold',
+                store.twitchConnected ? 'bg-emerald-500 text-white' : 'bg-[#9146FF] text-white']"
+            >{{ store.twitchConnected ? '✓' : '1' }}</span>
+            <div class="min-w-0 flex-1">
+              <template v-if="!store.twitchConnected">
+                <p class="text-xs text-foreground mb-1.5">Connecte ta chaîne</p>
+                <form class="flex gap-2" @submit.prevent="submitTwitch">
+                  <input
+                    v-model="twitchChannelInput"
+                    type="text"
+                    placeholder="nom_de_ta_chaine"
+                    maxlength="25"
+                    class="min-w-0 flex-1 rounded-md border border-border bg-background px-2.5 py-1.5 text-xs text-foreground placeholder:text-foreground-subtle focus:border-[#9146FF]/60 focus:outline-none"
+                  />
+                  <button
+                    type="submit"
+                    :disabled="!twitchChannelInput.trim()"
+                    class="rounded-md bg-[#9146FF] px-3 py-1.5 text-xs font-semibold text-white hover:bg-[#7c2df0] transition-colors disabled:opacity-50"
+                  >
+                    Connecter
+                  </button>
+                </form>
+                <p v-if="store.twitchError" class="mt-1.5 text-[11px] text-red-400">{{ store.twitchError }}</p>
+              </template>
+              <template v-else>
+                <div class="flex items-center justify-between gap-2">
+                  <span class="text-xs text-foreground">
+                    Connecté à <span class="font-semibold text-[#bf94ff]">#{{ store.twitchChannel }}</span>
+                  </span>
+                  <button
+                    class="rounded-md border border-border-hover px-2 py-0.5 text-[10px] font-medium text-foreground-muted hover:text-red-400 hover:border-red-500/40 transition-colors"
+                    @click="store.disconnectTwitch()"
+                  >
+                    Déconnecter
+                  </button>
+                </div>
+              </template>
             </div>
-          </template>
+          </div>
+
+          <!-- Étape 2 : lancer le mode vote -->
+          <div class="flex items-start gap-2">
+            <span
+              :class="['flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[10px] font-bold',
+                store.isVoteMode ? 'bg-emerald-500 text-white' : store.twitchConnected ? 'bg-[#9146FF] text-white' : 'bg-surface-hover text-foreground-subtle']"
+            >{{ store.isVoteMode ? '✓' : '2' }}</span>
+            <div class="min-w-0 flex-1">
+              <template v-if="store.isVoteMode">
+                <p class="text-xs text-emerald-400 font-medium">
+                  Vote en cours ! Tes viewers votent en tapant le nom d'un tier
+                  (<span class="font-mono">S</span>, <span class="font-mono">A</span>…) dans ton chat.
+                </p>
+              </template>
+              <template v-else>
+                <p class="text-xs text-foreground mb-1.5">
+                  Lance le Mode Vote — chaque élément est soumis au vote et tes
+                  viewers répondent dans le chat (<span class="font-mono">S</span>,
+                  <span class="font-mono">A</span>, <span class="font-mono">B</span>…), sans compte.
+                </p>
+                <button
+                  :disabled="!store.twitchConnected || store.pool.length === 0"
+                  class="inline-flex items-center gap-1.5 rounded-md bg-emerald-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-emerald-500 transition-colors disabled:opacity-40"
+                  @click="store.toggleVoteMode(); showTwitchMenu = false"
+                >
+                  <Vote class="h-3.5 w-3.5" />
+                  Lancer le Mode Vote
+                </button>
+                <p v-if="store.twitchConnected && store.pool.length === 0" class="mt-1.5 text-[11px] text-amber-400">
+                  Ajoute d'abord des éléments dans le pool — le vote porte sur les éléments non classés.
+                </p>
+              </template>
+            </div>
+          </div>
         </div>
       </div>
 
