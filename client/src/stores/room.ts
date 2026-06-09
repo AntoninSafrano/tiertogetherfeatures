@@ -108,7 +108,7 @@ export const useRoomStore = defineStore('room', () => {
       'room:state', 'item:moved', 'item:created', 'item:skipped',
       'room:locked', 'room:focus-toggled', 'room:vote-toggled',
       'vote:started', 'vote:update', 'vote:result',
-      'room:reset', 'room:user-left', 'chat:message', 'error',
+      'room:reset', 'room:user-joined', 'room:user-left', 'chat:message', 'error',
       'row:updated', 'row:deleted', 'row:reordered', 'row:added',
     ] as const
     for (const ev of EVENTS) socket.value.off(ev as any)

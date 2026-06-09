@@ -71,4 +71,10 @@ const TierListSchema = new Schema(
   { timestamps: true },
 )
 
+// Indexes for the public browse/featured/profile queries
+TierListSchema.index({ isPublic: 1, createdAt: -1 })
+TierListSchema.index({ isPublic: 1, downloads: -1 })
+TierListSchema.index({ isPublic: 1, category: 1 })
+TierListSchema.index({ authorId: 1 })
+
 export const TierListModel = mongoose.model<TierListDocument>('TierList', TierListSchema)

@@ -130,6 +130,8 @@ export interface SocketData {
   username: string
   roomId: string | null
   color: string
+  /** Resolved avatar URL, cached after the first chat message ('' = none) */
+  avatar?: string
 }
 
 // ─── Chat ────────────────────────────────────────────────────────────

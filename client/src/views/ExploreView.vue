@@ -1,12 +1,12 @@
 <script setup lang="ts">
-import { ref, onMounted, watch } from 'vue'
+import { ref, onMounted, onUnmounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuth } from '@/composables/useAuth'
 import NavBar from '@/components/NavBar.vue'
 import ErrorPopup from '@/components/ErrorPopup.vue'
 import { Search, Download, Clock, TrendingUp, Gamepad2, UtensilsCrossed, Tv, Music, Film, Dumbbell, MoreHorizontal, LayoutGrid, Star, History, Trash2, Pencil, EyeOff, Eye, X, Check, ThumbsUp, ThumbsDown, Share2 } from 'lucide-vue-next'
 import { API_BASE } from '@/config'
-import { getCategoryBadgeColor } from '@/lib/utils'
+import { getCategoryBadgeColor, getCategoryLabel, getRelativeTime } from '@/lib/utils'
 
 const router = useRouter()
 const { user, fetchUser } = useAuth()
@@ -120,19 +120,6 @@ function getCoverImage(tierlist: PublicTierList): string {
   return ''
 }
 
-function getCategoryLabel(cat: string): string {
-  const labels: Record<string, string> = {
-    Gaming: 'Jeux vidéo',
-    Food: 'Cuisine',
-    Anime: 'Anime',
-    Music: 'Musique',
-    Movies: 'Films',
-    Sports: 'Sport',
-    Other: 'Autre',
-  }
-  return labels[cat] || cat
-}
-
 async function shareTierList(e: Event, tl: PublicTierList) {
   e.stopPropagation()
   const url = `${window.location.origin}/tierlist/${tl._id}`
@@ -145,25 +132,15 @@ async function shareTierList(e: Event, tl: PublicTierList) {
   }
 }
 
-function getRelativeTime(dateStr: string): string {
-  const now = Date.now()
-  const diff = now - new Date(dateStr).getTime()
-  const minutes = Math.floor(diff / 60000)
-  if (minutes < 60) return `il y a ${minutes}min`
-  const hours = Math.floor(minutes / 60)
-  if (hours < 24) return `il y a ${hours}h`
-  const days = Math.floor(hours / 24)
-  if (days < 7) return `il y a ${days}j`
-  const weeks = Math.floor(days / 7)
-  if (weeks < 5) return `il y a ${weeks}sem`
-  return new Date(dateStr).toLocaleDateString()
-}
-
-let searchTimeout: any = null
+let searchTimeout: ReturnType<typeof setTimeout> | null = null
 function onSearchInput() {
-  clearTimeout(searchTimeout)
+  if (searchTimeout) clearTimeout(searchTimeout)
   searchTimeout = setTimeout(() => fetchTierlists(), 300)
 }
+
+onUnmounted(() => {
+  if (searchTimeout) clearTimeout(searchTimeout)
+})
 
 const votingInProgress = ref<Set<string>>(new Set())
 
@@ -298,7 +275,7 @@ onMounted(async () => {
     <main class="mx-auto max-w-6xl px-4 sm:px-10 py-8">
       <!-- Header -->
       <div class="mb-8">
-        <h1 class="text-[40px] font-bold tracking-tight text-foreground mb-2">EXPLORER LES TIER LISTS</h1>
+        <h1 class="text-3xl sm:text-[40px] font-bold tracking-tight text-foreground mb-2">EXPLORER LES TIER LISTS</h1>
         <p class="text-base text-foreground-muted mb-5">Découvrez et clonez des tier lists créées par la communauté</p>
 
         <!-- Search -->

@@ -19,6 +19,7 @@ import jwt from 'jsonwebtoken'
 import { TierListModel } from '../models/TierList'
 import { UserModel } from '../models/User'
 import { env } from '../config/env'
+import { containsBannedWord } from '../middleware/moderation'
 
 // A03: Sanitize user inputs — prevent NoSQL injection and XSS
 function sanitize(str: string, maxLen: number = 500): string {
@@ -836,28 +837,35 @@ export function registerRoomHandlers(io: TypedServer, socket: TypedSocket): void
       return
     }
 
-    const tierList = await TierListModel.findOne({ roomId })
+    try {
+      const tierList = await TierListModel.findOne({ roomId }).select('ownerId').lean()
 
-    // Resolve avatar if the sender is authenticated
-    const authUserId = getAuthUserId(socket)
-    let avatar: string | undefined
-    if (authUserId) {
-      const u = await UserModel.findById(authUserId).select('avatar').lean().catch(() => null)
-      if (u && (u as any).avatar) avatar = (u as any).avatar
+      // Resolve avatar once per connection, then reuse it for every message
+      if (socket.data.avatar === undefined) {
+        const authUserId = getAuthUserId(socket)
+        let avatar = ''
+        if (authUserId) {
+          const u = await UserModel.findById(authUserId).select('avatar').lean().catch(() => null)
+          if (u && (u as any).avatar) avatar = (u as any).avatar
+        }
+        socket.data.avatar = avatar
+      }
+
+      const message = {
+        id: randomUUID(),
+        userId: socket.id,
+        username: socket.data.username || 'Anonymous',
+        color: socket.data.color || '#9147ff',
+        ...(socket.data.avatar ? { avatar: socket.data.avatar } : {}),
+        text,
+        isHost: tierList?.ownerId === socket.id,
+        timestamp: Date.now(),
+      }
+
+      io.in(roomId).emit('chat:message', message)
+    } catch (err) {
+      console.error('[Room] Chat send failed:', err)
     }
-
-    const message = {
-      id: randomUUID(),
-      userId: socket.id,
-      username: socket.data.username || 'Anonymous',
-      color: socket.data.color || '#9147ff',
-      ...(avatar ? { avatar } : {}),
-      text,
-      isHost: tierList?.ownerId === socket.id,
-      timestamp: Date.now(),
-    }
-
-    io.in(roomId).emit('chat:message', message)
   })
 
   // ─── disconnect ─────────────────────────────────────────────────
@@ -927,44 +935,3 @@ function generateUserColor(): string {
   return colors[Math.floor(Math.random() * colors.length)]!
 }
 
-// ─── Chat Moderation ───────────────────────────────────────────────
-
-const BANNED_WORDS = [
-  // English slurs & hate speech
-  'nigger', 'nigga', 'faggot', 'fag', 'retard', 'retarded', 'tranny',
-  'kike', 'spic', 'chink', 'gook', 'wetback', 'beaner', 'coon',
-  'dyke', 'paki', 'towelhead', 'raghead', 'cracker',
-  // English profanity
-  'fuck', 'shit', 'ass', 'asshole', 'bitch', 'dick', 'cock', 'pussy',
-  'whore', 'slut', 'cunt', 'bastard', 'motherfucker', 'stfu', 'wtf',
-  // French slurs & hate speech
-  'nègre', 'negre', 'bougnoule', 'bougnoul', 'youpin', 'youpine',
-  'bamboula', 'bicot', 'raton', 'chinetoque', 'bridé', 'bride',
-  'tapette', 'pédé', 'pede', 'gouine', 'tarlouze', 'enculé', 'encule',
-  'fils de pute', 'fdp', 'ntm', 'nique ta mere', 'nique ta mère',
-  // French profanity
-  'pute', 'putain', 'salope', 'salaud', 'connard', 'connasse',
-  'merde', 'bordel', 'bite', 'couille', 'branleur', 'branleuse',
-  'nique', 'niquer', 'baiser', 'sexe', 'porn', 'porno',
-  'pd', 'tg', 'ta gueule', 'ferme ta gueule', 'ftg',
-  'batard', 'bâtard', 'abruti', 'débile', 'debile',
-  'con', 'conne', 'connerie',
-  // Violence & threats
-  'kill yourself', 'kys', 'suicide', 'gas the', 'heil hitler',
-  'nazi', 'white power', 'white supremacy',
-]
-
-const bannedRegex = new RegExp(
-  BANNED_WORDS.map((w) => w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|'),
-  'i',
-)
-
-function containsBannedWord(text: string): boolean {
-  // Normalize: remove accents, leetspeak basics
-  const normalized = text
-    .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
-    .replace(/0/g, 'o').replace(/1/g, 'i').replace(/3/g, 'e')
-    .replace(/4/g, 'a').replace(/5/g, 's').replace(/\$/g, 's')
-    .replace(/@/g, 'a')
-  return bannedRegex.test(normalized) || bannedRegex.test(text)
-}

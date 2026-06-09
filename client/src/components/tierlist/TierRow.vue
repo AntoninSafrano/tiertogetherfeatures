@@ -224,7 +224,7 @@ function onDragChange(evt: any) {
       ref="settingsPanel"
       role="dialog"
       :aria-label="`Paramètres du tier ${rowData.label}`"
-      class="absolute right-11 top-1/2 z-40 w-64 -translate-y-1/2 rounded-xl border border-border-hover bg-surface p-4 shadow-2xl"
+      class="absolute right-11 top-1/2 z-40 w-64 -translate-y-1/2 rounded-xl border border-border-hover bg-surface p-4 shadow-2xl max-sm:fixed max-sm:left-1/2 max-sm:right-auto max-sm:z-50 max-sm:w-[calc(100vw-2rem)] max-sm:max-w-xs max-sm:-translate-x-1/2"
       @click.stop
       @keydown.escape.stop="showSettings = false"
     >

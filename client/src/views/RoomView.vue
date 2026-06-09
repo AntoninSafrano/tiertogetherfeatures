@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, onUnmounted, ref, computed, nextTick, watch } from 'vue'
+import { onMounted, onUnmounted, ref, computed, nextTick } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useRoomStore } from '@/stores/room'
 import { useSocket } from '@/composables/useSocket'
@@ -55,21 +55,31 @@ function scrollToBottom() {
 
 const blockedError = ref<string | null>(null)
 
-watch(() => socket.value, (sock) => {
+function onChatMessage(msg: ChatMessage) {
+  chatMessages.value.push(msg)
+  if (!panelOpen.value || activeTab.value !== 'chat') unreadCount.value++
+  scrollToBottom()
+}
+
+function onSocketError(serverMsg: string) {
+  if (typeof serverMsg === 'string' && serverMsg.startsWith('Message bloqué')) {
+    blockedError.value = 'Ton message ne respecte pas les règles de la communauté et n\'a pas été envoyé.'
+    if (!panelOpen.value || activeTab.value !== 'chat') switchToChat()
+    setTimeout(() => { blockedError.value = null }, 4500)
+  }
+}
+
+// Bound AFTER the store's bindEvents() ran: bindEvents() calls off() on
+// chat:message/error when (re)binding a socket, which would silently drop
+// listeners registered earlier (e.g. via an immediate watch).
+function bindChatListeners() {
+  const sock = socket.value
   if (!sock) return
-  sock.on('chat:message', (msg: ChatMessage) => {
-    chatMessages.value.push(msg)
-    if (!panelOpen.value || activeTab.value !== 'chat') unreadCount.value++
-    scrollToBottom()
-  })
-  sock.on('error', (serverMsg: string) => {
-    if (typeof serverMsg === 'string' && serverMsg.startsWith('Message bloqué')) {
-      blockedError.value = 'Ton message ne respecte pas les règles de la communauté et n\'a pas été envoyé.'
-      if (!panelOpen.value || activeTab.value !== 'chat') switchToChat()
-      setTimeout(() => { blockedError.value = null }, 4500)
-    }
-  })
-}, { immediate: true })
+  sock.off('chat:message', onChatMessage)
+  sock.off('error', onSocketError)
+  sock.on('chat:message', onChatMessage)
+  sock.on('error', onSocketError)
+}
 
 function sendMessage() {
   const text = chatInput.value.trim()
@@ -100,11 +110,14 @@ onMounted(async () => {
   // If we already joined this room (e.g. after createRoom navigated here), skip gate
   if (store.currentRoom?.id === roomId) {
     gateResolved.value = true
+    bindChatListeners()
     return
   }
 })
 
 onUnmounted(() => {
+  socket.value?.off('chat:message', onChatMessage)
+  socket.value?.off('error', onSocketError)
   if (!isSolo) {
     store.clearRoom()
   }
@@ -121,6 +134,7 @@ async function onGateReady(payload: { username: string; avatar: string; isGuest:
 
   if (res.success) {
     gateResolved.value = true
+    bindChatListeners()
   } else {
     const isNotFound = res.error === 'Room introuvable'
     error.value = isNotFound
@@ -157,7 +171,7 @@ function goHome() {
           <ArrowLeft class="h-4 w-4" />
         </button>
         <div class="flex items-center gap-1.5">
-          <span class="text-sm font-semibold text-foreground truncate max-w-[200px]">{{ store.title || 'Tier List' }}</span>
+          <span class="text-sm font-semibold text-foreground truncate max-w-[120px] sm:max-w-[200px]">{{ store.title || 'Tier List' }}</span>
           <span class="text-foreground-subtle">·</span>
           <span class="text-xs font-mono text-foreground-subtle">{{ roomId }}</span>
           <button

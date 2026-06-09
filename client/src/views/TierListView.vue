@@ -8,7 +8,7 @@ import { useRoomStore } from '@/stores/room'
 import { ArrowLeft, Download, Calendar, LayoutGrid, Copy, Settings2, Share2, Code, Flag } from 'lucide-vue-next'
 import ReportModal from '@/components/ReportModal.vue'
 import { API_BASE } from '@/config'
-import { getCategoryBadgeColor } from '@/lib/utils'
+import { getCategoryBadgeColor, getCategoryLabel } from '@/lib/utils'
 
 const route = useRoute()
 const router = useRouter()
@@ -93,19 +93,6 @@ async function cloneAndUse() {
   } finally {
     isCloning.value = false
   }
-}
-
-function getCategoryLabel(cat: string): string {
-  const labels: Record<string, string> = {
-    Gaming: 'Jeux vidéo',
-    Food: 'Cuisine',
-    Anime: 'Anime',
-    Music: 'Musique',
-    Movies: 'Films',
-    Sports: 'Sport',
-    Other: 'Autre',
-  }
-  return labels[cat] || cat
 }
 
 const shareCopied = ref(false)

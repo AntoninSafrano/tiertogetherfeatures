@@ -7,7 +7,7 @@ import {
   BarChart3, UserPlus, Calendar, Mail, Chrome, CheckCircle, Flag
 } from 'lucide-vue-next'
 import { API_BASE } from '@/config'
-import { getCategoryBadgeColor, getCategorySolidColor } from '@/lib/utils'
+import { getCategoryBadgeColor, getCategorySolidColor, getCategoryLabel } from '@/lib/utils'
 
 const router = useRouter()
 
@@ -125,19 +125,6 @@ async function fetchStats() {
   } finally {
     isLoading.value = false
   }
-}
-
-function getCategoryLabel(cat: string): string {
-  const labels: Record<string, string> = {
-    Gaming: 'Jeux video',
-    Food: 'Cuisine',
-    Anime: 'Anime',
-    Music: 'Musique',
-    Movies: 'Films',
-    Sports: 'Sport',
-    Other: 'Autre',
-  }
-  return labels[cat] || cat
 }
 
 function formatDate(d: string): string {

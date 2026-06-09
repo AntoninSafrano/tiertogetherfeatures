@@ -6,6 +6,7 @@ import { useAuth } from '@/composables/useAuth'
 import { useCloudinary } from '@/composables/useCloudinary'
 import { X, Globe, Lock, Tag, LogIn, ImagePlus, Upload, Loader2, CheckCircle2 } from 'lucide-vue-next'
 import { API_BASE } from '@/config'
+import { getCategoryLabel } from '@/lib/utils'
 
 const router = useRouter()
 const route = useRoute()
@@ -29,16 +30,6 @@ const success = ref(false)
 const customCover = ref('')
 
 const categories = ['Gaming', 'Food', 'Anime', 'Music', 'Movies', 'Sports', 'Other']
-
-const categoryLabels: Record<string, string> = {
-  Gaming: 'Jeux vidéo',
-  Food: 'Cuisine',
-  Anime: 'Anime',
-  Music: 'Musique',
-  Movies: 'Films',
-  Sports: 'Sport',
-  Other: 'Autre',
-}
 
 const autoCover = computed(() => {
   for (const row of store.rows) {
@@ -208,7 +199,7 @@ async function publish() {
             </div>
 
             <!-- Or pick from tier list -->
-            <div v-if="allImages.length > 0" class="grid grid-cols-6 gap-1.5 max-h-40 overflow-y-auto rounded-lg border border-border p-2 bg-surface">
+            <div v-if="allImages.length > 0" class="grid grid-cols-4 sm:grid-cols-6 gap-1.5 max-h-40 overflow-y-auto rounded-lg border border-border p-2 bg-surface">
               <button
                 v-for="img in allImages"
                 :key="img.url"
@@ -253,7 +244,7 @@ async function publish() {
               v-model="category"
               class="w-full rounded-lg border border-border-hover bg-surface-hover px-3 py-2 text-sm text-foreground focus:border-primary/50 focus:outline-none"
             >
-              <option v-for="cat in categories" :key="cat" :value="cat">{{ categoryLabels[cat] || cat }}</option>
+              <option v-for="cat in categories" :key="cat" :value="cat">{{ getCategoryLabel(cat) }}</option>
             </select>
           </div>
 

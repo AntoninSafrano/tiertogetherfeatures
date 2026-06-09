@@ -3,7 +3,7 @@ import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuth } from '@/composables/useAuth'
 import { useCloudinary } from '@/composables/useCloudinary'
-import { getCategoryBadgeColor } from '@/lib/utils'
+import { getCategoryBadgeColor, getCategoryLabel } from '@/lib/utils'
 import NavBar from '@/components/NavBar.vue'
 import AvatarCropper from '@/components/AvatarCropper.vue'
 import {
@@ -59,20 +59,6 @@ const isSaving = ref(false)
 const confirmDelete = ref<MyTierList | null>(null)
 const deleteError = ref<string | null>(null)
 const isDeleting = ref(false)
-
-const CATEGORY_LABELS: Record<string, string> = {
-  Gaming: 'Jeux vidéo',
-  Food: 'Cuisine',
-  Anime: 'Anime',
-  Music: 'Musique',
-  Movies: 'Films',
-  Sports: 'Sport',
-  Other: 'Autre',
-}
-
-function getCategoryLabel(cat: string): string {
-  return CATEGORY_LABELS[cat] ?? cat
-}
 
 function getCoverImage(tl: MyTierList): string {
   if (tl.coverImage) return tl.coverImage

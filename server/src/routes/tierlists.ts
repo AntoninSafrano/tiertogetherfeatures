@@ -166,100 +166,72 @@ router.get('/api/tierlists/stats', async (req: Request, res: Response) => {
       return
     }
 
-    const totalTierlists = await TierListModel.countDocuments()
-    const publicTierlists = await TierListModel.countDocuments({ isPublic: true })
-    const privateTierlists = totalTierlists - publicTierlists
-    const totalUsers = await UserModel.countDocuments()
-    const googleUsers = await UserModel.countDocuments({ authProvider: 'google' })
-    const emailUsers = await UserModel.countDocuments({ authProvider: 'email' })
-    const verifiedUsers = await UserModel.countDocuments({ emailVerified: true })
-
-    // Users registered in last 7 days
     const oneWeekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
     const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000)
-    const newUsersWeek = await UserModel.countDocuments({ createdAt: { $gte: oneWeekAgo } })
-    const newUsersToday = await UserModel.countDocuments({ createdAt: { $gte: oneDayAgo } })
-
-    // Tierlists created in last 7 days
-    const newTierlistsWeek = await TierListModel.countDocuments({ createdAt: { $gte: oneWeekAgo } })
-    const newTierlistsToday = await TierListModel.countDocuments({ createdAt: { $gte: oneDayAgo } })
-
-    // Total downloads
-    const downloadAgg = await TierListModel.aggregate([
-      { $group: { _id: null, total: { $sum: '$downloads' } } }
-    ])
-    const totalDownloads = downloadAgg[0]?.total || 0
-
-    // Total votes cast
-    const voteAgg = await TierListModel.aggregate([
-      { $project: { voterCount: { $size: { $ifNull: ['$voters', []] } } } },
-      { $group: { _id: null, total: { $sum: '$voterCount' } } }
-    ])
-    const totalVotes = voteAgg[0]?.total || 0
-
-    // Trending this week
-    const trending = await TierListModel.find({ isPublic: true, createdAt: { $gte: oneWeekAgo } })
-      .sort({ downloads: -1 })
-      .limit(10)
-      .select('title category coverImage upvotes downvotes downloads roomId authorId createdAt')
-      .lean()
-
-    // Top downloaded all time
-    const topDownloaded = await TierListModel.find({ isPublic: true })
-      .sort({ downloads: -1 })
-      .limit(10)
-      .select('title category coverImage upvotes downvotes downloads roomId authorId createdAt')
-      .lean()
-
-    // Top voted all time (by upvotes)
-    const topVoted = await TierListModel.find({ isPublic: true })
-      .sort({ upvotes: -1 })
-      .limit(10)
-      .select('title category coverImage upvotes downvotes downloads roomId authorId createdAt')
-      .lean()
-
-    // Categories breakdown
-    const categories = await TierListModel.aggregate([
-      { $match: { isPublic: true } },
-      { $group: { _id: '$category', count: { $sum: 1 }, totalDownloads: { $sum: '$downloads' } } },
-      { $sort: { count: -1 } },
-    ])
-
-    // Recent users (last 20)
-    const recentUsers = await UserModel.find()
-      .sort({ createdAt: -1 })
-      .limit(20)
-      .select('displayName email avatar authProvider emailVerified createdAt')
-      .lean()
-
-    // Users by registration date (last 30 days, daily counts)
     const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
-    const userGrowth = await UserModel.aggregate([
-      { $match: { createdAt: { $gte: thirtyDaysAgo } } },
+    const TOP_SELECT = 'title category coverImage upvotes downvotes downloads roomId authorId createdAt'
+    const growthPipeline = (since: Date): any[] => [
+      { $match: { createdAt: { $gte: since } } },
       { $group: {
         _id: { $dateToString: { format: '%Y-%m-%d', date: '$createdAt' } },
-        count: { $sum: 1 }
-      }},
-      { $sort: { _id: 1 } }
+        count: { $sum: 1 },
+      } },
+      { $sort: { _id: 1 } },
+    ]
+
+    // All queries are independent — run them in parallel
+    const [
+      totalTierlists, publicTierlists, totalUsers, googleUsers, emailUsers, verifiedUsers,
+      newUsersWeek, newUsersToday, newTierlistsWeek, newTierlistsToday,
+      downloadAgg, voteAgg,
+      trending, topDownloaded, topVoted, categories, recentUsers,
+      userGrowth, tierlistGrowth, topAuthors,
+    ] = await Promise.all([
+      TierListModel.countDocuments(),
+      TierListModel.countDocuments({ isPublic: true }),
+      UserModel.countDocuments(),
+      UserModel.countDocuments({ authProvider: 'google' }),
+      UserModel.countDocuments({ authProvider: 'email' }),
+      UserModel.countDocuments({ emailVerified: true }),
+      UserModel.countDocuments({ createdAt: { $gte: oneWeekAgo } }),
+      UserModel.countDocuments({ createdAt: { $gte: oneDayAgo } }),
+      TierListModel.countDocuments({ createdAt: { $gte: oneWeekAgo } }),
+      TierListModel.countDocuments({ createdAt: { $gte: oneDayAgo } }),
+      TierListModel.aggregate([
+        { $group: { _id: null, total: { $sum: '$downloads' } } },
+      ]),
+      TierListModel.aggregate([
+        { $project: { voterCount: { $size: { $ifNull: ['$voters', []] } } } },
+        { $group: { _id: null, total: { $sum: '$voterCount' } } },
+      ]),
+      TierListModel.find({ isPublic: true, createdAt: { $gte: oneWeekAgo } })
+        .sort({ downloads: -1 }).limit(10).select(TOP_SELECT).lean(),
+      TierListModel.find({ isPublic: true })
+        .sort({ downloads: -1 }).limit(10).select(TOP_SELECT).lean(),
+      TierListModel.find({ isPublic: true })
+        .sort({ upvotes: -1 }).limit(10).select(TOP_SELECT).lean(),
+      TierListModel.aggregate([
+        { $match: { isPublic: true } },
+        { $group: { _id: '$category', count: { $sum: 1 }, totalDownloads: { $sum: '$downloads' } } },
+        { $sort: { count: -1 } },
+      ]),
+      UserModel.find()
+        .sort({ createdAt: -1 }).limit(20)
+        .select('displayName email avatar authProvider emailVerified createdAt')
+        .lean(),
+      UserModel.aggregate(growthPipeline(thirtyDaysAgo)),
+      TierListModel.aggregate(growthPipeline(thirtyDaysAgo)),
+      TierListModel.aggregate([
+        { $match: { isPublic: true, authorId: { $exists: true, $nin: [null, ''] } } },
+        { $group: { _id: '$authorId', count: { $sum: 1 }, totalDownloads: { $sum: '$downloads' } } },
+        { $sort: { count: -1 } },
+        { $limit: 10 },
+      ]),
     ])
 
-    // Tierlists by creation date (last 30 days)
-    const tierlistGrowth = await TierListModel.aggregate([
-      { $match: { createdAt: { $gte: thirtyDaysAgo } } },
-      { $group: {
-        _id: { $dateToString: { format: '%Y-%m-%d', date: '$createdAt' } },
-        count: { $sum: 1 }
-      }},
-      { $sort: { _id: 1 } }
-    ])
-
-    // Most active authors (excludes system-seeded lists with empty authorId)
-    const topAuthors = await TierListModel.aggregate([
-      { $match: { isPublic: true, authorId: { $exists: true, $nin: [null, ''] } } },
-      { $group: { _id: '$authorId', count: { $sum: 1 }, totalDownloads: { $sum: '$downloads' } } },
-      { $sort: { count: -1 } },
-      { $limit: 10 }
-    ])
+    const privateTierlists = totalTierlists - publicTierlists
+    const totalDownloads = downloadAgg[0]?.total || 0
+    const totalVotes = voteAgg[0]?.total || 0
 
     // Resolve author names — keep only valid 24-hex ObjectId strings
     const OBJECT_ID_RE = /^[a-f0-9]{24}$/i

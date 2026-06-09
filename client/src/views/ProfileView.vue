@@ -4,7 +4,7 @@ import { useRoute, useRouter } from 'vue-router'
 import NavBar from '@/components/NavBar.vue'
 import { ArrowLeft, Download, ThumbsUp, Calendar, LayoutGrid, User } from 'lucide-vue-next'
 import { API_BASE } from '@/config'
-import { getCategoryBadgeColor } from '@/lib/utils'
+import { getCategoryBadgeColor, getCategoryLabel, getRelativeTime } from '@/lib/utils'
 
 const route = useRoute()
 const router = useRouter()
@@ -64,33 +64,6 @@ function getInitials(name: string): string {
     .join('')
     .toUpperCase()
     .slice(0, 2)
-}
-
-function getCategoryLabel(cat: string): string {
-  const labels: Record<string, string> = {
-    Gaming: 'Jeux video',
-    Food: 'Cuisine',
-    Anime: 'Anime',
-    Music: 'Musique',
-    Movies: 'Films',
-    Sports: 'Sport',
-    Other: 'Autre',
-  }
-  return labels[cat] || cat
-}
-
-function getRelativeTime(dateStr: string): string {
-  const now = Date.now()
-  const diff = now - new Date(dateStr).getTime()
-  const minutes = Math.floor(diff / 60000)
-  if (minutes < 60) return `il y a ${minutes}min`
-  const hours = Math.floor(minutes / 60)
-  if (hours < 24) return `il y a ${hours}h`
-  const days = Math.floor(hours / 24)
-  if (days < 7) return `il y a ${days}j`
-  const weeks = Math.floor(days / 7)
-  if (weeks < 5) return `il y a ${weeks}sem`
-  return new Date(dateStr).toLocaleDateString()
 }
 
 function formatJoinDate(dateStr: string): string {
@@ -176,7 +149,7 @@ onMounted(() => {
         </div>
 
         <!-- Stats -->
-        <div class="grid grid-cols-3 gap-4 mb-8">
+        <div class="grid grid-cols-3 gap-2 sm:gap-4 mb-8">
           <div class="rounded-xl border border-border bg-surface p-4 text-center">
             <div class="flex items-center justify-center gap-1.5 text-foreground-muted mb-1">
               <LayoutGrid class="h-4 w-4" />
