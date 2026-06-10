@@ -2,7 +2,6 @@
 import { ref, onMounted, onUnmounted } from 'vue'
 import { useRoomStore } from '@/stores/room'
 import { Lock, Unlock, RotateCcw, Download, Maximize, Upload, Vote, Palette, Twitch } from 'lucide-vue-next'
-import { toPng } from 'html-to-image'
 import PublishModal from './PublishModal.vue'
 
 const store = useRoomStore()
@@ -51,77 +50,145 @@ function confirmReset() {
   showResetConfirm.value = false
 }
 
-/** Add a footer banner with the title + tiertogether.fr branding — every
- *  shared screenshot becomes an ad for the site. */
-async function addWatermark(dataUrl: string, title: string): Promise<string> {
-  const img = new Image()
-  await new Promise<void>((resolve, reject) => {
-    img.onload = () => resolve()
-    img.onerror = reject
-    img.src = dataUrl
+// ─── Canvas export ──────────────────────────────────────────────
+// The tier list is redrawn from the store onto a canvas (instead of a DOM
+// screenshot, which silently dropped CSS background-images). Deterministic,
+// works on every browser, and includes the tiertogether.fr footer.
+
+function loadImage(url: string): Promise<HTMLImageElement | null> {
+  return new Promise((resolve) => {
+    const img = new Image()
+    img.crossOrigin = 'anonymous'
+    const timer = setTimeout(() => resolve(null), 8000)
+    img.onload = () => { clearTimeout(timer); resolve(img) }
+    img.onerror = () => { clearTimeout(timer); resolve(null) }
+    img.src = url
   })
+}
 
-  const banner = 64 // px (image is exported at pixelRatio 2)
-  const canvas = document.createElement('canvas')
-  canvas.width = img.width
-  canvas.height = img.height + banner
-  const ctx = canvas.getContext('2d')
-  if (!ctx) return dataUrl
+/** Draw an image cropped to cover a square cell */
+function drawCover(ctx: CanvasRenderingContext2D, img: HTMLImageElement, x: number, y: number, size: number) {
+  const ratio = Math.max(size / img.width, size / img.height)
+  const w = img.width * ratio
+  const h = img.height * ratio
+  ctx.save()
+  ctx.beginPath()
+  ctx.roundRect(x, y, size, size, 8)
+  ctx.clip()
+  ctx.drawImage(img, x + (size - w) / 2, y + (size - h) / 2, w, h)
+  ctx.restore()
+}
 
-  ctx.fillStyle = '#0c0d14'
-  ctx.fillRect(0, 0, canvas.width, canvas.height)
-  ctx.drawImage(img, 0, 0)
-
-  const midY = img.height + banner / 2
+function drawPlaceholder(ctx: CanvasRenderingContext2D, label: string, color: string, x: number, y: number, size: number) {
+  ctx.save()
+  ctx.beginPath()
+  ctx.roundRect(x, y, size, size, 8)
+  ctx.clip()
+  const grad = ctx.createLinearGradient(x, y, x + size, y + size)
+  grad.addColorStop(0, color + '30')
+  grad.addColorStop(1, '#000000')
+  ctx.fillStyle = grad
+  ctx.fillRect(x, y, size, size)
+  ctx.fillStyle = '#ffffff'
+  ctx.font = 'bold 13px system-ui, sans-serif'
+  ctx.textAlign = 'center'
   ctx.textBaseline = 'middle'
-
-  // Left: tier list title
-  ctx.font = '600 24px system-ui, -apple-system, sans-serif'
-  ctx.fillStyle = 'rgba(255,255,255,0.45)'
-  const maxTitleWidth = canvas.width * 0.55
-  let label = title
-  while (label && ctx.measureText(label).width > maxTitleWidth) label = label.slice(0, -1)
-  if (label !== title) label += '…'
-  if (label) ctx.fillText(label, 24, midY)
-
-  // Right: brand ("Tier" in primary purple + "together.fr" in white)
-  ctx.font = '700 26px system-ui, -apple-system, sans-serif'
-  const part1 = 'tier'
-  const part2 = 'together.fr'
-  const w1 = ctx.measureText(part1).width
-  const w2 = ctx.measureText(part2).width
-  const startX = canvas.width - w1 - w2 - 24
-  ctx.fillStyle = '#a855f7'
-  ctx.fillText(part1, startX, midY)
-  ctx.fillStyle = 'rgba(255,255,255,0.85)'
-  ctx.fillText(part2, startX + w1, midY)
-
-  return canvas.toDataURL('image/png')
+  const words = label.split(/\s+/).slice(0, 3)
+  words.forEach((w, i) => {
+    ctx.fillText(w.slice(0, 12), x + size / 2, y + size / 2 + (i - (words.length - 1) / 2) * 16)
+  })
+  ctx.restore()
 }
 
 async function exportImage() {
-  const target = document.getElementById('tier-rows-container')
-  if (!target) return
-
+  if (isExporting.value) return
   isExporting.value = true
   try {
-    const dataUrl = await toPng(target, {
-      backgroundColor: '#0c0d14',
-      pixelRatio: 2,
-      cacheBust: true,
-      fetchRequestInit: { mode: 'cors' },
-      skipFonts: true,
-      filter: (node: HTMLElement) => {
-        // Skip problematic elements
-        return !node.classList?.contains('lucide')
-      },
-    })
+    const ITEM = 96
+    const GAP = 8
+    const LABEL_W = 120
+    const WIDTH = 1240
+    const BANNER = 64
+    const cols = Math.floor((WIDTH - LABEL_W - GAP) / (ITEM + GAP))
 
-    const branded = await addWatermark(dataUrl, store.title || 'Tier list')
+    const rows = store.rows.map((row) => {
+      const lines = Math.max(1, Math.ceil(row.items.length / cols))
+      return { row, height: Math.max(ITEM + GAP * 2, lines * (ITEM + GAP) + GAP) }
+    })
+    const totalH = rows.reduce((s, r) => s + r.height, 0) + BANNER
+
+    // Preload every image in parallel (failed loads → placeholder)
+    const urls = [...new Set(store.rows.flatMap((r) => r.items.map((i) => i.imageUrl)).filter(Boolean))]
+    const loaded = new Map<string, HTMLImageElement>()
+    await Promise.all(urls.map(async (u) => {
+      const img = await loadImage(u)
+      if (img) loaded.set(u, img)
+    }))
+
+    const canvas = document.createElement('canvas')
+    canvas.width = WIDTH
+    canvas.height = totalH
+    const ctx = canvas.getContext('2d')
+    if (!ctx) throw new Error('canvas 2d unavailable')
+
+    ctx.fillStyle = '#0c0d14'
+    ctx.fillRect(0, 0, WIDTH, totalH)
+
+    let y = 0
+    for (const { row, height } of rows) {
+      // Label column
+      ctx.fillStyle = row.color
+      ctx.fillRect(0, y, LABEL_W, height)
+      ctx.fillStyle = '#0c0d14'
+      ctx.textAlign = 'center'
+      ctx.textBaseline = 'middle'
+      const label = row.label
+      ctx.font = label.length > 8 ? 'bold 15px system-ui' : label.length > 4 ? 'bold 20px system-ui' : 'bold 34px system-ui'
+      const labelWords = label.length > 8 ? label.split(/\s+/).slice(0, 3) : [label]
+      labelWords.forEach((w, i) => {
+        ctx.fillText(w.slice(0, 12), LABEL_W / 2, y + height / 2 + (i - (labelWords.length - 1) / 2) * 18)
+      })
+
+      // Items zone
+      ctx.fillStyle = 'rgba(255,255,255,0.025)'
+      ctx.fillRect(LABEL_W, y, WIDTH - LABEL_W, height)
+
+      row.items.forEach((item, idx) => {
+        const cx = LABEL_W + GAP + (idx % cols) * (ITEM + GAP)
+        const cy = y + GAP + Math.floor(idx / cols) * (ITEM + GAP)
+        const img = item.imageUrl ? loaded.get(item.imageUrl) : undefined
+        if (img) drawCover(ctx, img, cx, cy, ITEM)
+        else drawPlaceholder(ctx, item.label, row.color, cx, cy, ITEM)
+      })
+
+      // Separator
+      ctx.fillStyle = 'rgba(255,255,255,0.08)'
+      ctx.fillRect(0, y + height - 1, WIDTH, 1)
+      y += height
+    }
+
+    // Footer banner: title + brand
+    const midY = totalH - BANNER / 2
+    ctx.textAlign = 'left'
+    ctx.textBaseline = 'middle'
+    ctx.font = '600 22px system-ui, sans-serif'
+    ctx.fillStyle = 'rgba(255,255,255,0.45)'
+    let title = store.title || 'Tier list'
+    while (title && ctx.measureText(title).width > WIDTH * 0.55) title = title.slice(0, -1)
+    ctx.fillText(title, 24, midY)
+
+    ctx.font = '700 24px system-ui, sans-serif'
+    const w1 = ctx.measureText('tier').width
+    const w2 = ctx.measureText('together.fr').width
+    const startX = WIDTH - w1 - w2 - 24
+    ctx.fillStyle = '#a855f7'
+    ctx.fillText('tier', startX, midY)
+    ctx.fillStyle = 'rgba(255,255,255,0.85)'
+    ctx.fillText('together.fr', startX + w1, midY)
 
     const link = document.createElement('a')
     link.download = `${store.title || 'tierlist'}.png`
-    link.href = branded
+    link.href = canvas.toDataURL('image/png')
     link.click()
   } catch (err) {
     console.error('[Export] Failed:', err)

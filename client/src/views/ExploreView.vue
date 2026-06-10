@@ -150,6 +150,8 @@ function getCoverImage(tierlist: PublicTierList): string {
   return ''
 }
 
+const sharedId = ref<string | null>(null)
+
 async function shareTierList(e: Event, tl: PublicTierList) {
   e.stopPropagation()
   const url = `${window.location.origin}/tierlist/${tierlistSlugId(tl._id, tl.title)}`
@@ -159,6 +161,8 @@ async function shareTierList(e: Event, tl: PublicTierList) {
     await navigator.share({ title, url, text: `Découvre cette tier list : ${title}` })
   } else {
     await navigator.clipboard.writeText(url)
+    sharedId.value = tl._id
+    setTimeout(() => { if (sharedId.value === tl._id) sharedId.value = null }, 2000)
   }
 }
 
@@ -458,9 +462,10 @@ onMounted(async () => {
                   <button
                     @click.stop="shareTierList($event, tl)"
                     class="transition-colors text-foreground-muted hover:text-primary"
-                    title="Partager"
+                    :title="sharedId === tl._id ? 'Lien copié !' : 'Partager'"
                   >
-                    <Share2 class="h-3.5 w-3.5" />
+                    <Check v-if="sharedId === tl._id" class="h-3.5 w-3.5 text-emerald-400" />
+                    <Share2 v-else class="h-3.5 w-3.5" />
                   </button>
                 </div>
                 <span>{{ getRelativeTime(tl.createdAt) }}</span>
