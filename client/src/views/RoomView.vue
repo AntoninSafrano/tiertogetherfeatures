@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { onMounted, onUnmounted, ref, computed, nextTick } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import { useRoomStore } from '@/stores/room'
 import { useSocket } from '@/composables/useSocket'
 import { TierBoard } from '@/components/tierlist'
@@ -11,6 +12,7 @@ import { ArrowLeft, Crown, Users, MessageCircle, Send, PanelRightClose, PanelRig
 
 const route = useRoute()
 const router = useRouter()
+const { t } = useI18n()
 const store = useRoomStore()
 const { socket } = useSocket()
 
@@ -54,7 +56,7 @@ async function nativeShare() {
   try {
     await navigator.share({
       title: store.title || 'TierTogether',
-      text: `Rejoins ma tier list "${store.title}" sur TierTogether !`,
+      text: t('room.shareText', { title: store.title }),
       url: window.location.href,
     })
   } catch { /* user cancelled */ }
@@ -83,7 +85,7 @@ function onChatMessage(msg: ChatMessage) {
 
 function onSocketError(serverMsg: string) {
   if (typeof serverMsg === 'string' && serverMsg.startsWith('Message bloqué')) {
-    blockedError.value = 'Ton message ne respecte pas les règles de la communauté et n\'a pas été envoyé.'
+    blockedError.value = t('room.blockedMessage')
     if (!panelOpen.value || activeTab.value !== 'chat') switchToChat()
     setTimeout(() => { blockedError.value = null }, 4500)
   }
@@ -157,11 +159,11 @@ async function onGateReady(payload: { username: string; avatar: string; isGuest:
     bindChatListeners()
   } else {
     if (res.error === 'Room introuvable') {
-      error.value = 'Room introuvable — ce code ne correspond à aucune room active.'
+      error.value = t('room.notFoundError')
     } else if (res.error) {
       error.value = res.error
     } else {
-      error.value = 'Impossible de rejoindre la room. Vérifiez votre connexion.'
+      error.value = t('room.joinError')
     }
     gateResolved.value = true
   }
@@ -203,7 +205,7 @@ function goHome() {
               @click.stop="showInvite = !showInvite"
             >
               <UserPlus class="h-3.5 w-3.5" />
-              Inviter
+              {{ $t('room.invite') }}
             </button>
 
             <div
@@ -211,17 +213,17 @@ function goHome() {
               class="absolute left-0 top-full mt-2 z-50 w-80 max-w-[calc(100vw-2rem)] rounded-xl border border-border-hover bg-surface p-4 shadow-2xl"
               @click.stop
             >
-              <p class="text-sm font-semibold text-foreground mb-1">Invite tes amis</p>
-              <p class="text-[11px] text-foreground-muted mb-3">Ils rejoignent en 2 clics, sans compte.</p>
+              <p class="text-sm font-semibold text-foreground mb-1">{{ $t('room.inviteTitle') }}</p>
+              <p class="text-[11px] text-foreground-muted mb-3">{{ $t('room.inviteHint') }}</p>
 
               <!-- Room code -->
               <button
                 class="w-full flex items-center justify-between gap-2 rounded-lg border border-border bg-background px-3 py-2 mb-2 hover:border-primary/40 transition-colors group"
-                title="Copier le code"
+                :title="$t('room.copyCode')"
                 @click="copyRoomCode"
               >
                 <div class="text-left">
-                  <p class="text-[10px] uppercase tracking-wider text-foreground-subtle">Code de la room</p>
+                  <p class="text-[10px] uppercase tracking-wider text-foreground-subtle">{{ $t('room.roomCode') }}</p>
                   <p class="font-mono text-lg font-bold tracking-[0.2em] text-foreground">{{ roomId }}</p>
                 </div>
                 <Check v-if="codeCopied" class="h-4 w-4 text-emerald-400" />
@@ -235,7 +237,7 @@ function goHome() {
               >
                 <Check v-if="linkCopied" class="h-3.5 w-3.5" />
                 <Copy v-else class="h-3.5 w-3.5" />
-                {{ linkCopied ? 'Lien copié !' : 'Copier le lien d\'invitation' }}
+                {{ linkCopied ? $t('common.linkCopied') : $t('room.copyInviteLink') }}
               </button>
 
               <button
@@ -244,7 +246,7 @@ function goHome() {
                 @click="nativeShare"
               >
                 <Share2 class="h-3.5 w-3.5" />
-                Partager…
+                {{ $t('room.shareNative') }}
               </button>
             </div>
           </div>
@@ -252,7 +254,7 @@ function goHome() {
           <div v-if="showInvite" class="fixed inset-0 z-40" @click="showInvite = false" />
         </div>
         <div v-if="isSolo" class="rounded-full bg-primary/10 px-2.5 py-0.5">
-          <span class="text-[11px] font-medium text-primary">Solo</span>
+          <span class="text-[11px] font-medium text-primary">{{ $t('room.solo') }}</span>
         </div>
       </div>
 
@@ -262,7 +264,7 @@ function goHome() {
         class="flex items-center gap-2 h-8 px-3 rounded-lg text-foreground-muted hover:text-foreground hover:bg-surface-hover transition-colors"
         @click="panelOpen = !panelOpen"
       >
-        <span class="text-xs font-medium">{{ store.users.length }} en ligne</span>
+        <span class="text-xs font-medium">{{ $t('room.onlineCount', { n: store.users.length }) }}</span>
         <PanelRightOpen v-if="!panelOpen" class="h-4 w-4" />
         <PanelRightClose v-else class="h-4 w-4" />
       </button>
@@ -270,7 +272,7 @@ function goHome() {
 
     <!-- Loading -->
     <div v-if="isLoading" class="flex flex-1 items-center justify-center">
-      <p class="text-foreground-muted">Connexion à la room...</p>
+      <p class="text-foreground-muted">{{ $t('room.connecting') }}</p>
     </div>
 
     <!-- Error -->
@@ -280,7 +282,7 @@ function goHome() {
         class="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-primary-hover transition-colors"
         @click="goHome"
       >
-        Retour à l'accueil
+        {{ $t('room.backHome') }}
       </button>
     </div>
 
@@ -312,7 +314,7 @@ function goHome() {
               @click="switchToChat"
             >
               <MessageCircle class="h-3.5 w-3.5" />
-              Chat
+              {{ $t('room.tabChat') }}
               <span
                 v-if="unreadCount > 0 && activeTab !== 'chat'"
                 class="flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-[10px] font-bold text-white"
@@ -326,7 +328,7 @@ function goHome() {
               @click="activeTab = 'players'"
             >
               <Users class="h-3.5 w-3.5" />
-              Joueurs
+              {{ $t('room.tabPlayers') }}
               <span class="text-[10px] opacity-60">{{ store.users.length }}</span>
             </button>
           </div>
@@ -335,7 +337,7 @@ function goHome() {
           <template v-if="activeTab === 'chat'">
             <div class="flex-1 overflow-y-auto px-4 py-3 space-y-3">
               <div v-if="chatMessages.length === 0" class="flex h-full items-center justify-center">
-                <p class="text-xs text-foreground-subtle">Aucun message</p>
+                <p class="text-xs text-foreground-subtle">{{ $t('room.noMessages') }}</p>
               </div>
               <div v-for="msg in chatMessages" :key="msg.id" class="group/msg flex items-start gap-2">
                 <img
@@ -370,7 +372,7 @@ function goHome() {
                 <input
                   v-model="chatInput"
                   type="text"
-                  placeholder="Message..."
+                  :placeholder="$t('room.messagePlaceholder')"
                   maxlength="500"
                   class="flex-1 rounded-lg border border-border bg-surface h-9 px-3 text-[13px] text-foreground placeholder:text-foreground-subtle focus:border-primary/50 focus:outline-none focus:ring-1 focus:ring-primary/20"
                 />
@@ -415,7 +417,7 @@ function goHome() {
                     <span class="truncate text-sm font-medium text-foreground">{{ u.username }}</span>
                     <Crown v-if="u.id === store.currentRoom?.hostId" class="h-3.5 w-3.5 shrink-0 text-yellow-500" />
                   </div>
-                  <span class="text-[10px] text-foreground-subtle">En ligne</span>
+                  <span class="text-[10px] text-foreground-subtle">{{ $t('room.online') }}</span>
                 </div>
               </div>
             </div>

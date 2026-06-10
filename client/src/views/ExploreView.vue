@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import { useAuth } from '@/composables/useAuth'
 import NavBar from '@/components/NavBar.vue'
 import ErrorPopup from '@/components/ErrorPopup.vue'
@@ -10,6 +11,7 @@ import { getCategoryBadgeColor, getCategoryLabel, getRelativeTime, tierlistSlugI
 
 const router = useRouter()
 const route = useRoute()
+const { t } = useI18n()
 const { user, fetchUser } = useAuth()
 
 function categoryFromRoute(): string {
@@ -57,22 +59,22 @@ function loadLocalRooms() {
   localRooms.value = JSON.parse(localStorage.getItem('tt-my-rooms') || '[]')
 }
 
-const categories = [
-  { label: 'Tout', icon: LayoutGrid, value: 'All' },
-  { label: 'Jeux vidéo', icon: Gamepad2, value: 'Gaming' },
-  { label: 'Cuisine', icon: UtensilsCrossed, value: 'Food' },
-  { label: 'Anime', icon: Tv, value: 'Anime' },
-  { label: 'Musique', icon: Music, value: 'Music' },
-  { label: 'Films', icon: Film, value: 'Movies' },
-  { label: 'Sport', icon: Dumbbell, value: 'Sports' },
-  { label: 'Autre', icon: MoreHorizontal, value: 'Other' },
-]
+const categories = computed(() => [
+  { label: t('common.all'), icon: LayoutGrid, value: 'All' },
+  { label: getCategoryLabel('Gaming'), icon: Gamepad2, value: 'Gaming' },
+  { label: getCategoryLabel('Food'), icon: UtensilsCrossed, value: 'Food' },
+  { label: getCategoryLabel('Anime'), icon: Tv, value: 'Anime' },
+  { label: getCategoryLabel('Music'), icon: Music, value: 'Music' },
+  { label: getCategoryLabel('Movies'), icon: Film, value: 'Movies' },
+  { label: getCategoryLabel('Sports'), icon: Dumbbell, value: 'Sports' },
+  { label: getCategoryLabel('Other'), icon: MoreHorizontal, value: 'Other' },
+])
 
-const sortOptions = [
-  { value: 'downloads', label: 'Plus téléchargés', icon: Download },
-  { value: 'recent', label: 'Récents', icon: Clock },
-  { value: 'popular', label: 'Populaires', icon: TrendingUp },
-]
+const sortOptions = computed(() => [
+  { value: 'downloads', label: t('explore.sortDownloads'), icon: Download },
+  { value: 'recent', label: t('explore.sortRecent'), icon: Clock },
+  { value: 'popular', label: t('explore.sortPopular'), icon: TrendingUp },
+])
 
 async function fetchTierlists() {
   isLoading.value = true
@@ -126,8 +128,8 @@ function selectCategory(value: string) {
 
 const pageTitle = computed(() =>
   activeCategory.value === 'All'
-    ? 'EXPLORER LES TIER LISTS'
-    : `TIER LISTS ${getCategoryLabel(activeCategory.value).toUpperCase()}`,
+    ? t('explore.title')
+    : t('explore.categoryTitle', { category: getCategoryLabel(activeCategory.value).toUpperCase() }),
 )
 
 watch(() => route.fullPath, () => {
@@ -136,7 +138,7 @@ watch(() => route.fullPath, () => {
     if (next !== activeCategory.value) activeCategory.value = next
     document.title = activeCategory.value === 'All'
       ? 'TierTogether'
-      : `Tier lists ${getCategoryLabel(activeCategory.value)} - TierTogether`
+      : t('explore.docTitle', { category: getCategoryLabel(activeCategory.value) })
   }
 })
 
@@ -158,7 +160,7 @@ async function shareTierList(e: Event, tl: PublicTierList) {
   const title = tl.title || 'TierTogether'
 
   if (navigator.share) {
-    await navigator.share({ title, url, text: `Découvre cette tier list : ${title}` })
+    await navigator.share({ title, url, text: t('explore.shareText', { title }) })
   } else {
     await navigator.clipboard.writeText(url)
     sharedId.value = tl._id
@@ -233,10 +235,10 @@ async function deleteTierList(id: string) {
       myLists.value = myLists.value.filter((l) => l._id !== id)
       confirmDelete.value = null
     } else {
-      managementError.value = { title: 'Suppression impossible', description: data.error || 'Erreur inconnue' }
+      managementError.value = { title: t('explore.deleteFailed'), description: data.error || t('common.unknownError') }
     }
   } catch {
-    managementError.value = { title: 'Erreur réseau', description: 'Impossible de supprimer la tier list.' }
+    managementError.value = { title: t('common.networkError'), description: t('explore.deleteNetworkError') }
   }
 }
 
@@ -264,10 +266,10 @@ async function saveEdit() {
       }
       editingList.value = null
     } else {
-      managementError.value = { title: 'Modification impossible', description: data.error || 'Erreur inconnue' }
+      managementError.value = { title: t('explore.editFailed'), description: data.error || t('common.unknownError') }
     }
   } catch {
-    managementError.value = { title: 'Erreur réseau', description: 'Impossible de modifier la tier list.' }
+    managementError.value = { title: t('common.networkError'), description: t('explore.editNetworkError') }
   }
 }
 
@@ -310,7 +312,7 @@ onMounted(async () => {
       <!-- Header -->
       <div class="mb-8">
         <h1 class="text-3xl sm:text-[40px] font-bold tracking-tight text-foreground mb-2">{{ pageTitle }}</h1>
-        <p class="text-base text-foreground-muted mb-5">Découvrez et clonez des tier lists créées par la communauté</p>
+        <p class="text-base text-foreground-muted mb-5">{{ $t('explore.subtitle') }}</p>
 
         <!-- Search -->
         <div class="relative max-w-md">
@@ -318,7 +320,7 @@ onMounted(async () => {
           <input
             v-model="searchQuery"
             type="text"
-            placeholder="Rechercher des tier lists..."
+            :placeholder="$t('explore.searchPlaceholder')"
             class="w-full rounded-xl border border-border bg-surface py-3 pl-12 pr-5 text-sm text-foreground placeholder:text-foreground-subtle focus:border-primary/50 focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
             @input="onSearchInput"
           />
@@ -331,17 +333,17 @@ onMounted(async () => {
           :class="['px-4 py-2 text-sm font-medium transition-colors border-b-2 -mb-px', activeTab === 'explore' ? 'border-primary text-primary' : 'border-transparent text-foreground-muted hover:text-foreground']"
           @click="activeTab = 'explore'"
         >
-          Explorer
+          {{ $t('explore.tabExplore') }}
         </button>
         <button
           :class="['px-4 py-2 text-sm font-medium transition-colors border-b-2 -mb-px', activeTab === 'mine' ? 'border-primary text-primary' : 'border-transparent text-foreground-muted hover:text-foreground']"
           @click="activeTab = 'mine'; loadLocalRooms(); if (user) fetchMyLists()"
         >
-          Mes Listes
+          {{ $t('explore.tabMine') }}
         </button>
       </div>
 
-      <section v-if="activeTab === 'explore'" aria-label="Explorer les tier lists">
+      <section v-if="activeTab === 'explore'" :aria-label="$t('explore.sectionAria')">
         <!-- Categories -->
         <div class="flex flex-wrap items-center gap-2.5 mb-4">
           <button
@@ -390,8 +392,8 @@ onMounted(async () => {
         </div>
 
         <div v-else-if="tierlists.length === 0" class="text-center py-16">
-          <p class="text-foreground-muted text-lg">Aucune tier list trouvée</p>
-          <p class="text-foreground-subtle text-sm mt-1">Soyez le premier à en publier une !</p>
+          <p class="text-foreground-muted text-lg">{{ $t('explore.emptyTitle') }}</p>
+          <p class="text-foreground-subtle text-sm mt-1">{{ $t('explore.emptyHint') }}</p>
         </div>
 
         <div v-else class="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
@@ -404,7 +406,7 @@ onMounted(async () => {
             <!-- Featured badge -->
             <div v-if="featuredIds.has(tl._id)" class="absolute top-2 left-2 z-10 inline-flex h-5 items-center gap-1 rounded-full bg-yellow-500/90 px-2 text-[10px] font-bold leading-none text-black">
               <Star class="h-2.5 w-2.5" />
-              <span>Populaire</span>
+              <span>{{ $t('explore.popular') }}</span>
             </div>
 
             <!-- Category badge -->
@@ -435,7 +437,7 @@ onMounted(async () => {
                 class="text-[11px] text-foreground-subtle hover:text-primary transition-colors mb-1.5 block truncate"
                 @click.stop
               >
-                par {{ tl.authorDisplayName }}
+                {{ $t('explore.byAuthor', { author: tl.authorDisplayName }) }}
               </router-link>
 
               <div class="flex items-center justify-between text-[11px] text-foreground-muted">
@@ -462,7 +464,7 @@ onMounted(async () => {
                   <button
                     @click.stop="shareTierList($event, tl)"
                     class="transition-colors text-foreground-muted hover:text-primary"
-                    :title="sharedId === tl._id ? 'Lien copié !' : 'Partager'"
+                    :title="sharedId === tl._id ? $t('common.linkCopied') : $t('common.share')"
                   >
                     <Check v-if="sharedId === tl._id" class="h-3.5 w-3.5 text-emerald-400" />
                     <Share2 v-else class="h-3.5 w-3.5" />
@@ -476,7 +478,7 @@ onMounted(async () => {
       </section>
 
       <!-- My Lists tab -->
-      <section v-if="activeTab === 'mine'" aria-label="Mes tier lists">
+      <section v-if="activeTab === 'mine'" :aria-label="$t('explore.mineSectionAria')">
         <!-- Error popup -->
         <ErrorPopup
           v-if="managementError"
@@ -489,7 +491,7 @@ onMounted(async () => {
         <div v-if="localRooms.length > 0" class="mb-8">
           <div class="flex items-center gap-2 mb-4">
             <History class="h-5 w-5 text-foreground-muted" />
-            <h2 class="text-lg font-bold text-foreground">Brouillons</h2>
+            <h2 class="text-lg font-bold text-foreground">{{ $t('explore.drafts') }}</h2>
           </div>
           <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
             <div
@@ -510,7 +512,7 @@ onMounted(async () => {
                   </span>
                   <button
                     class="p-1 rounded text-foreground-subtle hover:text-destructive hover:bg-destructive/10 transition-colors"
-                    title="Supprimer"
+                    :title="$t('common.delete')"
                     @click="deleteLocalRoom(room.roomId)"
                   >
                     <Trash2 class="h-3.5 w-3.5" />
@@ -525,7 +527,7 @@ onMounted(async () => {
         <!-- Published lists (auth) -->
         <template v-if="user">
           <div v-if="myLists.length > 0">
-            <h2 class="text-lg font-bold text-foreground mb-4">Publiées</h2>
+            <h2 class="text-lg font-bold text-foreground mb-4">{{ $t('explore.published') }}</h2>
             <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
               <div
                 v-for="tl in myLists"
@@ -567,14 +569,14 @@ onMounted(async () => {
                         @click="saveEdit"
                       >
                         <Check class="h-3 w-3" />
-                        Sauver
+                        {{ $t('common.save') }}
                       </button>
                       <button
                         class="flex-1 flex items-center justify-center gap-1 rounded bg-surface-hover py-1.5 text-xs font-medium text-foreground-muted hover:text-foreground transition-colors"
                         @click="editingList = null"
                       >
                         <X class="h-3 w-3" />
-                        Annuler
+                        {{ $t('common.cancel') }}
                       </button>
                     </div>
                   </template>
@@ -592,7 +594,7 @@ onMounted(async () => {
                         <!-- Edit -->
                         <button
                           class="p-1.5 rounded text-foreground-subtle hover:text-primary hover:bg-primary/10 transition-colors"
-                          title="Modifier"
+                          :title="$t('common.edit')"
                           @click="startEdit(tl)"
                         >
                           <Pencil class="h-3.5 w-3.5" />
@@ -600,7 +602,7 @@ onMounted(async () => {
                         <!-- Toggle visibility -->
                         <button
                           class="p-1.5 rounded text-foreground-subtle hover:text-warning hover:bg-warning/10 transition-colors"
-                          :title="(tl as any).isPublic !== false ? 'Rendre privée' : 'Rendre publique'"
+                          :title="(tl as any).isPublic !== false ? $t('explore.makePrivate') : $t('explore.makePublic')"
                           @click="toggleVisibility(tl)"
                         >
                           <EyeOff v-if="(tl as any).isPublic !== false" class="h-3.5 w-3.5" />
@@ -610,7 +612,7 @@ onMounted(async () => {
                         <button
                           v-if="confirmDelete !== tl._id"
                           class="p-1.5 rounded text-foreground-subtle hover:text-destructive hover:bg-destructive/10 transition-colors"
-                          title="Supprimer"
+                          :title="$t('common.delete')"
                           @click="confirmDelete = tl._id"
                         >
                           <Trash2 class="h-3.5 w-3.5" />
@@ -620,7 +622,7 @@ onMounted(async () => {
                           class="px-2 py-1 rounded bg-destructive text-white text-[10px] font-medium hover:bg-red-600 transition-colors"
                           @click="deleteTierList(tl._id)"
                         >
-                          Confirmer
+                          {{ $t('common.confirm') }}
                         </button>
                       </div>
                     </div>
@@ -631,7 +633,7 @@ onMounted(async () => {
                           {{ getCategoryLabel(tl.category) }}
                         </span>
                         <span v-if="(tl as any).isPublic === false" class="rounded-full px-2 py-0.5 text-[10px] font-medium bg-foreground-subtle/20 text-foreground-subtle">
-                          Privée
+                          {{ $t('explore.private') }}
                         </span>
                       </div>
                       <span class="flex items-center gap-1">
@@ -647,30 +649,30 @@ onMounted(async () => {
         </template>
 
         <div v-if="localRooms.length === 0 && myLists.length === 0" class="text-center py-16">
-          <p class="text-foreground-muted text-lg">Aucune tier list</p>
-          <p class="text-foreground-subtle text-sm mt-1">Créez ou clonez une tier list pour commencer !</p>
+          <p class="text-foreground-muted text-lg">{{ $t('explore.mineEmptyTitle') }}</p>
+          <p class="text-foreground-subtle text-sm mt-1">{{ $t('explore.mineEmptyHint') }}</p>
         </div>
       </section>
 
       <!-- Footer -->
       <footer class="border-t border-border mt-12 py-6 text-center text-xs text-foreground-subtle">
-        <nav aria-label="Tier lists par catégorie" class="flex flex-wrap items-center justify-center gap-x-3 gap-y-1 mb-4">
-          <router-link to="/tierlists/jeux-video" class="hover:text-foreground transition-colors">Tier lists jeux vidéo</router-link>
+        <nav :aria-label="$t('explore.footerNavAria')" class="flex flex-wrap items-center justify-center gap-x-3 gap-y-1 mb-4">
+          <router-link to="/tierlists/jeux-video" class="hover:text-foreground transition-colors">{{ $t('explore.footerGaming') }}</router-link>
           <span>&middot;</span>
-          <router-link to="/tierlists/anime" class="hover:text-foreground transition-colors">Tier lists anime</router-link>
+          <router-link to="/tierlists/anime" class="hover:text-foreground transition-colors">{{ $t('explore.footerAnime') }}</router-link>
           <span>&middot;</span>
-          <router-link to="/tierlists/musique" class="hover:text-foreground transition-colors">Tier lists musique</router-link>
+          <router-link to="/tierlists/musique" class="hover:text-foreground transition-colors">{{ $t('explore.footerMusic') }}</router-link>
           <span>&middot;</span>
-          <router-link to="/tierlists/films" class="hover:text-foreground transition-colors">Tier lists films</router-link>
+          <router-link to="/tierlists/films" class="hover:text-foreground transition-colors">{{ $t('explore.footerMovies') }}</router-link>
           <span>&middot;</span>
-          <router-link to="/tierlists/sport" class="hover:text-foreground transition-colors">Tier lists sport</router-link>
+          <router-link to="/tierlists/sport" class="hover:text-foreground transition-colors">{{ $t('explore.footerSports') }}</router-link>
           <span>&middot;</span>
-          <router-link to="/tierlists/cuisine" class="hover:text-foreground transition-colors">Tier lists cuisine</router-link>
+          <router-link to="/tierlists/cuisine" class="hover:text-foreground transition-colors">{{ $t('explore.footerFood') }}</router-link>
         </nav>
         <div class="flex items-center justify-center gap-4">
-          <router-link to="/legal" class="hover:text-foreground transition-colors">Mentions légales</router-link>
+          <router-link to="/legal" class="hover:text-foreground transition-colors">{{ $t('explore.footerLegal') }}</router-link>
           <span>&middot;</span>
-          <a href="mailto:support@tiertogether.fr" class="hover:text-foreground transition-colors">Contact</a>
+          <a href="mailto:support@tiertogether.fr" class="hover:text-foreground transition-colors">{{ $t('explore.footerContact') }}</a>
           <span>&middot;</span>
           <span>&copy; 2026 TierTogether</span>
         </div>

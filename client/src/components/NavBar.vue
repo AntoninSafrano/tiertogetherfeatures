@@ -1,12 +1,19 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import { useAuth } from '@/composables/useAuth'
+import { setLocale } from '@/i18n'
 import { Menu, X } from 'lucide-vue-next'
 
 const router = useRouter()
+const { locale } = useI18n()
 const { user, fetchUser } = useAuth()
 const mobileMenuOpen = ref(false)
+
+function toggleLocale() {
+  setLocale(locale.value === 'fr' ? 'en' : 'fr')
+}
 
 onMounted(() => {
   fetchUser()
@@ -27,20 +34,28 @@ onMounted(() => {
           to="/"
           :class="['text-sm transition-colors', router.currentRoute.value.path === '/' ? 'font-semibold text-foreground' : 'font-medium text-foreground-muted hover:text-foreground']"
         >
-          Explorer
+          {{ $t('nav.explore') }}
         </router-link>
         <router-link
           to="/create"
           :class="['text-sm transition-colors', router.currentRoute.value.path === '/create' ? 'font-semibold text-foreground' : 'font-medium text-foreground-muted hover:text-foreground']"
         >
-          Créer
+          {{ $t('nav.create') }}
         </router-link>
+        <button
+          type="button"
+          :aria-label="$t('nav.switchLanguage')"
+          class="text-sm font-medium text-foreground-muted hover:text-foreground transition-colors"
+          @click="toggleLocale"
+        >
+          {{ locale === 'fr' ? 'EN' : 'FR' }}
+        </button>
         <!-- Auth -->
         <template v-if="user">
           <router-link
             :to="{ name: 'me' }"
             class="flex items-center gap-2 ml-2 rounded-full pl-1 pr-3 py-1 hover:bg-surface-hover transition-colors"
-            title="Mon profil"
+            :title="$t('nav.myProfile')"
           >
             <div
               :class="['h-8 w-8 rounded-full flex items-center justify-center overflow-hidden',
@@ -63,7 +78,7 @@ onMounted(() => {
             to="/auth"
             class="rounded-full bg-primary px-5 py-2 text-sm font-semibold text-white hover:bg-primary-hover transition-colors"
           >
-            Connexion
+            {{ $t('nav.login') }}
           </router-link>
         </template>
       </div>
@@ -71,7 +86,7 @@ onMounted(() => {
       <!-- Mobile hamburger button -->
       <button
         type="button"
-        :aria-label="mobileMenuOpen ? 'Fermer le menu' : 'Ouvrir le menu'"
+        :aria-label="mobileMenuOpen ? $t('nav.closeMenu') : $t('nav.openMenu')"
         :aria-expanded="mobileMenuOpen"
         class="sm:hidden p-2 text-foreground-muted hover:text-foreground transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 rounded"
         @click="mobileMenuOpen = !mobileMenuOpen"
@@ -88,15 +103,23 @@ onMounted(() => {
           @click="mobileMenuOpen = false"
           :class="['block rounded-lg px-3 py-2 text-sm transition-colors', router.currentRoute.value.path === '/' ? 'font-semibold text-foreground bg-surface-hover' : 'font-medium text-foreground-muted hover:text-foreground hover:bg-surface-hover']"
         >
-          Explorer
+          {{ $t('nav.explore') }}
         </router-link>
         <router-link
           to="/create"
           @click="mobileMenuOpen = false"
           :class="['block rounded-lg px-3 py-2 text-sm transition-colors', router.currentRoute.value.path === '/create' ? 'font-semibold text-foreground bg-surface-hover' : 'font-medium text-foreground-muted hover:text-foreground hover:bg-surface-hover']"
         >
-          Créer
+          {{ $t('nav.create') }}
         </router-link>
+        <button
+          type="button"
+          :aria-label="$t('nav.switchLanguage')"
+          class="block w-full rounded-lg px-3 py-2 text-left text-sm font-medium text-foreground-muted hover:text-foreground hover:bg-surface-hover transition-colors"
+          @click="toggleLocale"
+        >
+          {{ locale === 'fr' ? 'EN' : 'FR' }}
+        </button>
         <!-- Auth (mobile) -->
         <template v-if="user">
           <router-link
@@ -119,7 +142,7 @@ onMounted(() => {
             </div>
             <div class="min-w-0">
               <p class="truncate text-sm font-medium text-foreground">{{ user.displayName }}</p>
-              <p class="text-[11px] text-foreground-muted">Voir mon profil</p>
+              <p class="text-[11px] text-foreground-muted">{{ $t('nav.viewProfile') }}</p>
             </div>
           </router-link>
         </template>
@@ -129,7 +152,7 @@ onMounted(() => {
             @click="mobileMenuOpen = false"
             class="block mt-1 rounded-full bg-primary px-5 py-2 text-center text-sm font-semibold text-white hover:bg-primary-hover transition-colors"
           >
-            Connexion
+            {{ $t('nav.login') }}
           </router-link>
         </template>
       </div>

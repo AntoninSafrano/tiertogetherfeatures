@@ -71,7 +71,7 @@ export function getCategorySolidColor(cat: string): string {
   return categorySolidColors[cat] ?? categorySolidColors.Other!
 }
 
-const categoryLabels: Record<string, string> = {
+const categoryLabelsFr: Record<string, string> = {
   Gaming: 'Jeux vidéo',
   Food: 'Cuisine',
   Anime: 'Anime',
@@ -81,8 +81,25 @@ const categoryLabels: Record<string, string> = {
   Other: 'Autre',
 }
 
+const categoryLabelsEn: Record<string, string> = {
+  Gaming: 'Video games',
+  Food: 'Food',
+  Anime: 'Anime',
+  Music: 'Music',
+  Movies: 'Movies',
+  Sports: 'Sports',
+  Other: 'Other',
+}
+
+let categoryLocale: 'fr' | 'en' = 'fr'
+
+export function setCategoryLocale(l: 'fr' | 'en') {
+  categoryLocale = l
+}
+
 export function getCategoryLabel(cat: string): string {
-  return categoryLabels[cat] ?? cat
+  const labels = categoryLocale === 'en' ? categoryLabelsEn : categoryLabelsFr
+  return labels[cat] ?? cat
 }
 
 export function getRelativeTime(dateStr: string): string {

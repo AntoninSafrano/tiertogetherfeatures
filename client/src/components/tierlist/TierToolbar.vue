@@ -203,7 +203,7 @@ async function exportImage() {
     <!-- Left zone: Admin Controls (host only) -->
     <div v-if="store.isHost" class="flex items-center gap-3">
       <span class="font-mono text-[10px] font-medium tracking-wider text-foreground-muted uppercase">
-        Admin
+        {{ $t('toolbar.admin') }}
       </span>
 
       <button
@@ -211,7 +211,7 @@ async function exportImage() {
         @click="resetRankings"
       >
         <RotateCcw class="h-3.5 w-3.5" />
-        <span class="hidden sm:inline">Tout retirer</span>
+        <span class="hidden sm:inline">{{ $t('toolbar.resetAll') }}</span>
       </button>
 
       <button
@@ -220,7 +220,7 @@ async function exportImage() {
       >
         <Lock v-if="store.isLocked" class="h-3.5 w-3.5" />
         <Unlock v-else class="h-3.5 w-3.5" />
-        <span class="hidden sm:inline">{{ store.isLocked ? 'Déverrouiller' : 'Verrouiller' }}</span>
+        <span class="hidden sm:inline">{{ store.isLocked ? $t('toolbar.unlock') : $t('toolbar.lock') }}</span>
       </button>
 
       <button
@@ -233,7 +233,7 @@ async function exportImage() {
         @click="store.toggleFocusMode()"
       >
         <Maximize class="h-3.5 w-3.5" />
-        <span class="hidden sm:inline">Mode Focus</span>
+        <span class="hidden sm:inline">{{ $t('toolbar.focusMode') }}</span>
       </button>
 
       <button
@@ -248,7 +248,7 @@ async function exportImage() {
         @click="store.toggleVoteMode()"
       >
         <Vote class="h-3.5 w-3.5" />
-        <span class="hidden sm:inline">{{ store.isVoteMode ? 'Arrêter Vote' : 'Mode Vote' }}</span>
+        <span class="hidden sm:inline">{{ store.isVoteMode ? $t('toolbar.stopVote') : $t('toolbar.voteMode') }}</span>
       </button>
 
       <!-- Twitch chat bridge -->
@@ -270,7 +270,7 @@ async function exportImage() {
           class="absolute left-0 top-full mt-1 z-50 w-72 rounded-lg border border-border-hover bg-surface shadow-xl p-3"
           @click.stop
         >
-          <p class="text-sm font-semibold text-foreground mb-2.5">Faire voter ton chat Twitch</p>
+          <p class="text-sm font-semibold text-foreground mb-2.5">{{ $t('twitch.title') }}</p>
 
           <!-- Étape 1 : connecter la chaîne -->
           <div class="flex items-start gap-2 mb-2.5">
@@ -280,12 +280,12 @@ async function exportImage() {
             >{{ store.twitchConnected ? '✓' : '1' }}</span>
             <div class="min-w-0 flex-1">
               <template v-if="!store.twitchConnected">
-                <p class="text-xs text-foreground mb-1.5">Connecte ta chaîne</p>
+                <p class="text-xs text-foreground mb-1.5">{{ $t('twitch.step1') }}</p>
                 <form class="flex gap-2" @submit.prevent="submitTwitch">
                   <input
                     v-model="twitchChannelInput"
                     type="text"
-                    placeholder="nom_de_ta_chaine"
+                    :placeholder="$t('twitch.channelPlaceholder')"
                     maxlength="25"
                     class="min-w-0 flex-1 rounded-md border border-border bg-background px-2.5 py-1.5 text-xs text-foreground placeholder:text-foreground-subtle focus:border-[#9146FF]/60 focus:outline-none"
                   />
@@ -294,7 +294,7 @@ async function exportImage() {
                     :disabled="!twitchChannelInput.trim()"
                     class="rounded-md bg-[#9146FF] px-3 py-1.5 text-xs font-semibold text-white hover:bg-[#7c2df0] transition-colors disabled:opacity-50"
                   >
-                    Connecter
+                    {{ $t('twitch.connect') }}
                   </button>
                 </form>
                 <p v-if="store.twitchError" class="mt-1.5 text-[11px] text-red-400">{{ store.twitchError }}</p>
@@ -302,13 +302,13 @@ async function exportImage() {
               <template v-else>
                 <div class="flex items-center justify-between gap-2">
                   <span class="text-xs text-foreground">
-                    Connecté à <span class="font-semibold text-[#bf94ff]">#{{ store.twitchChannel }}</span>
+                    {{ $t('twitch.connectedTo') }} <span class="font-semibold text-[#bf94ff]">#{{ store.twitchChannel }}</span>
                   </span>
                   <button
                     class="rounded-md border border-border-hover px-2 py-0.5 text-[10px] font-medium text-foreground-muted hover:text-red-400 hover:border-red-500/40 transition-colors"
                     @click="store.disconnectTwitch()"
                   >
-                    Déconnecter
+                    {{ $t('twitch.disconnect') }}
                   </button>
                 </div>
               </template>
@@ -324,15 +324,13 @@ async function exportImage() {
             <div class="min-w-0 flex-1">
               <template v-if="store.isVoteMode">
                 <p class="text-xs text-emerald-400 font-medium">
-                  Vote en cours ! Tes viewers votent en tapant le nom d'un tier
-                  (<span class="font-mono">S</span>, <span class="font-mono">A</span>…) dans ton chat.
+                  {{ $t('twitch.voteRunningBefore') }}(<span class="font-mono">S</span>, <span class="font-mono">A</span>…){{ $t('twitch.voteRunningAfter') }}
                 </p>
               </template>
               <template v-else>
                 <p class="text-xs text-foreground mb-1.5">
-                  Lance le Mode Vote — chaque élément est soumis au vote et tes
-                  viewers répondent dans le chat (<span class="font-mono">S</span>,
-                  <span class="font-mono">A</span>, <span class="font-mono">B</span>…), sans compte.
+                  {{ $t('twitch.launchHintBefore') }}(<span class="font-mono">S</span>,
+                  <span class="font-mono">A</span>, <span class="font-mono">B</span>…){{ $t('twitch.launchHintAfter') }}
                 </p>
                 <button
                   :disabled="!store.twitchConnected || store.pool.length === 0"
@@ -340,10 +338,10 @@ async function exportImage() {
                   @click="store.toggleVoteMode(); showTwitchMenu = false"
                 >
                   <Vote class="h-3.5 w-3.5" />
-                  Lancer le Mode Vote
+                  {{ $t('twitch.launchVote') }}
                 </button>
                 <p v-if="store.twitchConnected && store.pool.length === 0" class="mt-1.5 text-[11px] text-amber-400">
-                  Ajoute d'abord des éléments dans le pool — le vote porte sur les éléments non classés.
+                  {{ $t('twitch.poolEmptyHint') }}
                 </p>
               </template>
             </div>
@@ -358,7 +356,7 @@ async function exportImage() {
           @click.stop="showThemeMenu = !showThemeMenu; showTwitchMenu = false"
         >
           <Palette class="h-3.5 w-3.5" />
-          <span class="hidden sm:inline">Thème</span>
+          <span class="hidden sm:inline">{{ $t('toolbar.theme') }}</span>
         </button>
         <div
           v-if="showThemeMenu"
@@ -394,7 +392,7 @@ async function exportImage() {
         @click="showPublishModal = true"
       >
         <Upload class="h-3.5 w-3.5" />
-        <span class="hidden sm:inline">Publier</span>
+        <span class="hidden sm:inline">{{ $t('toolbar.publish') }}</span>
       </button>
 
     <button
@@ -403,7 +401,7 @@ async function exportImage() {
       @click="exportImage"
     >
       <Download class="h-3.5 w-3.5" />
-      <span class="hidden sm:inline">{{ isExporting ? 'Export...' : 'Exporter' }}</span>
+      <span class="hidden sm:inline">{{ isExporting ? $t('toolbar.exporting') : $t('toolbar.export') }}</span>
     </button>
     </div>
 
@@ -413,10 +411,10 @@ async function exportImage() {
     <Teleport to="body">
       <div v-if="showResetConfirm" class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm" @click.self="showResetConfirm = false">
         <div class="mx-4 w-full max-w-sm rounded-xl border border-border bg-surface p-6 shadow-2xl">
-          <p class="text-sm font-medium text-foreground">Remettre tous les éléments dans le pool ?</p>
+          <p class="text-sm font-medium text-foreground">{{ $t('toolbar.resetConfirm') }}</p>
           <div class="mt-4 flex justify-end gap-3">
-            <button class="rounded-lg px-4 py-2 text-xs font-medium text-foreground-muted hover:bg-surface-hover transition-colors" @click="showResetConfirm = false">Annuler</button>
-            <button class="rounded-lg bg-red-500 px-4 py-2 text-xs font-medium text-white hover:bg-red-600 transition-colors" @click="confirmReset">Confirmer</button>
+            <button class="rounded-lg px-4 py-2 text-xs font-medium text-foreground-muted hover:bg-surface-hover transition-colors" @click="showResetConfirm = false">{{ $t('common.cancel') }}</button>
+            <button class="rounded-lg bg-red-500 px-4 py-2 text-xs font-medium text-white hover:bg-red-600 transition-colors" @click="confirmReset">{{ $t('common.confirm') }}</button>
           </div>
         </div>
       </div>

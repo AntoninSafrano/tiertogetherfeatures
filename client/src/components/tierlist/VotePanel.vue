@@ -54,8 +54,8 @@ const chatVoteHint = computed(() =>
     <template v-if="store.pool.length === 0 && !store.voteWinner">
       <div class="flex flex-col items-center gap-3 py-12">
         <Trophy class="h-16 w-16 text-emerald-400" />
-        <p class="text-xl font-bold text-foreground">Tous les elements ont ete votes !</p>
-        <p class="text-sm text-foreground-muted">Le mode vote est termine.</p>
+        <p class="text-xl font-bold text-foreground">{{ $t('vote.allVoted') }}</p>
+        <p class="text-sm text-foreground-muted">{{ $t('vote.voteOver') }}</p>
       </div>
     </template>
 
@@ -63,14 +63,14 @@ const chatVoteHint = computed(() =>
     <template v-else-if="store.voteWinner && winnerRow">
       <div class="flex flex-col items-center gap-4 animate-pulse">
         <Trophy class="h-10 w-10 text-yellow-400" />
-        <p class="text-lg font-bold text-foreground">Resultat du vote</p>
+        <p class="text-lg font-bold text-foreground">{{ $t('vote.result') }}</p>
         <div
           class="flex items-center gap-3 rounded-xl px-6 py-3 text-lg font-bold shadow-lg"
           :style="{ backgroundColor: winnerRow.color + '30', color: winnerRow.color, border: '2px solid ' + winnerRow.color }"
         >
           <span>{{ winnerRow.label }}</span>
         </div>
-        <p class="text-xs text-foreground-subtle">Prochain element dans un instant...</p>
+        <p class="text-xs text-foreground-subtle">{{ $t('vote.nextItem') }}</p>
       </div>
     </template>
 
@@ -80,11 +80,11 @@ const chatVoteHint = computed(() =>
       <div class="flex flex-wrap items-center justify-center gap-x-4 gap-y-1">
         <div class="flex items-center gap-2 text-sm font-medium text-emerald-400">
           <Users class="h-4 w-4" />
-          <span>{{ store.votedCount }}/{{ store.totalVoters }} joueurs ont vote</span>
+          <span>{{ $t('vote.playersVoted', { voted: store.votedCount, total: store.totalVoters }) }}</span>
         </div>
         <div v-if="store.twitchConnected" class="flex items-center gap-1.5 text-sm font-medium text-[#bf94ff]">
           <Twitch class="h-4 w-4" />
-          <span>{{ store.twitchVotedCount }} vote{{ store.twitchVotedCount !== 1 ? 's' : '' }} du chat</span>
+          <span>{{ $t('vote.chatVotes', store.twitchVotedCount) }}</span>
         </div>
       </div>
 
@@ -95,8 +95,8 @@ const chatVoteHint = computed(() =>
       >
         <Twitch class="h-4 w-4 shrink-0 text-[#bf94ff]" />
         <p class="text-sm text-foreground">
-          <span class="font-semibold text-[#bf94ff]">Viewers :</span>
-          tapez <span class="font-mono font-bold">{{ chatVoteHint }}</span> dans le chat pour voter !
+          <span class="font-semibold text-[#bf94ff]">{{ $t('vote.viewersLabel') }}</span>
+          {{ $t('vote.typeBefore') }}<span class="font-mono font-bold">{{ chatVoteHint }}</span>{{ $t('vote.typeAfter') }}
         </p>
       </div>
 
@@ -130,7 +130,7 @@ const chatVoteHint = computed(() =>
             {{ store.voteTimeLeft }}
           </span>
         </div>
-        <span class="text-xs text-foreground-muted">secondes restantes</span>
+        <span class="text-xs text-foreground-muted">{{ $t('vote.secondsLeft') }}</span>
       </div>
 
       <!-- Item card -->
@@ -172,7 +172,7 @@ const chatVoteHint = computed(() =>
 
       <!-- Instruction -->
       <p class="text-sm text-foreground-muted">
-        {{ store.hasVoted ? 'En attente des autres joueurs...' : 'Cliquez sur un tier pour voter' }}
+        {{ store.hasVoted ? $t('vote.waitingOthers') : $t('vote.clickToVote') }}
       </p>
 
       <!-- Tier row buttons -->
@@ -198,7 +198,7 @@ const chatVoteHint = computed(() =>
             <div class="flex items-center justify-between mb-1">
               <span class="text-sm font-medium text-foreground">{{ row.label }}</span>
               <span v-if="getVoteCount(row.id) > 0" class="text-xs font-mono text-foreground-muted">
-                {{ getVoteCount(row.id) }} vote{{ getVoteCount(row.id) !== 1 ? 's' : '' }}
+                {{ $t('vote.rowVotes', getVoteCount(row.id)) }}
               </span>
             </div>
 
@@ -224,7 +224,7 @@ const chatVoteHint = computed(() =>
 
       <!-- Remaining counter -->
       <p class="text-xs text-foreground-subtle">
-        {{ remainingCount }} element{{ remainingCount !== 1 ? 's' : '' }} restant{{ remainingCount !== 1 ? 's' : '' }}
+        {{ $t('vote.remaining', remainingCount) }}
       </p>
     </template>
 
@@ -232,7 +232,7 @@ const chatVoteHint = computed(() =>
     <template v-else>
       <div class="flex flex-col items-center gap-3 py-8">
         <Users class="h-10 w-10 text-foreground-muted animate-pulse" />
-        <p class="text-sm text-foreground-muted">En attente du debut du vote...</p>
+        <p class="text-sm text-foreground-muted">{{ $t('vote.waitingStart') }}</p>
       </div>
     </template>
   </div>

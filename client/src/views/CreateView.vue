@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import { useSocket } from '@/composables/useSocket'
 import { useRoomStore } from '@/stores/room'
 import { useAuth } from '@/composables/useAuth'
@@ -9,6 +10,7 @@ import ErrorPopup from '@/components/ErrorPopup.vue'
 import { Plus, Users, LogIn, Gamepad2 } from 'lucide-vue-next'
 
 const router = useRouter()
+const { t } = useI18n()
 const store = useRoomStore()
 const { isConnected, connect } = useSocket()
 const { user, fetchUser } = useAuth()
@@ -33,11 +35,11 @@ onMounted(async () => {
 async function createRoom() {
   createError.value = ''
   if (!user.value && !usernameInput.value.trim()) {
-    createError.value = 'Renseignez votre nom pour continuer.'
+    createError.value = t('create.nameRequired')
     return
   }
   if (!tierListName.value.trim()) {
-    createError.value = 'Donnez un nom à votre room.'
+    createError.value = t('create.roomNameRequired')
     return
   }
   isLoading.value = true
@@ -49,8 +51,8 @@ async function createRoom() {
     router.push({ name: 'room', params: { id: res.roomId } })
   } else {
     errorPopup.value = {
-      title: 'Création impossible',
-      description: 'Impossible de créer la room. Vérifiez votre connexion et réessayez.',
+      title: t('create.createFailedTitle'),
+      description: t('create.createFailedDesc'),
       retry: createRoom,
     }
   }
@@ -59,11 +61,11 @@ async function createRoom() {
 async function joinRoom() {
   joinError.value = ''
   if (!user.value && !usernameInput.value.trim()) {
-    joinError.value = 'Renseignez votre nom pour continuer.'
+    joinError.value = t('create.nameRequired')
     return
   }
   if (!roomIdInput.value.trim()) {
-    joinError.value = 'Entrez le code de la room.'
+    joinError.value = t('create.codeRequired')
     return
   }
   isLoading.value = true
@@ -75,10 +77,8 @@ async function joinRoom() {
   } else {
     const isNotFound = res.error === 'Room introuvable'
     errorPopup.value = {
-      title: isNotFound ? 'Room introuvable' : 'Connexion impossible',
-      description: isNotFound
-        ? 'Ce code ne correspond à aucune room active. Vérifiez le code et réessayez.'
-        : 'Impossible de rejoindre la room. Vérifiez votre connexion et réessayez.',
+      title: isNotFound ? t('create.notFoundTitle') : t('create.joinFailedTitle'),
+      description: isNotFound ? t('create.notFoundDesc') : t('create.joinFailedDesc'),
       retry: joinRoom,
     }
   }
@@ -114,12 +114,12 @@ function trySolo() {
         <div class="flex flex-col items-center gap-3">
           <!-- Hero title -->
           <h1 class="text-3xl sm:text-5xl font-bold text-center text-foreground leading-[1.1] tracking-tight">
-            CLASSEZ. DÉBATTEZ. PARTAGEZ.
+            {{ $t('create.heroTitle') }}
           </h1>
 
           <!-- Subtitle -->
           <p class="text-foreground-muted text-sm sm:text-base text-center max-w-lg leading-relaxed">
-            Créez des tier lists collaboratives en temps réel avec vos amis.
+            {{ $t('create.heroSubtitle') }}
           </p>
         </div>
 
@@ -128,7 +128,7 @@ function trySolo() {
           v-if="errorPopup"
           :title="errorPopup.title"
           :description="errorPopup.description"
-          :retry-label="errorPopup.retry ? 'Réessayer' : undefined"
+          :retry-label="errorPopup.retry ? $t('common.retry') : undefined"
           @close="errorPopup = null"
           @retry="errorPopup.retry?.()"
         />
@@ -138,7 +138,7 @@ function trySolo() {
           <input
             v-model="usernameInput"
             type="text"
-            placeholder="Votre pseudo..."
+            :placeholder="$t('create.usernamePlaceholder')"
             maxlength="20"
             class="w-full rounded-lg border border-border bg-background h-11 px-4 text-sm text-foreground placeholder:text-foreground-subtle focus:border-primary/50 focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
           />
@@ -152,12 +152,12 @@ function trySolo() {
               <div class="w-10 h-10 rounded-xl bg-primary-soft flex items-center justify-center">
                 <Plus class="h-5 w-5 text-primary" />
               </div>
-              <h2 class="text-lg font-bold text-foreground">Créer une Room</h2>
+              <h2 class="text-lg font-bold text-foreground">{{ $t('create.createCard') }}</h2>
             </div>
             <input
               v-model="tierListName"
               type="text"
-              placeholder="Nom de la room..."
+              :placeholder="$t('create.roomNamePlaceholder')"
               maxlength="100"
               class="w-full rounded-lg border border-border bg-background h-11 px-3.5 text-sm text-foreground placeholder:text-foreground-subtle focus:border-primary/50 focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
             />
@@ -167,7 +167,7 @@ function trySolo() {
               @click="createRoom"
             >
               <Plus class="h-4 w-4" />
-              {{ isLoading ? 'Création...' : 'Créer la Room' }}
+              {{ isLoading ? $t('create.creating') : $t('create.createBtn') }}
             </button>
             <p v-if="createError" class="text-xs text-destructive">{{ createError }}</p>
           </div>
@@ -178,12 +178,12 @@ function trySolo() {
               <div class="w-10 h-10 rounded-xl bg-success/10 flex items-center justify-center">
                 <Users class="h-5 w-5 text-success" />
               </div>
-              <h2 class="text-lg font-bold text-foreground">Rejoindre une Room</h2>
+              <h2 class="text-lg font-bold text-foreground">{{ $t('create.joinCard') }}</h2>
             </div>
             <input
               v-model="roomIdInput"
               type="text"
-              placeholder="Code de la room..."
+              :placeholder="$t('create.roomCodePlaceholder')"
               maxlength="50"
               class="w-full rounded-lg border border-border bg-background h-11 px-3.5 text-sm text-foreground placeholder:text-foreground-subtle focus:border-primary/50 focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
             />
@@ -193,7 +193,7 @@ function trySolo() {
               @click="joinRoom"
             >
               <LogIn class="h-4 w-4" />
-              {{ isLoading ? 'Connexion...' : 'Rejoindre' }}
+              {{ isLoading ? $t('create.joining') : $t('create.joinBtn') }}
             </button>
             <p v-if="joinError" class="text-xs text-destructive">{{ joinError }}</p>
           </div>
@@ -203,7 +203,7 @@ function trySolo() {
         <div class="flex items-center gap-8 text-sm">
           <button class="flex items-center gap-2 text-foreground-muted hover:text-foreground transition-colors" @click="trySolo">
             <Gamepad2 class="h-4 w-4" />
-            Créer une tier list en solo
+            {{ $t('create.solo') }}
           </button>
         </div>
       </div>

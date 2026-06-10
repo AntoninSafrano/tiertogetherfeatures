@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import NavBar from '@/components/NavBar.vue'
 import TierRow from '@/components/tierlist/TierRow.vue'
 import TierItem from '@/components/tierlist/TierItem.vue'
@@ -12,6 +13,7 @@ import { getCategoryBadgeColor, getCategoryLabel } from '@/lib/utils'
 
 const route = useRoute()
 const router = useRouter()
+const { t } = useI18n()
 const roomStore = useRoomStore()
 
 const isEmbed = computed(() => route.query.embed === 'true')
@@ -63,13 +65,13 @@ async function fetchTierList() {
   try {
     const res = await fetch(`${API_BASE}/api/tierlists/${route.params.id}`)
     if (!res.ok) {
-      error.value = 'Tier list introuvable'
+      error.value = t('tierlist.notFound')
       return
     }
     const data = await res.json()
     tierlist.value = data.tierlist
   } catch {
-    error.value = 'Impossible de charger la tier list'
+    error.value = t('tierlist.loadError')
   } finally {
     isLoading.value = false
   }
@@ -116,7 +118,7 @@ async function shareTierList() {
   const title = tierlist.value?.title || 'TierTogether'
 
   if (navigator.share) {
-    await navigator.share({ title, url, text: `Découvre cette tier list : ${title}` })
+    await navigator.share({ title, url, text: t('tierlist.shareText', { title }) })
   } else {
     await navigator.clipboard.writeText(url)
     shareCopied.value = true
@@ -141,7 +143,7 @@ onMounted(() => {
         @click="router.push({ name: 'explore' })"
       >
         <ArrowLeft class="h-4 w-4" />
-        Retour
+        {{ $t('common.back') }}
       </button>
 
       <!-- Loading -->
@@ -160,7 +162,7 @@ onMounted(() => {
           class="mt-4 rounded-lg bg-surface-hover border border-border-hover px-4 py-2 text-sm text-foreground hover:bg-surface-active transition-colors"
           @click="router.push({ name: 'explore' })"
         >
-          Retour
+          {{ $t('common.back') }}
         </button>
       </div>
 
@@ -175,11 +177,11 @@ onMounted(() => {
             </span>
             <span class="inline-flex items-center gap-1">
               <Download class="h-3.5 w-3.5" />
-              {{ tierlist.downloads || 0 }} téléchargements
+              {{ $t('tierlist.downloads', { n: tierlist.downloads || 0 }) }}
             </span>
             <span class="inline-flex items-center gap-1">
               <LayoutGrid class="h-3.5 w-3.5" />
-              {{ totalItems }} items
+              {{ $t('tierlist.items', { n: totalItems }) }}
             </span>
             <span class="inline-flex items-center gap-1">
               <Calendar class="h-3.5 w-3.5" />
@@ -196,14 +198,14 @@ onMounted(() => {
             @click="cloneAndUse"
           >
             <Copy class="h-4 w-4" />
-            {{ isCloning ? 'Création...' : 'Utiliser comme modèle' }}
+            {{ isCloning ? $t('tierlist.cloning') : $t('tierlist.useTemplate') }}
           </button>
           <button
             class="inline-flex items-center gap-2 rounded-lg bg-surface-hover border border-border-hover px-4 py-2.5 text-sm font-medium text-foreground hover:bg-surface-active transition-all"
             @click="shareTierList"
           >
             <Share2 class="h-4 w-4" />
-            {{ shareCopied ? 'Lien copié !' : 'Partager' }}
+            {{ shareCopied ? $t('common.linkCopied') : $t('common.share') }}
           </button>
           <button
             class="inline-flex items-center gap-2 rounded-lg bg-surface-hover border border-border-hover px-4 py-2.5 text-sm font-medium text-foreground hover:bg-surface-active transition-all"
@@ -214,11 +216,11 @@ onMounted(() => {
           </button>
           <button
             class="inline-flex items-center gap-2 rounded-lg border border-border-hover bg-surface-hover px-4 py-2.5 text-sm font-medium text-foreground-muted hover:text-amber-400 hover:border-amber-500/40 transition-all"
-            aria-label="Signaler cette tier list"
+            :aria-label="$t('tierlist.reportAria')"
             @click="showReportModal = true"
           >
             <Flag class="h-4 w-4" />
-            Signaler
+            {{ $t('tierlist.report') }}
           </button>
         </div>
 
@@ -232,11 +234,11 @@ onMounted(() => {
         <!-- Embed code modal -->
         <div v-if="showEmbedModal && !isEmbed" class="mb-6 rounded-xl border border-border-hover bg-surface p-4">
           <div class="flex items-center justify-between mb-2">
-            <h3 class="text-sm font-semibold text-foreground">Code d'intégration</h3>
+            <h3 class="text-sm font-semibold text-foreground">{{ $t('tierlist.embedCode') }}</h3>
             <button
               class="text-foreground-muted hover:text-foreground text-xs"
               @click="showEmbedModal = false"
-            >Fermer</button>
+            >{{ $t('common.close') }}</button>
           </div>
           <div class="rounded-lg bg-background border border-border p-3 font-mono text-xs text-foreground-muted break-all select-all">
             {{ embedCode }}
@@ -246,12 +248,12 @@ onMounted(() => {
             @click="copyEmbedCode"
           >
             <Copy class="h-3.5 w-3.5" />
-            {{ embedCopied ? 'Copié !' : 'Copier' }}
+            {{ embedCopied ? $t('common.copied') : $t('common.copy') }}
           </button>
         </div>
 
         <!-- Tier Rows -->
-        <section aria-label="Classement" class="rounded-xl border border-border-hover bg-surface overflow-visible shadow-2xl">
+        <section :aria-label="$t('tierlist.rankingAria')" class="rounded-xl border border-border-hover bg-surface overflow-visible shadow-2xl">
           <div
             v-for="(row, index) in tierlist.rows"
             :key="row.id"
@@ -285,13 +287,13 @@ onMounted(() => {
                       class="h-6 w-6 cursor-pointer rounded border-0 bg-transparent"
                       @input="changeRowColor(index, ($event.target as HTMLInputElement).value)"
                     />
-                    Couleur
+                    {{ $t('tierlist.color') }}
                   </label>
                   <button
                     class="rounded-md bg-red-500/10 px-3 py-1.5 text-sm font-medium text-red-400 hover:bg-red-500/20 transition-colors text-left"
                     @click="deleteRow(index)"
                   >
-                    Supprimer la ligne
+                    {{ $t('tierlist.deleteRow') }}
                   </button>
                 </div>
               </div>
@@ -300,8 +302,8 @@ onMounted(() => {
         </section>
 
         <!-- Pool -->
-        <section v-if="tierlist.pool.length > 0" aria-label="Pool d'éléments" class="mt-6">
-          <h2 class="text-sm font-semibold text-foreground-muted mb-3">Pool ({{ tierlist.pool.length }} éléments)</h2>
+        <section v-if="tierlist.pool.length > 0" :aria-label="$t('tierlist.poolAria')" class="mt-6">
+          <h2 class="text-sm font-semibold text-foreground-muted mb-3">{{ $t('tierlist.pool', { n: tierlist.pool.length }) }}</h2>
           <div class="rounded-xl border border-border-hover bg-surface p-4">
             <div class="flex flex-wrap gap-2">
               <TierItem v-for="item in tierlist.pool" :key="item.id" :item="item" />
